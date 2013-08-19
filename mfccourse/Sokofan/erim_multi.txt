@@ -1,0 +1,89 @@
+These levels are copyright Erim Sever and were downloaded from 
+http://www.geocities.com/erimsever/sokoban.htm
+
+;erim_multi01x.xsb
+#####
+#   #####
+# $     #  #####
+# $# @# ####. .###
+# $ $## #     ...#
+###$    ## ##. ..#
+  #    $   ### ###
+  ####  ##$$   #
+     #####@#####
+         ###
+Title: erim_multi01x-SameErim01.xsb-third collection
+Author: Erim SEVER from TURKEY
+
+;erim_multi02x.xsb
+##################
+#..  #  *  #  *  #
+#.*. #  $  #  $  #
+#.#  #$ #$ #$ #  #
+#.#  $  #  $  # ##
+#.#  *  #  *  # #
+#*#############@#
+#.#  *  #  *  # #
+#.#  $  #  $  # ##
+#.#  #$ #$ #$ #  #
+#.*. #  $  #  $  #
+#..@ #  *  #  *  #
+##################
+Title: erim_multi02x-third collection
+Author: Erim SEVER from TURKEY
+
+;erim_multi03x.xsb
+#####
+#.$.#
+# $.#
+# $@#
+#@$ #
+#.$ #
+#.$.#
+#####
+Title: erim_multi03x-third collection
+Author: Erim SEVER from TURKEY
+
+;erim_multi04x.xsb
+ ####
+##..##
+# @$@##
+#.$$$.#
+##@$@ #
+ ##. ##
+  ####
+Title: erim_multi04x-third collection
+Author: Erim SEVER from TURKEY
+
+;erim_multi05x.xsb
+  ######
+  #    #
+###  $ ###
+#  $*** @#
+# **..*  #
+#  *..** #
+#@ ***$  #
+### $  ###
+  #    #
+  ######
+Title: erim_multi05x-third collection
+Author: Erim SEVER from TURKEY
+
+;erim_multi_nr01x.xsb
+#####
+#   #####
+# $     #  #####
+# $# @# ####. .###
+# $ $## #     ...#
+###$    ## ##. ..#
+  #    $   ### ###
+  ####  ##$$   #
+     #####@#####
+         ###
+Title: erim_multi_nr01-SameErim01.xsb-third collection
+Author: Erim SEVER from TURKEY
+Comment:
+boxorder 1 2 99 99 99 99 99 99
+goalorder 99 99 1 99 99 2 99 99
+Comment-End:
+

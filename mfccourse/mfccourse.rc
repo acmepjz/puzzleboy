@@ -1,0 +1,823 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// 中文(中华人民共和国) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)\r\n"
+    "LANGUAGE 4, 2\r\n"
+    "#pragma code_page(936)\r\n"
+    "#include ""res\\mfccourse.rc2""  // 非 Microsoft Visual C++ 编辑的资源\r\n"
+    "#include ""l.CHS\\afxres.rc""          // 标准组件\r\n"
+    "#include ""l.CHS\\afxprint.rc""        // 打印/打印预览资源\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\mfccourse.ico"
+IDR_LevelTYPE           ICON                    "res\\mfccourseDoc.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+IDR_EDIT_TOOLBAR        BITMAP                  "res\\EditToolbar.bmp"
+IDR_PLAYER              BITMAP                  "res\\player.bmp"
+IDR_EXIT                BITMAP                  "res\\exit.bmp"
+IDR_WALL                BITMAP                  "res\\wall.bmp"
+IDR_BLOCK               BITMAP                  "res\\block.bmp"
+IDR_ROTATE_BLOCK        BITMAP                  "res\\rotateblock.bmp"
+IDR_TARGET_BLOCK        BITMAP                  "res\\targetblock.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Toolbar
+//
+
+IDR_MAINFRAME TOOLBAR  16, 16
+BEGIN
+    BUTTON      ID_FILE_NEW
+    BUTTON      ID_FILE_OPEN
+    BUTTON      ID_FILE_SAVE
+    SEPARATOR
+    BUTTON      ID_FILE_PRINT
+    SEPARATOR
+    BUTTON      ID_EDIT_CUT
+    BUTTON      ID_EDIT_COPY
+    BUTTON      ID_EDIT_PASTE
+    SEPARATOR
+    BUTTON      ID_EDIT_UNDO
+    BUTTON      ID_EDIT_REDO
+    BUTTON      ID_GAME_RESTART
+    SEPARATOR
+    BUTTON      ID_GAME_RECORD
+    SEPARATOR
+    BUTTON      ID_VIEW_GRID
+    SEPARATOR
+    BUTTON      ID_EDIT_EDITMODE
+    SEPARATOR
+    BUTTON      ID_FIRST_LEVEL
+    BUTTON      ID_PREV_LEVEL
+    BUTTON      ID_NEXT_LEVEL
+    BUTTON      ID_LAST_LEVEL
+    BUTTON      ID_LEVEL_LIST
+    SEPARATOR
+    BUTTON      ID_APP_ABOUT
+END
+
+IDR_EDIT_TOOLBAR TOOLBAR  16, 16
+BEGIN
+    BUTTON      ID_EDIT_EDITMODE
+    BUTTON      ID_EDIT_PROPERTIES
+    SEPARATOR
+    BUTTON      ID_EDIT_SELECT
+    BUTTON      ID_EDIT_BRICK0
+    BUTTON      ID_EDIT_BRICK1
+    BUTTON      ID_EDIT_BRICK2
+    BUTTON      ID_EDIT_BRICK3
+    BUTTON      ID_EDIT_BRICK4
+    BUTTON      ID_EDIT_BRICK5
+    SEPARATOR
+    BUTTON      ID_EDIT_PUSHABLE0
+    BUTTON      ID_EDIT_PUSHABLE1
+    BUTTON      ID_EDIT_PUSHABLE2
+    BUTTON      ID_EDIT_CLEAR
+    SEPARATOR
+    BUTTON      ID_EDIT_ADD_LEVEL
+    BUTTON      ID_EDIT_REMOVE_LEVEL
+    SEPARATOR
+    BUTTON      ID_EDIT_MOVE_UP
+    BUTTON      ID_EDIT_MOVE_DOWN
+    BUTTON      ID_EDIT_MOVE_LEFT
+    BUTTON      ID_EDIT_MOVE_RIGHT
+    SEPARATOR
+    BUTTON      ID_EDIT_ROTATE_CW
+    BUTTON      ID_EDIT_ROTATE_CCW
+    SEPARATOR
+    BUTTON      ID_EDIT_APPLY_CHANGES
+    BUTTON      ID_EDIT_DISCARD_CHANGES
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU 
+BEGIN
+    POPUP "文件(&F)"
+    BEGIN
+        MENUITEM "新建(&N)\tCtrl+N",              ID_FILE_NEW
+        MENUITEM "打开(&O)...\tCtrl+O",           ID_FILE_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "打印设置(&R)...",                 ID_FILE_PRINT_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "最近的文件",                       ID_FILE_MRU_FILE1, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "关闭(&C)",                      ID_FILE_CLOSE
+        MENUITEM "退出(&X)",                      ID_APP_EXIT
+    END
+    POPUP "视图(&V)"
+    BEGIN
+        POPUP "工具栏(&T)"
+        BEGIN
+            MENUITEM "标准(&S)",                      ID_VIEW_TOOLBAR
+            MENUITEM "编辑(&E)",                      IDR_EDIT_TOOLBAR
+        END
+        MENUITEM "状态栏(&S)",                     ID_VIEW_STATUS_BAR
+    END
+    POPUP "帮助(&H)"
+    BEGIN
+        MENUITEM "关于 mfccourse(&A)...",         ID_APP_ABOUT
+    END
+END
+
+IDR_LevelTYPE MENU 
+BEGIN
+    POPUP "文件(&F)"
+    BEGIN
+        MENUITEM "新建(&N)\tCtrl+N",              ID_FILE_NEW
+        MENUITEM "打开(&O)...\tCtrl+O",           ID_FILE_OPEN
+        MENUITEM "关闭(&C)",                      ID_FILE_CLOSE
+        MENUITEM "保存(&S)\tCtrl+S",              ID_FILE_SAVE
+        MENUITEM "另存为(&A)...",                  ID_FILE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "打印(&P)...\tCtrl+P",           ID_FILE_PRINT
+        MENUITEM "打印预览(&V)",                    ID_FILE_PRINT_PREVIEW
+        MENUITEM "打印设置(&R)...",                 ID_FILE_PRINT_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "最近的文件",                       ID_FILE_MRU_FILE1, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "退出(&X)",                      ID_APP_EXIT
+    END
+    POPUP "编辑(&E)"
+    BEGIN
+        MENUITEM "撤消(&U)\tCtrl+Z",              ID_EDIT_UNDO
+        MENUITEM "重做(&R)\tCtrl+Y",              ID_EDIT_REDO
+        MENUITEM "重新开始(&S)\tCtrl+R",            ID_GAME_RESTART
+        MENUITEM SEPARATOR
+        MENUITEM "编辑模式(&E)\tCtrl+E",            ID_EDIT_EDITMODE
+        POPUP "工具(&O)"
+        BEGIN
+            MENUITEM "选择(&S)",                      ID_EDIT_SELECT
+            MENUITEM SEPARATOR
+            MENUITEM "地面(&G)",                      ID_EDIT_BRICK0
+            MENUITEM "墙壁(&W)",                      ID_EDIT_BRICK1
+            MENUITEM "深坑(&I)",                      ID_EDIT_BRICK2
+            MENUITEM "箱子目标(&T)",                    ID_EDIT_BRICK3
+            MENUITEM "终点(&E)",                      ID_EDIT_BRICK4
+            MENUITEM "玩家(&P)",                      ID_EDIT_BRICK5
+            MENUITEM SEPARATOR
+            MENUITEM "添加箱子(&B)",                    ID_EDIT_PUSHABLE0
+            MENUITEM "添加旋转砖块(&R)",                  ID_EDIT_PUSHABLE1
+            MENUITEM "添加目标箱子(&A)",                  ID_EDIT_PUSHABLE2
+        END
+        POPUP "选择的砖块(&B)"
+        BEGIN
+            MENUITEM "向上移动(&U)\tUp",                ID_EDIT_MOVE_UP
+            MENUITEM "向下移动(&D)\tDown",              ID_EDIT_MOVE_DOWN
+            MENUITEM "向左移动(&L)\tLeft",              ID_EDIT_MOVE_LEFT
+            MENUITEM "向右移动(&R)\tRight",             ID_EDIT_MOVE_RIGHT
+            MENUITEM SEPARATOR
+            MENUITEM "顺时针旋转(&W)\tPgDn",             ID_EDIT_ROTATE_CW
+            MENUITEM "逆时针旋转(&C)\tPgUp",             ID_EDIT_ROTATE_CCW
+            MENUITEM SEPARATOR
+            MENUITEM "应用修改(&A)\tEnter",             ID_EDIT_APPLY_CHANGES
+            MENUITEM "放弃修改(&I)\tEsc",               ID_EDIT_DISCARD_CHANGES
+        END
+        MENUITEM "关卡属性(&I)...\tCtrl+Enter",     ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "添加关卡(&D)...",                 ID_EDIT_ADD_LEVEL
+        MENUITEM "删除关卡(&V)",                    ID_EDIT_REMOVE_LEVEL
+        MENUITEM SEPARATOR
+        MENUITEM "剪切(&T)\tCtrl+X",              ID_EDIT_CUT
+        MENUITEM "复制(&C)\tCtrl+C",              ID_EDIT_COPY
+        MENUITEM "粘贴(&P)\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM "删除(&L)\tDel",                 ID_EDIT_CLEAR
+        MENUITEM SEPARATOR
+        MENUITEM "全选(&A)\tCtrl+A",              ID_EDIT_SELECT_ALL
+    END
+    POPUP "视图(&V)"
+    BEGIN
+        POPUP "工具栏(&T)"
+        BEGIN
+            MENUITEM "标准(&S)",                      ID_VIEW_TOOLBAR
+            MENUITEM "编辑(&E)",                      IDR_EDIT_TOOLBAR
+        END
+        MENUITEM "状态栏(&S)",                     ID_VIEW_STATUS_BAR
+        MENUITEM SEPARATOR
+        MENUITEM "显示网格(&G)\tCtrl+'",            ID_VIEW_GRID
+        POPUP "动画速度(&E)"
+        BEGIN
+            MENUITEM "加速(&F)\tCtrl+=",              ID_VIEW_ANIMATION_SPEED_0
+            MENUITEM "减速(&S)\tCtrl+-",              ID_VIEW_ANIMATION_SPEED_00
+            MENUITEM SEPARATOR
+            MENUITEM "&1x",                         ID_VIEW_ANIMATION_SPEED
+            MENUITEM "&2x",                         ID_VIEW_ANIMATION_SPEED_2
+            MENUITEM "&4x",                         ID_VIEW_ANIMATION_SPEED_3
+            MENUITEM "&8x",                         ID_VIEW_ANIMATION_SPEED_999
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "第一关(&F)\tCtrl+Home",          ID_FIRST_LEVEL
+        MENUITEM "上一关(&P)\tCtrl+PgUp",          ID_PREV_LEVEL
+        MENUITEM "下一关(&N)\tCtrl+PgDn",          ID_NEXT_LEVEL
+        MENUITEM "最后一关(&A)\tCtrl+End",          ID_LAST_LEVEL
+        MENUITEM SEPARATOR
+        MENUITEM "关卡列表(&L)...\tCtrl+L",         ID_LEVEL_LIST
+    END
+    POPUP "工具(&T)"
+    BEGIN
+        MENUITEM "关卡录像(&O)...",                 ID_GAME_RECORD
+        MENUITEM SEPARATOR
+        MENUITEM "关卡数据库(&D)...",                ID_LEVEL_DATABASE
+        MENUITEM SEPARATOR
+        MENUITEM "导入推箱子关卡(&I)...",              ID_TOOLS_IMPORT_SOKOBAN
+    END
+    POPUP "窗口(&W)"
+    BEGIN
+        MENUITEM "新建窗口(&N)",                    ID_WINDOW_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "层叠(&C)",                      ID_WINDOW_CASCADE
+        MENUITEM "水平平铺(&H)",                    ID_WINDOW_TILE_HORZ
+        MENUITEM "垂直平铺(&V)",                    ID_WINDOW_TILE_VERT
+        MENUITEM "排列图标(&A)",                    ID_WINDOW_ARRANGE
+    END
+    POPUP "帮助(&H)"
+    BEGIN
+        MENUITEM "关于 mfccourse(&A)...",         ID_APP_ABOUT
+    END
+END
+
+IDR_POPUP_SAVE MENU 
+BEGIN
+    POPUP "[]"
+    BEGIN
+        MENUITEM "保存(&S)\tCtrl+S",              ID_FILE_SAVE
+        MENUITEM "另存为(&A)...",                  ID_FILE_SAVE_AS
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS 
+BEGIN
+    VK_DELETE,      ID_EDIT_CLEAR,          VIRTKEY, NOINVERT
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "E",            ID_EDIT_EDITMODE,       VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    VK_RETURN,      ID_EDIT_PROPERTIES,     VIRTKEY, CONTROL, NOINVERT
+    "Y",            ID_EDIT_REDO,           VIRTKEY, CONTROL, NOINVERT
+    "A",            ID_EDIT_SELECT_ALL,     VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
+    VK_HOME,        ID_FIRST_LEVEL,         VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_GAME_RESTART,        VIRTKEY, CONTROL, NOINVERT
+    VK_END,         ID_LAST_LEVEL,          VIRTKEY, CONTROL, NOINVERT
+    "L",            ID_LEVEL_LIST,          VIRTKEY, CONTROL, NOINVERT
+    VK_NEXT,        ID_NEXT_LEVEL,          VIRTKEY, CONTROL, NOINVERT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    VK_PRIOR,       ID_PREV_LEVEL,          VIRTKEY, CONTROL, NOINVERT
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+    VK_OEM_PLUS,    ID_VIEW_ANIMATION_SPEED_0, VIRTKEY, CONTROL, NOINVERT
+    VK_OEM_MINUS,   ID_VIEW_ANIMATION_SPEED_00, VIRTKEY, CONTROL, NOINVERT
+    VK_OEM_7,       ID_VIEW_GRID,           VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 320, 240
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "关于 Puzzle Boy MFC"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,262,218,50,14,WS_GROUP
+    CONTROL         "",IDC_TAB1,"SysTabControl32",0x0,6,6,306,204
+    ICON            IDR_MAINFRAME,IDC_MFC_ICON,12,24,20,20
+    LTEXT           "Puzzle Boy MFC, Version 1.0\n\nCopyright (C) 2012-2013 acme_pjz\nPuzzle Boy Classical Levels 关卡版权归 Puzzle Boy Flash 以及 Kwirk, Puzzle Boy,\nAmazing Tater 所有",IDC_INFO,36,24,260,48,SS_NOPREFIX
+    CONTROL         "Puzzle Boy Flash 地址:\n<a>http://www.freegamesnews.com/en/games/2010/PuzzleBoyFlash.php</a>",IDC_PUZZLE_BOY_FLASH,
+                    "SysLink",WS_TABSTOP,36,72,258,24
+    CONTROL         "GNU GPL",IDC_GNU_GPL,"SysLink",WS_TABSTOP,36,96,258,102
+    LTEXT           "游戏目标是把每个小人都移动到终点。方向键移动, 空格键或者鼠标点击切换小人。只有当所有绿色点上面都放置上绿色箱子时终点才会打开。",IDC_INFO2,36,24,228,24,SS_NOPREFIX
+    CONTROL         131,IDR_PLAYER,"Static",SS_BITMAP,12,24,18,18
+    CONTROL         132,IDR_EXIT,"Static",SS_BITMAP,270,24,37,18
+    CONTROL         133,IDR_WALL,"Static",SS_BITMAP,12,48,18,18
+    CONTROL         134,IDR_BLOCK,"Static",SS_BITMAP,270,72,37,18
+    CONTROL         135,IDR_ROTATE_BLOCK,"Static",SS_BITMAP,12,96,55,55
+    CONTROL         136,IDR_TARGET_BLOCK,"Static",SS_BITMAP,270,156,37,18
+    LTEXT           "橙色方块是墙壁。小人和箱子都不能通过。",IDC_INFO3,36,48,228,24,SS_NOPREFIX
+    LTEXT           "黑色方块是深坑, 小人不能通过, 但是各种箱子可以通过。黄色方块是普通箱子。当箱子完全处在深坑上方时, 箱子便会填平深坑。",IDC_INFO4,36,72,228,24,SS_NOPREFIX
+    LTEXT           "浅蓝色方块是旋转方块。可以推动它使其旋转, 但是旋转范围内必须没有障碍物。",IDC_INFO5,72,96,228,24,SS_NOPREFIX
+    LTEXT           "绿色方块是目标箱子, 绿色小点是目标区域。目标箱子不会掉入深坑中。只有当所有绿色点上面都放置上绿色箱子时终点才会打开。",IDC_INFO6,36,156,228,24,SS_NOPREFIX
+    LTEXT           "Blah",IDC_EDIT_INFO,12,24,294,180,SS_NOPREFIX
+END
+
+IDD_LEVEL_PROPERTIES DIALOGEX 0, 0, 316, 180
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "关卡属性"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_LEVEL_PACK_NAME,54,6,192,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_LEVEL_NAME,54,24,192,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_WIDTH,54,54,186,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_HEIGHT,54,72,186,12,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "保留关卡内容",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,90,66,12
+    EDITTEXT        IDC_X_OFFSET,54,108,72,12,ES_AUTOHSCROLL | WS_DISABLED
+    EDITTEXT        IDC_Y_OFFSET,54,126,72,12,ES_AUTOHSCROLL | WS_DISABLED
+    DEFPUSHBUTTON   "确定",IDOK,258,6,50,14
+    PUSHBUTTON      "取消",IDCANCEL,258,24,50,14
+    LTEXT           "关卡包名称",IDC_STATIC,6,6,48,12
+    LTEXT           "关卡名称",IDC_STATIC,6,24,48,12
+    GROUPBOX        "改变关卡大小",IDC_STATIC,6,42,240,132
+    LTEXT           "宽度",IDC_STATIC,12,54,36,12
+    LTEXT           "高度",IDC_STATIC,12,72,36,12
+    LTEXT           "横向平移",IDC_STATIC,12,108,36,12
+    LTEXT           "纵向平移",IDC_STATIC,12,126,36,12
+    PUSHBUTTON      "",IDC_ALIGN1,150,102,24,18,WS_DISABLED
+    PUSHBUTTON      "",IDC_ALIGN2,174,102,24,18,WS_DISABLED
+    PUSHBUTTON      "",IDC_ALIGN3,198,102,24,18,WS_DISABLED
+    PUSHBUTTON      "",IDC_ALIGN4,150,120,24,18,WS_DISABLED
+    PUSHBUTTON      "",IDC_ALIGN5,174,120,24,18,WS_DISABLED
+    PUSHBUTTON      "",IDC_ALIGN6,198,120,24,18,WS_DISABLED
+    PUSHBUTTON      "",IDC_ALIGN7,150,138,24,18,WS_DISABLED
+    PUSHBUTTON      "",IDC_ALIGN8,174,138,24,18,WS_DISABLED
+    PUSHBUTTON      "",IDC_ALIGN9,198,138,24,18,WS_DISABLED
+    GROUPBOX        "对齐",IDC_STATIC,138,90,96,72
+END
+
+IDD_LEVEL_LIST DIALOGEX 0, 0, 364, 217
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "关卡列表"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_EDITLABELS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_TABSTOP,6,24,294,150,WS_EX_CLIENTEDGE
+    EDITTEXT        IDC_EDIT1,84,180,30,12,ES_AUTOHSCROLL | ES_NUMBER
+    PUSHBUTTON      "移动",IDC_MOVE_LEVEL,144,180,50,14
+    DEFPUSHBUTTON   "转到",IDOK,306,6,50,14
+    PUSHBUTTON      "取消",IDCANCEL,306,24,50,14
+    LTEXT           "移动选中的关卡到第",IDC_STATIC,6,180,78,12
+    LTEXT           "关",IDC_STATIC,120,180,12,12
+    PUSHBUTTON      "复制所有关卡到数据库",IDYES,6,198,96,14
+    PUSHBUTTON      "查询所有关卡的纪录",IDNO,108,198,96,14
+    CONTROL         "只显示指定玩家:",IDC_SHOW_SPECIFIED_PLAYER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,210,198,78,12
+    EDITTEXT        IDC_EDIT2,288,198,66,12,ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT           "过滤:",IDC_STATIC,6,6,24,12
+    EDITTEXT        IDC_KEYWORD,30,6,270,12,ES_AUTOHSCROLL
+END
+
+IDD_RECORD DIALOGEX 0, 0, 316, 241
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "关卡录像"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "关闭",IDOK,246,6,62,14
+    LTEXT           "在此复制关卡录像, 或者粘贴录像后点击“应用”键",IDC_STATIC,12,6,210,12
+    EDITTEXT        IDC_EDIT1,12,18,228,78,ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL
+    PUSHBUTTON      "应用",IDYES,246,24,62,14
+    CONTROL         "动画演示",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,246,42,60,12
+    PUSHBUTTON      "生成视频",ID_GAME_RECORD,246,198,62,14
+    GROUPBOX        "生成视频",IDC_STATIC,6,186,306,30
+    LTEXT           "宽度",IDC_STATIC,12,198,24,12
+    EDITTEXT        IDC_EDIT2,36,198,48,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "高度",IDC_STATIC,90,198,24,12
+    EDITTEXT        IDC_EDIT3,114,198,48,12,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "",IDC_PROGRESS1,"msctls_progress32",PBS_SMOOTH,6,222,306,12
+    GROUPBOX        "关卡纪录",IDC_STATIC,6,102,306,78
+    LTEXT           "123",IDC_BEST_RECORD,246,114,60,24
+    PUSHBUTTON      "查看最佳纪录",IDC_VIEW_RECORD,246,138,62,14
+    CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,12,114,228,60
+    PUSHBUTTON      "简单优化",IDC_OPTIMIZE,246,66,62,14
+    PUSHBUTTON      "求解 (Beta)",IDC_SOLVE_IT,246,84,62,14,NOT WS_VISIBLE
+END
+
+IDD_LEVEL_DATABASE DIALOGEX 0, 0, 364, 258
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "关卡数据库 (Beta)"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "保存修改",IDOK,306,198,54,14
+    PUSHBUTTON      "取消",IDCANCEL,306,216,54,14
+    CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_TABSTOP,6,24,354,168,WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_LIST2,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_TABSTOP,6,198,132,54,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "从其它文件合并",IDYES,144,198,66,14
+    LTEXT           "过滤:",IDC_STATIC,6,6,24,12
+    EDITTEXT        IDC_KEYWORD,30,6,270,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "应用",IDRETRY,306,6,54,14
+END
+
+IDD_LEVEL_FINISHED DIALOGEX 0, 0, 196, 180
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "关卡完成"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "请输入你的名字:",IDC_STATIC,6,48,72,12
+    EDITTEXT        IDC_EDIT1,6,60,186,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,144,162,50,14
+    ICON            "",IDC_ICON_INFORMATION,6,6,20,20
+    LTEXT           "静态",IDC_INFO,42,6,150,30
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,6,42,186,1
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,6,78,186,1
+    LTEXT           "已有的纪录:",IDC_STATIC,6,84,72,12
+    CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,6,96,132,78
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,2
+ PRODUCTVERSION 1,0,0,2
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080403a8"
+        BEGIN
+            VALUE "Comments", "【高级Windows程序设计】作业"
+            VALUE "CompanyName", "acme_pjz"
+            VALUE "FileDescription", "像推箱子的山寨游戏"
+            VALUE "FileVersion", "1.0.0.2"
+            VALUE "InternalName", "mfccourse.exe"
+            VALUE "LegalCopyright", "Copyright (C) 2012-2013 acme_pjz"
+            VALUE "OriginalFilename", "mfccourse.exe"
+            VALUE "ProductVersion", "1.0.0.2"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 936
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 232
+    END
+
+    IDD_LEVEL_PROPERTIES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 309
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 173
+    END
+
+    IDD_LEVEL_LIST, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 357
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 210
+    END
+
+    IDD_RECORD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 309
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 234
+    END
+
+    IDD_LEVEL_DATABASE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 357
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 251
+    END
+
+    IDD_LEVEL_FINISHED, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 189
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 173
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDR_MAINFRAME           "Puzzle Boy MFC"
+    IDR_LevelTYPE           "\nLevel\nLevel\nmfccourse Level (*.lev)\n.lev\nmfccourse.Level\nmfccourse.Level"
+END
+
+STRINGTABLE 
+BEGIN
+    AFX_IDS_APP_TITLE       "mfccourse"
+    AFX_IDS_IDLEMESSAGE     "就绪"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_INDICATOR_EXT        "EXT"
+    ID_INDICATOR_CAPS       "CAP"
+    ID_INDICATOR_NUM        "NUM"
+    ID_INDICATOR_SCRL       "SCRL"
+    ID_INDICATOR_OVR        "OVR"
+    ID_INDICATOR_REC        "REC"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_FILE_NEW             "创建新文档\n新建"
+    ID_FILE_OPEN            "打开现有文档\n打开"
+    ID_FILE_CLOSE           "关闭活动文档\n关闭"
+    ID_FILE_SAVE            "保存活动文档\n保存"
+    ID_FILE_SAVE_AS         "用新名称保存活动文档\n另存为"
+    ID_FILE_PAGE_SETUP      "更改打印选项\n页面设置"
+    ID_FILE_PRINT_SETUP     "更改打印机选项和打印选项\n打印设置"
+    ID_FILE_PRINT           "打印活动文档\n打印"
+    ID_FILE_PRINT_PREVIEW   "显示整页\n打印预览"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_APP_ABOUT            "显示程序信息、版本号和版权\n关于"
+    ID_APP_EXIT             "退出应用程序；提示保存文档\n退出"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_FILE_MRU_FILE1       "打开此文档"
+    ID_FILE_MRU_FILE2       "打开此文档"
+    ID_FILE_MRU_FILE3       "打开此文档"
+    ID_FILE_MRU_FILE4       "打开此文档"
+    ID_FILE_MRU_FILE5       "打开此文档"
+    ID_FILE_MRU_FILE6       "打开此文档"
+    ID_FILE_MRU_FILE7       "打开此文档"
+    ID_FILE_MRU_FILE8       "打开此文档"
+    ID_FILE_MRU_FILE9       "打开此文档"
+    ID_FILE_MRU_FILE10      "打开此文档"
+    ID_FILE_MRU_FILE11      "打开此文档"
+    ID_FILE_MRU_FILE12      "打开此文档"
+    ID_FILE_MRU_FILE13      "打开此文档"
+    ID_FILE_MRU_FILE14      "打开此文档"
+    ID_FILE_MRU_FILE15      "打开此文档"
+    ID_FILE_MRU_FILE16      "打开此文档"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_NEXT_PANE            "切换到下一个窗格\n下一窗格"
+    ID_PREV_PANE            "切换回上一个窗格\n上一窗格"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_WINDOW_NEW           "为活动文档打开另一个窗口\n新建窗口"
+    ID_WINDOW_ARRANGE       "在窗口底部排列图标\n排列图标"
+    ID_WINDOW_CASCADE       "以重叠方式排列窗口\n层叠窗口"
+    ID_WINDOW_TILE_HORZ     "以非重叠的平铺方式排列窗口\n平铺窗口"
+    ID_WINDOW_TILE_VERT     "以非重叠的平铺方式排列窗口\n平铺窗口"
+    ID_WINDOW_SPLIT         "将活动窗口拆分为多个窗格\n拆分"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_EDIT_CLEAR           "清除选定内容\n清除"
+    ID_EDIT_CLEAR_ALL       "清除全部内容\n全部清除"
+    ID_EDIT_COPY            "复制选定内容并将其放到剪贴板上\n复制"
+    ID_EDIT_CUT             "剪切选定内容并将其放到剪贴板上\n剪切"
+    ID_EDIT_FIND            "查找指定的文本\n查找"
+    ID_EDIT_PASTE           "插入剪贴板内容\n粘贴"
+    ID_EDIT_REPEAT          "重复上一操作\n重复"
+    ID_EDIT_REPLACE         "用其他文本替换特定的文本\n替换"
+    ID_EDIT_SELECT_ALL      "选定整个文档\n全选"
+    ID_EDIT_UNDO            "撤消上一操作\n撤消"
+    ID_EDIT_REDO            "恢复上次撤消的操作\n重做"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_VIEW_TOOLBAR         "显示或隐藏工具栏\n切换工具栏"
+    ID_VIEW_STATUS_BAR      "显示或隐藏状态栏\n切换状态栏"
+END
+
+STRINGTABLE 
+BEGIN
+    AFX_IDS_SCSIZE          "更改窗口大小"
+    AFX_IDS_SCMOVE          "更改窗口位置"
+    AFX_IDS_SCMINIMIZE      "将窗口缩小为图标"
+    AFX_IDS_SCMAXIMIZE      "使窗口最大化显示"
+    AFX_IDS_SCNEXTWINDOW    "切换到下一个文档窗口"
+    AFX_IDS_SCPREVWINDOW    "切换到前一个文档窗口"
+    AFX_IDS_SCCLOSE         "关闭活动窗口并提示保存文档"
+END
+
+STRINGTABLE 
+BEGIN
+    AFX_IDS_SCRESTORE       "将窗口恢复到正常大小"
+    AFX_IDS_SCTASKLIST      "激活任务列表"
+    AFX_IDS_MDICHILD        "激活此窗口"
+END
+
+STRINGTABLE 
+BEGIN
+    AFX_IDS_PREVIEW_CLOSE   "关闭打印预览模式\n取消预览"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_VIEW_ANIMATION_SPEED_0 "加快动画速度\n加速"
+    ID_VIEW_ANIMATION_SPEED_00 "减慢动画速度\n减速"
+    ID_VIEW_ANIMATION_SPEED "使用1倍动画速度\n1x"
+    ID_VIEW_ANIMATION_SPEED_2 "使用2倍动画速度\n2x"
+    ID_VIEW_ANIMATION_SPEED_3 "使用4倍动画速度\n4x"
+    ID_VIEW_ANIMATION_SPEED_999 "使用8倍动画速度\n8x"
+    ID_VIEW_GRID            "在地图中显示网格\n显示网格"
+    ID_GAME_RECORD          "显示当前关卡的录像\n关卡录像"
+    ID_GAME_RESTART         "重新开始当前关卡\n重新开始"
+    ID_FIRST_LEVEL          "转到第一关\n第一关"
+    ID_PREV_LEVEL           "转到上一关\n上一关"
+    ID_NEXT_LEVEL           "转到下一关\n下一关"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_EDIT_EDITMODE        "进入地图编辑模式\n编辑模式"
+    ID_EDIT_PROPERTIES      "设置关卡名称和大小等属性\n关卡属性"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_EDIT_SELECT          "选择地图上的物品，编辑箱子的形状\n选择"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_EDIT_BRICK0          "放置地面\n地面"
+    ID_EDIT_BRICK1          "放置墙壁\n墙壁"
+    ID_EDIT_BRICK2          "放置深坑，必须用普通箱子填平才能通过\n深坑"
+    ID_EDIT_BRICK3          "放置箱子目标，只有当所有箱子目标被目标箱子盖住的时候才能过关\n箱子目标"
+    ID_EDIT_BRICK4          "放置终点\n终点"
+    ID_EDIT_BRICK5          "放置玩家，允许有多个玩家\n玩家"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_EDIT_PUSHABLE0       "添加普通箱子\n添加箱子"
+    ID_EDIT_PUSHABLE1       "添加旋转砖块\n添加旋转砖块"
+    ID_EDIT_PUSHABLE2       "添加目标箱子\n添加目标箱子"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_EDIT_ADD_LEVEL       "添加一个新的关卡\n添加关卡"
+    ID_EDIT_REMOVE_LEVEL    "删除当前关卡\n删除关卡"
+    ID_TOOLS_IMPORT_SOKOBAN "导入推箱子(Sokoban)关卡 (Beta)\n导入推箱子关卡"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_LAST_LEVEL           "转到最后一关\n最后一关"
+    ID_LEVEL_LIST           "显示关卡列表\n关卡列表"
+    ID_LEVEL_DATABASE       "显示关卡数据库以及最佳纪录\n关卡数据库"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_EDIT_MOVE_UP         "向上移动选择的砖块\n向上移动"
+    ID_EDIT_MOVE_DOWN       "向下移动选择的砖块\n向下移动"
+    ID_EDIT_MOVE_LEFT       "向左移动选择的砖块\n向左移动"
+    ID_EDIT_MOVE_RIGHT      "向右移动选择的砖块\n向右移动"
+    ID_EDIT_APPLY_CHANGES   "应用对当前箱子所做出的修改\n应用修改"
+    ID_EDIT_DISCARD_CHANGES "放弃对当前箱子所做出的修改\n放弃修改"
+    ID_EDIT_ROTATE_CCW      "逆时针旋转选择的砖块\n逆时针旋转"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_EDIT_ROTATE_CW       "顺时针旋转选择的砖块\n顺时针旋转"
+END
+
+#endif    // 中文(中华人民共和国) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE 4, 2
+#pragma code_page(936)
+#include "res\mfccourse.rc2"  // 非 Microsoft Visual C++ 编辑的资源
+#include "l.CHS\afxres.rc"          // 标准组件
+#include "l.CHS\afxprint.rc"        // 打印/打印预览资源
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
