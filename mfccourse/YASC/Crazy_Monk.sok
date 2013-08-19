@@ -1,0 +1,2195 @@
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::         Sokoban (c) by Falcon Co., Ltd., Japan         ::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::                    File Format 0.16                    ::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::                                                        ::
+:: File Notes                                  Optional   ::
+:: Puzzle 1                                    Required   ::
+::    Title                                    Optional*  ::
+::    Board                                    See legend ::
+::    Puzzle Notes                             Optional   ::
+::    Saved Game or Solution 1                 Optional   ::
+::      Title                                  Optional*  ::
+::      Moves                                  See legend ::
+::      Notes                                  Optional   ::
+::    Saved Game or Solution 2                 Optional   ::
+::    ... (more saved games and solutions)                ::
+:: Puzzle 2                                    Optional   ::
+:: ... (more puzzles)                                     ::
+::                                                        ::
+:: Remarks:                                               ::
+::                                                        ::
+:: File Notes                                             ::
+::   File notes consist of unstructured text and          ::
+::   key/value properties, such as "Author: Name". Lines  ::
+::   beginning with "::" are comments meant to be read    ::
+::   only by a person examining the file in a text        ::
+::   editor, and should not be displayed by the Sokoban   ::
+::   program.                                             ::
+::                                                        ::
+::   The optional but recommended property                ::
+::   "Collection: Name" assigns a name to the puzzle      ::
+::   collection. When a collection is copied from the     ::
+::   internet, for example, and pasted into a Sokoban     ::
+::   program, this information allows the collection to   ::
+::   be saved with the proper name.                       ::
+::                                                        ::
+:: Titles                                                 ::
+::   A title line is the last non-blank text line before  ::
+::   a puzzle, a saved game, or a solution, provided the  ::
+::   line is preceded  by a blank line or it is the only  ::
+::   text line at this position in the file.              ::
+::                                                        ::
+::   Title lines are optional unless a single or a last   ::
+::   text line from a preceding puzzle, saved game,       ::
+::   solution, or file header can be mistaken for a title ::
+::   line.                                                ::
+::                                                        ::
+:: Puzzle Notes                                           ::
+::   Two special key/value pairs are supported in puzzle  ::
+::   notes: "Title" and "Author", hence, titles can       ::
+::   either come from a title line or from a key/value    ::
+::   pair.                                                ::
+::                                                        ::
+::::::::::::::::::::::::::: Board ::::::::::::::::::::::::::
+:: Legend.................:      :.................Legend ::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: Wall...................: #  # :...................Wall ::
+:: Pusher.................: p  @ :.................Pusher ::
+:: Pusher on goal square..: P  + :..Pusher on goal square ::
+:: Box....................: b  $ :....................Box ::
+:: Box on goal square.....: B  * :.....Box on goal square ::
+:: Goal square............: .  . :............Goal square ::
+:: Floor..................:      :..................Floor ::
+:: Floor..................: -  _ :..................Floor ::
+::                                                        ::
+:: Remarks:                                               ::
+::                                                        ::
+::   The first and the last non-empty square in each row  ::
+::   must be a wall or a box on a goal. A board cannot    ::
+::   have empty rows.                                     ::
+::                                                        ::
+::   Boards may be run-length encoded (RLE), e.g.,        ::
+::   "###----p.#" may be encoded as "3#4-p.#", and        ::
+::   "#-#-#-##-#-#-#" may be encoded as "2(3(#-)#)".      ::
+::   A row cannot be split over multiple physical lines.  ::
+::                                                        ::
+::   Rows may be combined on a single physical line by    ::
+::   using "|" as a row separator, e.g.,                  ::
+::   "--3#|3#-#|#pb.#|5#". A "|" at the end of a physical ::
+::   line is optional and may be omitted.                 ::
+::                                                        ::
+::::::::::::::::::::::::::: Moves ::::::::::::::::::::::::::
+:: Legend.................:      :.................Legend ::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: Move pusher up.........: u  U :.......Push/pull box up ::
+:: Move pusher down.......: d  D :.....Push/pull box down ::
+:: Move pusher left.......: l  L :.....Push/pull box left ::
+:: Move pusher right......: r  R :....Push/pull box right ::
+:: Begin jump.............: [  ] :...............End jump ::
+:: Begin pusher change....: {  } :......End pusher change ::
+:: Current position.......: *  * :.......Current position ::
+::                                                        ::
+:: Remarks:                                               ::
+::                                                        ::
+::   Moves may be run-length encoded, e.g., "3r4U" means  ::
+::   "rrrUUUU", and "2(3(dr)R)" means "drdrdrRdrdrdrR".   ::
+::   Each line must, however, have at least one proper    ::
+::   non-digit character. Spaces between moves are        ::
+::   allowed.                                             ::
+::                                                        ::
+::   Jumps and pulls: Only in reverse mode saved games    ::
+::   and solutions.                                       ::
+::                                                        ::
+::   Reverse mode saved games and solutions must begin    ::
+::   with a jump, even if it is empty. An example:        ::
+::   "[]U[rr]d".                                          ::
+::                                                        ::
+::   Pusher changes: Only in puzzles with multiple        ::
+::   pushers, e.g., Multiban. Moves inside the braces     ::
+::   depict the relative movement to get from the         ::
+::   currently active pusher to the next active pusher.   ::
+::   At game start, a "{...}" sequence activates the      ::
+::   pusher relative to the top-left pusher. An example:  ::
+::   "{rddd}Urr{uul}uLU". If the top-left pusher is the   ::
+::   first active pusher, then the empty "{}" can be      ::
+::   omitted.                                             ::
+::                                                        ::
+::   The current position is optional and defaults to the ::
+::   position after the last move.                        ::
+::                                                        ::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+Date Created: 2009-01-23  22:56:00
+Date of Last Change: 2011-04-17  10:22:10
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+Crazy Monk is Copyright (c) 2008 by Jean-Pierre MARTEL and Matthias MEGER.
+These levels may be freely distributed provided they remain credited with this copyright and all commentaries.
+
+Note :
+The Disciple levels range from easy to moderately difficult. They have been designed for Sokoban players who enjoy "optimizing" solutions.
+Some levels present an arranged version designed by Matthias Meger (codified changes). Those remodels are more difficult than the initial mazes.
+
+Send comments and best solutions to :
+sokomonk@laposte.net
+
+Collection : Crazy Monk
+
+
+Just for Fun
+
+  ##############
+  #   #        #
+  # $ $ $ $ #$ #
+  # #$# ###  $ #
+  # # .....##$##
+  #  ...+..  $ #
+####$# ....# # #
+#    #### # $$ #
+# $#    $$ $ # #
+# $ ..#        #
+################
+
+Author : Jean-Pierre Martel
+
+Crazy Monk is Copyright (c) 2008 by Jean-Pierre MARTEL and Matthias MEGER.
+These levels may be freely distributed provided they remain credited with this copyright and all commentaries.
+
+Note :
+The Disciple levels range from easy to moderately difficult. They have been designed for Sokoban players who enjoy "optimizing" solutions.
+Some levels present an arranged version designed by Matthias Meger (codified changes). Those remodels are more difficult than the initial mazes.
+
+Send comments and best solutions to :
+sokomonk@laposte.net
+
+Solution/Moves (Built-in)
+llllluuuurrdDDuuullddddrRlDDlllddRRRUUUddrrrdrrrrrrruuuuLLLrrrddddllll
+lUUUrULulluuurrrrrrrddLDuruullllllldddlluuRlddrrrrdddddrrruLLdlUUddrrr
+rruuuuLLLLrrruuruulDDDuuullllllDllddrrddrRUdlluurDullluurrDullddrRddlU
+ruuuurrdLulDDDDrrddddrrrrruuuuLLLLLLrdddrrrUUdddrruuLruulLLLLdddrrrUUd
+rruulLLLrrruuuullddRluurrdDDulluLLLulDDullullddddRRlluuuRurDDDuulldddr
+ddllDldRRluurrdrrrRdrUUdrrrurruuLLL
+
+
+Goal Conquest
+
+  ##############
+  #   #        #
+  # $ $ $ $ #$ #
+  # # . ###  $ #
+  # # .....##$##
+  # *.*+#**  $ #
+####.# ....# # #
+#    #### # $$ #
+# $#    $$ $ $ #
+#   ..#        #
+################
+
+Author : Matthias Meger (remodelling)
+Comment :  1 wall moved, 1 wall removed, 1 goal moved, 2 goals added
+
+Solution/Moves (Built-in)
+urrrDullllldRdrrrUruLLLDldRluUluuullddddRRldddrrrdrrUUUUruLLLuuLrddrrd
+ddddrrruLdrrruuuuLLLLrrrrdddLdlllluuuUddddllullluuuluuuurrDrrurrrrrrrd
+dLDuruullllllldddrRdddddrrrrruuuuLLLLrrruuruulDDDuuulllllldllDDRRddlUr
+uuuurrdLulDDDDuuullulldRRRllldddrRldddrrrdrruLLLLdlUUUddrrrrruuUddddrr
+uLLdrrrruLLLrrrruuuLLLLrrdDuuruuuullddRluurrdDDulluLLullDDDuuurrdLulDD
+ulllldddRdddrrrdrrUUdLLLLdlUUUddrrrrrrrdrruLLLLLLLLdlUUdrrrrrrrrrruLru
+uLLLrdDrdLLLLLLLLdlllluurDldRRRlluurrD
+
+
+Criss-Cross
+
+   ########
+   #      #
+   # $$#  ####
+#### #  $    #
+#   $#..##$$ #
+#  # .+..  # #
+# #  .... #  #
+# $$##..#$   #
+#    $  # ####
+####  # $ #
+   #   #$ #
+   #      #
+   ########
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+dddLdddrrrruuuUrrruuuulllLuullDDDrdrrrUdllldddlldddrrrruuuuUdrrruuuulL
+ddLLdldddRluuuULuuuullddDlllddddrrRRRldddrrrruUllUUluRllllDurrruuuuull
+dddllldddRdRRRRldddrrrruullUUluuuuuurrddLruulldDDDDlllDldRRRRldddrrrru
+ullUdrrddlUruUUrrruuuLulLLLruulldDDDrrrrUrrdddlllUdrrruuulldLLrruruLLL
+LruulldDDuuulldRurDDullddDullldddrruRlddrrrrdRdrUUUUdrrruuulldL
+
+
+The Key
+
+   ########
+   #      #
+   # $##  ####
+####  $ $    #
+#   $#..##$$ #
+#  # ..*.*+# #
+# #  ..*..#  #
+# $ ##..#$   #
+#  $ $ $# ####
+####  #   #
+   #$   # #
+   #      #
+   ########
+
+Author : Matthias Meger (remodelling)
+Comment : 2 walls moved, 3 goals added
+
+Solution/Moves (Built-in)
+LdDDDllUdrruurrruuuullluulllllddDDrruruLLrdddRUldddrddlluluRddrrurruur
+rruuuulllLuulllldDDlllddddrRuuRRuruulldDuuuurrrrrddrrrddddllluurUdlddd
+dlluUlUUrRllddrUllululllddddrruuRRurDrRuLLrdddddlluuRlddrruUUUruLdllll
+ddlluRdrRRRlddrruUUUllllDuruuuuurrrrddLLLrrruulllldDDDullldddrruRRRRdd
+drruurrruuuulLddLruuLLLLLrrruulllDlDDDullldddrruRRlldldRRRRldddlUUdrrr
+uUUddrruuUdrrruuuLulDullllLulDDDullldddrruRlddRRRlddrruUdddrrUUUU
+
+
+Triple Lock
+
+   ##############
+   #            #
+#### $ $ $  $ $ #
+#  # $  ## ### ##
+#  ##$ #.. ..#$###
+# $ # ##.  +.#   #
+# $ # ##  #  # $ #
+#   . $.. ...$ $ #
+# $###$#.....##  #
+##    $ ##.####.##
+ ###$   $  #    #
+   #    ##.# $ ##
+   ######  $   #
+        #   #  #
+        ########
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+dddlddddRRuurrruuruuullddLLuuulluuurrrdLLulDDDuuurrrrrdLLLLulDDurrrrdD
+DrrddLLLrrdddlddLLLdlUUUUdlLLdlluulllUluuRDrrrRRRRdRddllldlluulllUluRR
+RRRRRllllllluuurDDldRRRRRRlllllddrrrddrrurrruullUUrDldRuuuRRdrDuluuLLr
+uuulldRurDDurrrrdddrrddllllululluRRluuulllldRRRurDDurrrrdddrrddllllulu
+lluRuuulllllldRRRRRurDDDuurrrrdddrrddlllluluLuuulllllldRDDDuurUluRRRRu
+rDDDuurrrrdddrDrddlddlllddlluullldlluRRRRllllullluurrRRRRurDuURuuurrrr
+dddDrrddlddllDldlluUllluLUddrrrrddrrurrdLLLdlUrrrruuruuruulDDuLLruuuuu
+llllllllldddddRRlluuuuurrrrrdddldlDllllllddrrRdrUUdlllluurrrRRlddddllU
+rruuullllddrRRdrUUdlllluurrrRlllluurDldR
+
+
+Candy Sugar
+
+   ####
+   #  #####
+   # $    #####
+#### ##     $ #
+#.* .$..##  $ #
+#.*@. ..# $## #
+#..## ..#   # #
+#.. .$..#  $# #
+### #$### #   #
+# $$$  $  # $ #
+#   #$ #$# $  #
+# $##         #
+#      ########
+########
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+rrrddLLLLuluuRDrrrrruurrrdDlddrUUUruLLrdddrDDrrdddllllllluulUUUruLLLLu
+lDrrrrddddrddlUUUUUruLLLLrruLLdrrrrruuurrdrddddlddlLLdlUUUUddddddllllu
+urrUUdRldlluRRlldddrUUddrrruuUUUlLddRldlddrrruuUUdlldlluRRRluurRRuuLLL
+rrrruuurrdrddddrdrDDrdLLLLLLLulUUdrrrruurrdrruuuuLLullLulDDDlddLUruuLL
+LdrRurDDlddddrddlUUUUUUruulldRddddddrrrrruRdrruulDrdLLLLLLLdlUUUUUUddd
+rrrruuuurUruLLLulDDlDulldRddddrrrruurrdDDrdLLLLUdLLdlUUUUUUUluuuRRRddl
+LrrurrrddddlddLLLdlUUUUUddddrrrruuuuruulllullldDRluurrrdrrrrdrruLLLLLr
+uLLDuLLulDD
+
+
+Fallback
+
+   ####
+   #  #####
+   #      #####
+####.## $$    #
+#.* * ** #    #
+#.*@* ..#  ## #
+#..##$#.# $ # #
+#...... #  $# #
+##### ### #   #
+# $ $  $  #$# #
+#   #  #$$    #
+# $## $    $  #
+#      ########
+########
+
+Author : Matthias Meger (remodelling)
+Comment : 2 walls moved, 1 wall added, 2 goals moved, 1 goal added
+
+Solution/Moves (Built-in)
+RRDDrruuUrURRdrrrddddddllldRurruullDurrddlLdllUUUUrUrDDullddddllLuuRRl
+ldddllllluurruRRRddrrrrrurruuuuuulllulldldddllDurruuururrdrrrddddddlld
+llllluuLuuuuuRldlluRdrdddddrdrrrrrurruuuuuullluluLLLLulDDDuurrrrrdrdrr
+rddddddlldllllluuluulllluuuRRlDlddrrrruuLLrrdddddrddlUUUUdddrrrrrrurru
+uuuuulllullulllldDllldddrrrRlllluuurrdLDldRRluuurruurrrrrdrdrrrddddddd
+LLLLLLLuuluuuuLLulDDldRuuulDDurrrrRuLLuurrrrrdrdrrrddddllulldDDulLLdlU
+UUUdddrrrruurrdrruuuulllulldLLdLLLLulDrrrrdddddrddlUUUUUUdddrrrruurrdr
+ruuuulllulldlDlLLLruLLDDurrrdddddddlllluurruRldllddrrrruuUUUUdddrrrruu
+rrdrruuuulllulldlldLLLulDrrrddddddrrrUruLLLdlUUUUdddrrrruurrdrruuuulll
+ulldlldLLLLrrrddddlldlluRRRllldddrrrruuUUUUdddrrrruurrdrruuuulllulldll
+dLLLrrdddddddlllUUluRRRlldddrrruuUUUUdddrrrruurrdrruuuulllulldllLLLdrR
+RurrurrdrrrddddddllLLrdLLLLdlUUUUUUdddrrrruurrdDurruuuulllulldlllldRdd
+ddddrrrUruLLLdlUUUUUluuurrrrddllLrrruulllldDrrrUrrrdrrrddddddlLLLdlUru
+uuruUlDDDDLLLdlUUUUUddddddrrrrruLrrrruuuuuuulLLLLdllLdddddddrrrUruLLLd
+lUUdrrrruuuurUruLLulLDurrdLdLruulDuLLulD
+
+
+Ali Baba's Cave
+
+##########
+#     #  ##
+# # #     #
+# ..... # #
+# ....# #$##
+# ##+##    ##
+#  . .#  #$ #
+# $ $ $$    #
+### #  $$ # #
+  # ##$ $$$ #
+  #    ##   #
+  ###########
+
+Author : Jean-Pierre Martel
+
+Crazy Monk is Copyright (c) 2008 by Jean-Pierre MARTEL and Matthias MEGER.
+These levels may be freely distributed provided they remain credited with this copyright and all commentaries.
+
+Note :
+The Disciple levels range from easy to moderately difficult. They have been designed for Sokoban players who enjoy "optimizing" solutions.
+Some levels present an arranged version designed by Matthias Meger (codified changes). Those remodels are more difficult than the initial mazes.
+
+Send comments and best solutions to :
+sokomonk@laposte.net
+
+Solution/Moves (Built-in)
+uurrrddrrrDrddddllULULUdrdrdrruuuulullluullldddrddRluuluuurrrddrrrdrdd
+ddlluluUlLrrddrdrruuuulullluullldddlddddrrrUUlULrdrddllluuUruuulllddrR
+drUUdllldRurrdrdrddllluuUluRlluuurrrrdLLurrrrddrrrdrddddlluluulLLLUUUr
+uurrrrdDuullllddldddrrdddllluuUluRdrUUddrrrrddrdrruuuLLLLLLLrrdddllluu
+UrrrrUUUUddddrddLUrurruuLLruuulLLdlLLuurrDullddrRdLdddlluRddddrrrUrrrU
+luLLLLUUUruLddddrrrddlUddllluuUluRdrUUUdddrdrruLLLrrdddllluuUluRdrUUdd
+rrruUUUddrruuulLLrrrdddrddLLUdrrrddLdlUUluLLLLrrdddllluuUluRlluuuuurrr
+rDDurrrrdddLdlUUUddrruuulLLrrrdddrddLLLLLLUdrrdddllluuUlluuuuuurrrrD
+
+
+Fake Doors
+
+       #####
+    ####   ##
+   ## $     ###
+ ### $ ## # $ #
+ #  $  #    # #
+ # $ #  +## $ #
+## $$##.. # # #
+#  $   ...    #
+#  $ #....#  ##
+## #   .### ##
+ # $  # .#.  #
+ #  $$   ### #
+ ##    #     #
+  ############
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+ddrrrrruuLrddllllllddddldlUUddlluRlluuuuRRRRlllluuurRuRuRRRurDDurrddDD
+DDDuullluuuRRluurrdDDDuulllddlDrdLdddrdrrrruuLuuruLLruuullldlluUllddDu
+ullddRdRRRRdrUUluluullddDldRRRRurDurDrruuulllDlluLulDDDldRRRlluuuuruRR
+RurDDullldddrruRRluurrdDDDurruuLrddddlLLLrrdddrddlllluuluuUUdllluuulDD
+ldRRRRllddddRRRuuuUllllldRlddRRuRRllUluRRRlluuurrdRluuurrrrrDDDDurrddl
+LLrdddrddllllUluUddllUluRR
+
+
+Eye of the Storm
+
+       #####
+    ####   ##
+   ## $   $ ###
+ ### $ ## # $ #
+ #  $  #  $ # #
+ #  ##  *## $ #
+##   ##*. # # #
+#   $ .*+*. . #
+#    #**..#$ ##
+## #   .### ##
+ # #  #$.#.  #
+ #   #   ### #
+ ##    #     #
+  ############
+
+Author : Matthias Meger (remodelling)
+Comment : 3 walls added, 3 goals added
+
+Solution/Moves (Built-in)
+urDrrDDuulllLLDurrdLdDrddrrrruuLuuullllddLLdldlluuurrDuluurDllddddrrdr
+ruRuuuulLLrrrddlllUlUdrdrrruurrrruuuuuLulldRddlDlDDrrrruuuuuLulDrrdddd
+drruuLrddlllluLdlllLLUluurRuRuRRRurrdrddDDurrddlLLLLuuurRlldddLLLLulDu
+luurrururrrurrdLDurrdDDDurrddlLLLLuuuRRlldddLLLLulluurrururrRurDDurrdD
+DDurrddlLLLuluuRRlldlluUlldRuuRRRurDDurrdDDrrddlllluluuRRlldllUUluRRRu
+rDDullllddlllddrrdrrrUruuRlddldDrUrrrrruullDurrddlLLLLUlDlDullulluurrr
+ruurrrrrdDDDurrddlLLLLdLUrrrruuuuullddRluurrdDDDurruuLrddddlLLLulDrrru
+uulllDuruurrDDDDuuuullllllddlllddrrdrrrrrrRlllllllullDRRRRRRRllllllluu
+urDDldRRRRRRllllluuurrrdRluuurrrrrddddddddrddllllUluUddldlluUUUdddlluu
+URuRRRRlllldlluRRRRRllllddddrruurRllUluRR
+
+
+Home, Sweet Home
+
+#############
+#           #
+## ##### ## #
+#  #    $ # ##
+#  $ **.* #  #
+## #$....@#  #
+ # # *.**$#  #
+ # #$.... $ $##
+ # # $$ $ #   #
+ # ## #####   #
+ #          ###
+ ############
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+lllddrrrRlllluuruulDulldRRDrrruuLDuuulllllldddRRRurRlDllllddddddrrrrrr
+rrruuUllllUdllUlUdrdrrrrrrdddlllllluUUrrdLurrrrrdddlllllluUlURdddllluu
+uuuurRRllluuurrrrrrdDrddDuuuluurrrddddrdDllLLrdLLLrUrrrrruulDrdLLLLrrr
+ddrruLdlUruLLLrrdddlllllluUluUUdddrddllluuuuuurR
+
+
+Concentration
+
+ ############
+ #          #
+##$#####.##$#
+#  #.   $ # ##
+#  $ **.* #  #
+## #$....@# $#
+ # # *.**$#  #
+ # #$.... $ $##
+ # # $$ $ #   #
+ # ##.#####   #
+ #          ###
+ ############
+
+Author : Matthias Meger (remodelling)
+Comment : 3 goals added
+
+Solution/Moves (Built-in)
+lluulDrdrruuLDllulldRdRddlUlUUrurDrruuullllllDDDRRRurRdrUllldRRlllddrU
+luRRlllluuurrrrrrrrrDDDDDrDDlddlllllluUUUddddllluuuuUdddddrrrrrrrrruur
+uuluuuuulllllllllddldRRRddrddddrrrrrruurrdLulULLLLdLUluluuRurrrrddDuuu
+lllldlllddddddrrruUUdlUUUdddrddllluuuuuurRlluuurrrrrrrrrdddrDDDllLLrdL
+LLulDrrruLLdlluuuullddddddrrrrrrrrrUUdrruLuLLLLLrrrrruulDrdLLLLrrrrddl
+UruLLL
+
+
+Castle, Sweet Castle
+
+ #############
+ #           #
+## ##### ##@ #
+#  # $.*   $##
+# ## ....$#  #
+#  #$.... #$ #
+# $# *...$#  #
+#  #$.... #$ ##
+##$ $ *.$$#   #
+#  ## ### $   #
+# $  $    ## ##
+#   #  #  $  #
+######   #####
+     #####
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+ullldddlllluRddrddlUlURddrrrrDDRRuruulDruuulDrdddrdLddlLLUllldlUUUUrrr
+uurUluuurrrdDlLrruullldDDllldldRRldddddrdrrUruLLLdlUlldlluRRRRUUUrrrrU
+UUdLuuuurrrddlLrruullldDDuuullllllddlddddrDrRllDlddrrurruUdddrdrruurUU
+UUUUluuurrrddlLdlllldldRlDRRlddddrdrruulLdlUUUUdddlldlluururRlldlddrru
+rruUddrrrrdrrruuLLrrddllluUUUUUUllllulDDDDRUUdddddlldlluRRRlluuuluuuur
+uurrrrrrdDuurrrddlLdLLrDDrddLrddllldlUUUUUddddllluurRllddrrruUUdlllulu
+urDDDDldRRRlluuuuuluuruurrrrrrdDDDrddddrrruulDrdLLrrddllluUUUUUUluuurr
+rddlLrruullldDDrdddddrrruuuulDDDrdLLrrddllluUUUUUUluuurrrddlLrruullldD
+rrrDDDDDrdLLrrddllllulldlUUUddrrrrUUUUUULuuurrrddlLrruullldD
+
+
+Private Yard
+
+##########
+#        #########
+#  $ $ $ #  . #  #
+#  $$$ $ $ #     #
+# $   $  ### ##  #
+# $$$# ##.....   #
+#  $ $  #.....# ##
+# #$@$# #.....#  #
+# $ $  $ .....#  #
+#    $  #####    #
+######  #   #  ###
+     ####   ####
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+uLDDRdRRuRRRRRRuuurrrddddllUUUddllllllldlluRRRRRRRRuuuuurrrddlLrruulll
+dDrrrddddllUUULLLddllluuluUrruuulldDDrruLdlllDDDldRRRRRRRRRuuuuurrrddl
+LrruullldDDurrrddddllUUUdLLLdllllddrUluRRRRRRuuuuurrrddlLrruullldDrrrd
+dddllUUUdddrruuuulLLLLrruuulldLLuullllllldddddddRRRRRRRRRRRuruurrddddl
+lUUUdddrruuuulLLLruuulldlluulllldDDDDDldRRRRRRRRRuruurrddddllUUULLddll
+lluulLDlldldRRRluRRRRRRRRuuuuurrrddlLrruullldDrrrddddllUUULuuuulldlldl
+llldDuulDDDRurDldRRRRRRRRuuuuurrrddlLrruullldDDurrrddddllUUUdLLdllllll
+ldlluRRRRRRRRRRuuuuurrrddlLrruullldDDurrrddddllUUUdLdllllllllllluuRRur
+DDldRRRRRRRRRuuuRRlluurrrdDDDrddlllUUUluuuulldlluulldDuLulDDDDDDldRRRR
+RRRRRuuuuurrrddddrddlllUUluuRRllddrUdddrrruuluUlLLuuulldlluLLLulDDDDDD
+ldRRRRRRRRRuuurrrddrddlllUUUluuuulldlldlLDuuLulDDDDDldRRRRRRRRRuuuuurr
+rrddllLrrUdddrddlllUUUddlllllluuLuurrurrurrddDRRlddddrrruuluUllluuulld
+llLLLulDDDDllluuuurRDDDDDRddlluRRRRRRRRRRuruulDurrrddrddlllUUUdddrrruu
+luulLdddlllllluuluuuuullDDDDDDldRRRRRRRRRllllluuluuurrrrurrddDrrrddrdd
+lllUUdlllllluuluuLulDDDDldRRRRRRRRRllllluuluuurrrrurrdddrrrruuLLLrrrdd
+lllluUrrrDrdLLLrrddrddlUUUUruulDrdLLrddddllUlllllluulLDlluurDllluRluRR
+DDDRdRRRRRRRRlllllllldlluRRRRRRRRRlllluuluuullDDDDldRRRRRRRllluullDldR
+RRRRllddlUluRRR
+
+
+Wandering
+
+###############
+# #    .      #
+#  .$#  $  #. #
+#  #   #.     #
+#    .# #$$#  #
+#  #  $ . . # #
+# .  #  #$# . #
+#  #$$$#.  #  #
+# $.@# $ $   .#
+#  #$$ . #$#. #
+# #  # $ #  # #
+#. .   #    $ #
+#  # $# .#$.# #
+#   .         #
+###############
+
+Author : Jean-Pierre Martel
+
+Crazy Monk is Copyright (c) 2008 by Jean-Pierre MARTEL and Matthias MEGER.
+These levels may be freely distributed provided they remain credited with this copyright and all commentaries.
+
+Note :
+The Disciple levels range from easy to moderately difficult. They have been designed for Sokoban players who enjoy "optimizing" solutions.
+Some levels present an arranged version designed by Matthias Meger (codified changes). Those remodels are more difficult than the initial mazes.
+
+Send comments and best solutions to :
+sokomonk@laposte.net
+
+Solution/Moves (Built-in)
+DDuuUUUruLLrddlluUUldddddRldddddrrrrrrrrrUdlluuuullLrddlLLLrrrDuruRuru
+urrdrruululUdllldlDDRdrURRRllldDDrRuUdrDRllddrrruUUUlUUruuuuuullllddRR
+lllUllullDDrdLLrddddDDurRurrruUddRRllllluLrururRUruLuuLrrrrrdddlUrdddd
+lDlldddddllllLuuLuuuUUUdllluuuuRdDDurRdrRR
+
+
+Ordered Chaos
+
+###############
+# #    .      #
+#  . #$$$$$#$ #
+#  #   #.   $ #
+#  . .# # $#  #
+#  # #  .$. # #
+# .  #  # # . #
+#  # $ #.$ #  #
+#  .@# $     .#
+#  # $$*$# #. #
+# #  #   #  # #
+#. *$$ # . .  #
+#  # $# .# .# #
+#   *         #
+###############
+
+Author : Matthias Meger (remodelling)
+Comment : 1 wall added, 1 goal moved, 2 goals added
+
+Solution/Moves (Built-in)
+llldddddrrRuUUUUUUUdlluuuurrurrrrrrrrrdddddddllluLdlDDlldLrurruurrrrru
+uuuuuulllllllllddrdLLruulldDDDDldRldddddrrruUUUUUUUdlluuuurrdrdLLruuur
+rrrrrrrrddLLLDlDlllddLrdRRRlddlldlluuuUUUdllluuurDDuuurrdrdLLruulllddd
+rUUdrrdddddddrruULrddlluUUUUUddrruurrrDDrDDDuurruuluLLruurrruulDullDDD
+uuullllllddrrUdldLLrdddddrrdrruLLLrddlluUUUUUddddddddllluuuuuuuurUrRll
+luuRDldRldddddddddrrruuuuuurrDrrRRRlllddDrRurDrruulUruulluLulDDDrdrrUd
+lldddlluuuRRRlluuuuruuullDRDDDDDuuuuuurDDDurRurDDDDDlDlldddlluuuRurDDD
+uulldddrRRlddllllLUluLLrruurRddLLuuuuuuuuuurRdRRurDDDDDDrddddlluuuRurD
+DDrdLddrrruuL
+
+
+X-File
+
+#####################
+#         @         #
+# $.$ $ $ # $ $ $.$ #
+##  .# $ $ $ $ #.  ##
+ # ##.# $ $ $ #.## #
+ #    .# $ $ #.    #
+ # #   .# $ #.   # #
+ # #.#  .#.#.  #.# #
+ #   #  ..*..  #   #
+ # #    .#.#.    # #
+ #   . .# $ #. .   #
+ # #  .# $ $ #.  # #
+ #   .# $ # $ #.   #
+ # #.# $ $ $ $ #.# #
+ #$.#   $ $ $   #.$#
+ #  $     #     $  #
+ #  #############  #
+ ####           ####
+
+Authors : J-P Martel and Matthias Meger
+
+Solution/Moves (Built-in)
+rrrdRullllllldLulllddlddrrrrdddrrrRuUrUrUrUdldldllUlUlUdrdrRULrddddRRR
+drUUluRRurrruuluulllddldldLdlluurDDDuurrururuurrrddrddlllldddlllLLLLrr
+ruuurruLrruruullldDDuuulldDDuRDDDDuuuuluulllllllldRdddrrrrddDDurrrRRRR
+llluuuurrdLulDDDuuuuluurrdDuurrrrrrddrddllllddDDldRuulllLLLLddLuUUruLL
+ullluuuurrrrddrdRRurDDDDuuullluRlluulllldddddddrruUrrrddrrRRRRllluuuul
+ldRurDDDuurruLuuurrrrrrddrdddddlluUlldDlllLLLrruuuruuuurrDLulDDuulllDr
+DrDDDDuuuuluulllllllddddrRdrrrdDrrRRluuurruLulDDDDuuuuruurrrrrDLLLLulD
+DurrrrrrdrddlLdllldlDlLLLLrrruuurruLulDDDDuuuuruurrrrrrrrdLLrdddlldlll
+ddllLLLdLLLrUUrDrrruuulluRlluluRRurDDrDDDDuulluRuuullllllldddddddrrDDu
+rrurrrRRRRdRRDDrdrrdDlddrUUUUUUUUUUUUUluLLLLLDllDDDDuuuurrurrrrrdrddll
+dlldDDldRuulllLLLLuuLLUllluuuurrDRRRRurDDDldRurDDDuuuurrurrdLdLLrruurr
+rrdrdddddllDDDDuuulllullLLLdLLUUUlullluuuRRRRRRurDDrDDDDuuuulullllllld
+ddrrrdrdddrUrrRRRlluuulluRurDDDDuuurrruurrrrdrddlldllldldlLLLLUlDDLDlD
+DlldDrddlUUUUUUUUUUUUUruulldRRRRRRRDldRRluuurDDrDDDDuulluRuuurrDDurrrr
+rrdrddlldllldDllLLLLddLLDldlldddrRRurrdrruLLdLLLLdlUUUUUUUUUUUUUruulld
+RRRRRRRurDDrDDDDuuuullllulllldddrrDrrdDDDuurrrRRRRllluuulluRurDDDDuurr
+uLuuurrrrrrrrdLdddlldlldDlllLLLLrrrdDlDlDDDrdLLLLLLdlUUUUUUUUUUUUUruul
+ldRRRRRRRurDDrDDDDuuuullllulllldddrrrdrdrrdrRRRRDRRlUUUrUrrruuuLLLLLLD
+rdLLulDDDDuulluRuullllllldddrrrdrdrrdrRRRRlllddldldlDDrdLLLLLdlUUUUUUU
+UUUUUUruulldRRRRRRRurDDrDDDDuulluRuullllllldddrrrdrdDrrrRRRllddldlddll
+DrdLLLLdlUUUUUUUUUUUUUruulldRRRRRRRurDDrDDDDuulluRuuurrDDurrrrrrrdddll
+ldldDDDulUUdllLLLLrrrddrDrDrDrddrRllllluLLruLLDrdLLLLLLdlUUUUUUUUUUUUU
+ruulldRRRRRRRurDDrDDDDuulluRuullllllldddrrrdrdrrdrRRRllddldDDrdLulDrdL
+LLLLLdlUUUUUUUUUUUUUruulldRRRRRRRurDDrDDDDuurruLuurrrrrrrddddddddddddd
+dlUruuuuullUUdlllUllLLLrrddrdrdrdDuululLulDDllDDrdLLLLrrrrrurrRdRRRRRd
+rUUUUUUUUUUUUUluurrdLLLLLLLulDDlDDDDuurruLuurrrrrrrdddllldldLdllLLrddd
+rrdDDlluLrRddRRRRRRdrUUUUUUUUUUUUUluurrdLLLLLLLulDDDulDDDDuulluRuullll
+lllddddddddddrrururrurUrRRldddrrdDDldRRRRRRdrUUUUUUUUUUUUUluurrdLLLLLL
+LulDDlDDDDuuuullllullllddddddddddrrururrururRdddrDDrrDldRRRRRdrUUUUUUU
+UUUUUUluurrdLLLLLLLddLulDDDDDlldldlluRRllddldlluuuuuuurrrdrdDRRlddlluR
+drUluRddlldldllddddrUrrrruuurDDrdLLLLLLdlUUUUUUrRRRllllUUUUUUUruulldRd
+dddddrrDullddrRlldddddrrrrrrrurRRRurDldRRRRdrUUUUUUUUUUUUUluurrdLullll
+lllDDrdLulDDDDuuurrdLulDD
+
+
+Backdoor
+
+ ###################
+ #                 #
+ #  $@#$  # $#$    #
+ # $ # $  #    #$# #
+ # $   $ $  $   $  #
+ #  #$ ### ## # $ ##
+ ###  $   $  #  # #
+   # $ $ # ### ## #
+ ### ##### #   ##$#
+## $      .# $  # #
+#  # ##### #$ $## #
+# #......#  $ $ # #
+# .......  #    # #
+###......####$### #
+#  ......#        #
+#          ########
+############
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+urrrrrrdddldDDDDlllllluuurRdLulDDDDDDuuuuuurruulDDrdLulDDDDDldRllluuru
+RldlddrrdRRRRurDurruUUUUUllLLulDlddDDulldlddrruRRRRllluuuuurrdLulDDDDu
+lldlddrruRRRlluuuuurrrrdLLLulDDDDDuuuuurruuuRRdLulDDDrdLLulDDDDulldldd
+rruRRDLuuuuuurruuurruurrrdddlLLLulDDDrrrrUdllldLLuuurrruuurrrdddLLLLul
+DDDllDDDDDDDRRRddrrrurrrUUULLrrdddllldllluuurrrUUUUUUUdllldLLulDDDDDDu
+uuuuurruuurruurrrdddLLLLulDDDrdLLulDDDDurrrrrrddrrrdrruLLLLrrdddllldll
+llluLLuRuruLuuuuurrrrrruururrdLLLLLLulDDDrdLLulDDDDDDDldRRRuurrrrUUUUU
+UUdlllluuurruurrrdddrrrrddlddlldDuurrdDLdLLrruruuuuruullllLLLLulDDDrdL
+LulDDDDDDDRurDurrrrUUUUUUUddddddrrrdrruLLLLrrruuuuuruullllLLLLulDDDrdL
+LulDDDDDDLdRRRurrrrUUUUUUUddddddrrrruuulDDrdLLLrrruuuuuruullllLLLLulDD
+DrdLLulDDDDDDldRRurrrrrUUUUUUUddddddrrruulDrdLLrrruuuuuruullllLLLLulDD
+DrdLLulDDDDDrdrrrrrUUddllllldlluRRRRllluuuuuurruuurruurrrrDDuurrDDldLL
+LLLLulDDDrdLLulDDDDDrddlluRRRldddrrrrrurrruuuuuuruuruuLLLLLLLLulDDDrdL
+LulDDDDDrddlluRRluuuuuurrrrrruurrrruurrrrddldLruLLLLLLLLLLulDDDrdLLulD
+DDDDrddlluRdrddrrrrrurrruuuuuuruurUruLLLLLLLLLulDDDrdLLulDDDDDuuuuurrr
+rrruurrrrrddlddddddlddllldllllluuULuuuuuurrrrrruurrrruurrDurrddlLLLLLL
+LLLLulDDDrdLLulDDDDDDrdddlluuRuuuuuuurruuurrurDuullDDrdLulDDDrdLLulDDD
+DDDuuuuuurrrrrruurrrrrddlddddddlddllldllllluULrddlluRuuuuuuuurrrrrruuL
+LLulDDuuruulllDllddRRRdrDrdLLulDDDDDDDuuuuuuurrrrrruurrrrrddlddddddldd
+llldlllllUdlluRdllluRdrrrrrrrrurrrrrrruuuuuUUUUluuurrddLLLLLLLLLLullDD
+DrdLLulDDDDDDDuuuuuuuruullluurDldRRRlluuurrrrddlDDDrdLLulDDDDDDuuuuuur
+uulluurDldRRluuurrrddlDDDrdLLulDDDDDuuuuurruuurrdLulDDDrdLLulDDDD
+
+
+Bubbles in a Bottle
+
+    #########
+    #.......#
+    #.......#
+#####....#..#
+# @$ $.#    #
+# #$#      .#
+# # #..#  ######
+# # ####       #
+# # #     # #  #
+# # #$ $    #  #
+#  $ $ #$ # $$ #
+#     $    #   #
+# $ $ $ ##$# # #
+# $ $ $#  $ $$ #
+### $  # #$ $  #
+  ####   #    ##
+     ##########
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+ldddddddrrrrRuuurrrdddlUUUUUUddrrrrrrddddlUUUruLLLLLrrdddRdrrdddldlluR
+UUUrUUUruLLLLrdddRlulluUUUlUUUluRdddRRlddddllldRlddldddrdrruurRRdrUUUr
+UUUruLLLLrdddRlulluUUUdddlUUUUUdRdddddddrDulluUUUUUddddllddldddrdrruur
+RRddlUrrUUUrUUUruLLLLrdddRlulluUUUrUdrUUUllLdlUldddlUUUdddrrrUUdRRUUlL
+dddddddllddldddrdrruurRRdrUUUrUUUruLLLLrddlluUUUddddlllddlluRdrUllLdll
+uuuuuuurRRRdrUUUdrrdRdrUUruLdddrUUddllldddlllDRRlddllluuuuuUddddddlluu
+uuuuurRRlddddddrRdrUUluRRdRUUUddddrUUUUULLruRRdrUlldddddrrdRdrrdddLdlU
+UUUrUUUruLLLLrddlllddLdLUUUluRRdrUUUddrUUULuRdddddrrdRdrrddLdlUUUrUUUr
+uLLLLrddlluUUUddddrrdRdrUUUruLLLLrddlluUUdddddrddllddlluUUUUUluRRdrUUU
+UUUUdlldDlUllllddddddRdrUUUUUUdddddlluuuuuurRRRllddddddddddRRuLUUdRdrU
+UUUluRRdrUUUUUUddLLUUdlllddddddddrddlUUUUUUUUUdddddlluuuuuurRRRDrUdrrR
+RUUddlddddddrddllddllUUUUUlLdlUUUUUUdddddlluuuuuurRRRURldllllddddddddd
+RUrrddlUUUUUUUUUdddddlluuuuuurRRlddddddrrrUluRRdrUUUUURdrUdllllUdlUlll
+ldddddddRdrUUUUUUUdddddlluuuuuurRRR
+
+
+The Octopus' Hole
+
+        #####
+ ########   ####
+##   #  $ $    #
+#    $  ## # # ##
+#  $ ## . $     #
+### #  ..###  $ #
+ #  #  #...# ####
+ # ## ....##    #
+ #  #  .....# $ #
+ # $#### ####$###
+ # $   $$ $ $ $@#
+ #####          #
+     ############
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+dlllllllUUUluRddddlluRdrUUUrULuuululLLdLddlddddRRRRRdrUUdlllllluuuuruu
+ruulldldRuRRRRurDDrdddLdlUluurRurrRRRuululDDurrddlLLLDDRdLLdRRRlldddrr
+ruLLdlUUdlllllluuuuruUrurrrDrdddldRRlllluuurRuulllulldRRRRurDDrDDrddll
+uRdrUdlllluuurRuuuRRurDDurrddlLLLrruullldDrDDDldlluuurRlldddrrurrdLddl
+llllluuuuruuurrrrdrDDuululllldddlddddrrrrrruuLuRddddrrrrruLLLLdrrrrrru
+LLLLLdllUUdlllllluuuuruuurrrrdrrrrrdddrdDuuluuuuurrddrdLLruLLLLLLdddld
+RuuulllddRldRluuurDurrddddddrruLdlUUUUUdddddrrrrrruLLLLLdlUUUUdddrrrrr
+uuurrdLulDDuuluUruLLLLruullldDulllldddlddrDldRRRRRdrUUUdddrrrrrruLLLLL
+dlUU
+
+
+Cheops
+
+        #####
+ ########   ####
+##   #  $ $    #
+#       ##$#$# ##
+#    ##$.       #
+### #  ..###  $ #
+ # $#* #...# #$##
+ #  # *..*##    #
+ #   ..*....# $ #
+ #  ####$####$###
+ #      $ #@$ $ #
+ #####          #
+     ############
+
+Author : Matthias Meger (remodelling)
+Comment : 1 wall moved, 2 walls removed, 3 goals added
+
+Solution/Moves (Built-in)
+dlluLdllullluuuUUUrurrrDrddddLLLLrrrrrUluuulullldldddldddrrrrdrruUddll
+ullluUUUUdddrrrrurrdLLLLLrrrrdddllullluUUdrruRuulDDrdLLrrrrdddllullllu
+uurDrrruuuRuullldLdDuururrrdrrrrrrruullDurrddrdLulLLLLLDDDLdRRRlllllll
+luuruururrrDrrrrrdddrrUULrddlluUruLLLLLdddddddrrrrruUUdddllllluuullUlu
+urRlldddllluuruururrrDrrrrrrdrddrdLuuuruLLLdddRluuuLLLLDDRdLLdlluuurRl
+ldddllluuruururrrDrDDrddlluRdddLLdrrrrrrruuUrUUUruLuulllulldRDuRRddlLL
+LddddllluuurRlldddllluuruururrrDrDDDDDullluuurRuuuRRurDDurrddlLLLrruul
+lldDrDDDDllluuurRurrrrrdrruLLLLLLrruullldDrDDDldlluuurRurDDuurrrrdddRd
+dddrruLdlUUUrUUUruLLLLLLLrruullldDullldlddlddrrruuurRurDurrrrrruuLLLul
+DDurrddlLLLrruullldDullldlddlddrrruuurRlldddrruLdrRRULLdllllluurDldRRR
+RRRllllluuuururrrdrrrrrdddRddddlllluLUUluRddddlluRdrUUUllllllddrUluRRR
+RlURdllluuuururrrddlDuruulllulDDDDDldRRRllddrRRRdrUUddrrruRdrUUUrUUUru
+LLLLLLLrrrrdddRdrUUUruLLLLLLruullldDulllllldRurDDDDldRR
+
+
+Pythagoras' Hobby
+
+      #########
+####### .     #
+# $ $  *.# $$ #
+#   ##.*.# $@ #
+## ##....#$$$ #
+## $..*.*  $  #
+# .####### $  #
+# ..          #
+# ##$#$#$#$# ##
+#      . #   #
+##############
+
+Author : Jean-Pierre Martel
+
+Crazy Monk is Copyright (c) 2008 by Jean-Pierre MARTEL and Matthias MEGER.
+These levels may be freely distributed provided they remain credited with this copyright and all commentaries.
+
+Note :
+The Disciple levels range from easy to moderately difficult. They have been designed for Sokoban players who enjoy "optimizing" solutions.
+Some levels present an arranged version designed by Matthias Meger (codified changes). Those remodels are more difficult than the initial mazes.
+
+Send comments and best solutions to :
+sokomonk@laposte.net
+
+Solution/Moves (Built-in)
+ruulllllddLddRullldRurruuulDlDurrddlLrruuurrrrrddddddllllllllllluuuuru
+RRRdddllLrrrurruLruulDDulllldlluRRRRRDrruulDrdLuurrrrrrddddddlllllllll
+lluUUUluRRRRRRdrddLLLLLrrrrruuluurDDuurrrrrddddddllllllllllluUUUluRRRR
+RRurDurrrrrddddddllluuLLLLLLLrrrrrrrddlllllllllddrrrUdllluuurUUUluRRRR
+RRurrrrrrddddlLLLLLLLLLrrrrrrrddlllllLLrddrrrrUdllllllluuurUUUluRRRRRl
+llldddrrrrrrrrrrruulDrdLLLLLLLLLLrrrrrrrddlLLLDuLLddrRllllluuurUUUddrr
+rrrrrrddrUruLLLLLLLLLrrrrrrrrrruuuullllllDlllldlluRRRRRllllddDrrrrrrrr
+rrddddllUUUruLLLLLLrrrrrrruuUruLLLLrddDuuurrdddLdLLLLLrrrrrruuuLDDrdLL
+LLLrrrruulDrdLLLrrruuuulDDDrdLL
+
+
+Pythagoras' Quest
+
+      #########
+####### .  $  #
+#   $  *.#$$$ #
+#   ##...# $  #
+## ##..*.# $$ #
+##$$..* .. #@ #
+#   ####.#$$$ #
+# *.   #*   $ #
+# ##$# # ### ##
+#      .     #
+##############
+
+Author : Matthias Meger (remodelling)
+Comment : 3 walls moved, 2 goals moved, 1 goal added
+
+Solution/Moves (Built-in)
+rddLddlllluUUUlUluulLLdldDuururrrddrdrddddllllllluuuRuuuluRRlddddldddr
+rrrrrruuuululldlLrrurrdrddddllllllluuurUrrruruuRDrDDlUruLuurDDldlldlll
+UUruRRRDrdLurruulDrdLulllldlluRRRRRDrruulDrdLddrUUlulllllddddldddrrrrr
+rruuUUlLLLLrrrrrddddrrrruuLLLrrrddlllllluulllUlUUUrurrrrdddrrrDullluuu
+lllldlluRRlddddrdrrrddrrrrrruulLuullluurDluuurDDlddlllLdlUUUruRRRllldl
+luRRlddddrdrrrddrrrrrruulluulLLLLLLddrrrddrruUUdddrrrruulluulLLLLrrrrr
+ddLrrrddlllluUUdrruulLLLrrrrddrrruulDrdLLLLrrrddlllluUUdrruulLLuurDldR
+uuuurrDDDDDuuuuulllDDrddddddlluulllulUUUruRRRllldldddrdrrrddrruuuuuuuu
+lDlllldlluRRRRRllllddddldddrrrUdrruulLddrrrrrrrruulLLruuuuuulldddddDDu
+rrrrruuuulDDDrdLLLLrrrddlllLuUUUUUddddrrrrruuuuuulDDDDDrdLLLLrrrddllll
+uUUUUdddrrrruLruuuuuLLLrddddDrdLLrrrddlllluUUUddrrrruuuuuLulDDDDDrdLLr
+rrddlllluUUdrrrruuuuLulDDDDrdLLrrrddlllluUrrrruuuLulDDDrdLL
+
+
+Another Brick in the Wall
+
+###################
+#    ###  #   #   #
+# #               #
+#  # . #   #   #  #
+#     #  #   #   ##
+#...#....+........#
+## ######.#### ####
+#...#.............#
+# $ $ $ $ $ $ $ $ #
+#$#$#$#$#$#$#$#$#$#
+#  $ $ $ $   $ $  #
+#    # # #   # # ##
+#  #    $  $   $  #
+#####$$#  $  # $# #
+# $ $  #$#   $    #
+#                 #
+###################
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+llllullldddldDDrdrrdrrrRdrRuuurUUdddlddllullllulluluuuruuurrrdrrrrrrrr
+rddldLurrrdLLruuulllllddrRRRdrUUUUUdrruulLLLLLLLLLLddlllluuurrrDDrdLLd
+lddldddrdrrdrrrrdrruuuruUdddlddlluuuRUUUUdrRRRdrUUUUUdrruulLLLLLLLLLLd
+dlldlluurDDDuuuluurrrDDrddrrrRRldddddRdrUUULuRRRdrUUUUUdrruulLLLLLLLLL
+LddLLdlluurDldRluuuurrrDDrdLLruuulllddrDrrrdrrrrddrrdddlllddlluuRRRRdr
+UUUdddlddddlllluUUlluuRRRRRRluUUUdrRRRdrUUUUUdrruulLLLLLLLLLLddlllluuu
+rrrDDurrrrrrdddLdddddlddRdrUUrUUUluRRRdrUUUUUdrruulLLLLLLLLLLddLLLuluu
+rrrDDuulllddDrrRuurrrrddldllUdrrururrddldddddRdrUUUluRRRdrUUdlllddddrd
+dLUUUUUlluuuLLLrrrrurrdrRRRllddllLLdlUUdrrrrruullulldLLLrrdddddlddllUd
+lluurRRUURlddRRuUUUddrrddddrrruuLUUddrddddrrruuluuLUUluuullulldLLrddrr
+rRdrUUdllllluururrdrRRlddRdddrddLLLLdlUUUUUluRRRdrUUddlddLdlUUUlluuuru
+rrdrRddllLLdlUUdrrrrruullulldRRlluullddRRRlldddddRdrUUURuLLdlUUddddldd
+drRdrUUUUUUddrruUluRdrUUUUUdrruulLLLLLLdlddRRlddrRRRdrrddrrUULrddlluUd
+dLLrddddrUdlLLdlUUUUUUUruLLdlUUdlLdddllUURRRlddldddddrrUUddllllluRRUdd
+rUUUUdrRRRdrUUUUUrrrUUUUUllullldlddRddrRRRdddLdlUUUddlluUUUdrRRdrrrddr
+ddLLLLdlUUUUUruLLLdllllddRRRRRdrUUUruLdrrrULdddlllllllllddRRllulluRUUR
+RRRRlddldddddllllluRRRRdrUUUUdRRRRdrUUUUdlluUUdlllllldddldlUUUURRRRRld
+dRRuUddllLdlUUdlluurRRRRRRlddRRuUrRRlllddRdrUUUddrruUruUUUrruulLDDDDuu
+ulluurDldRurDDuulllllulDDD
+
+
+The Spine
+
+##############
+#   #  .  #  #
+# $ $$.*. $$ #
+# $ $ #.#    #
+#  ## ..* $###
+# $# $#*#   #
+##    ...$# #
+ #$ #$#.#@  #
+ # $  ...$###
+ ## #$#.# #
+ # $  ..* #
+ #   ##.  #
+ ##########
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+rruulluuulLddDDuuuuullDRurrrddddrrddllUlllllldDrrrrdddrruuUlllllluurrr
+rDDDDllUdrruuuuuuuUrrddLruulldDDDrrUdllDDrrUUllllllddrRRRuuuullDldRRlu
+urruurrdrDLLLdDrrUddrruuLuLLruulldDrrrurruulDrdLLruLLDrdLLrrdrddllulll
+lDulllUluuuurrdRRRlDDDDrrrrUruLuuulLDlllldRluullddRluRRRRRluRldDDDldRR
+RllllluUURRllluRRRRDDDldRRlllddrRRlddldlluRRRRluullDulUUUUluRRRurDDDld
+RDullddrRddldlluRRR
+
+
+The Blockade
+
+##############
+#   #  .. #@ #
+# $ $$*.#$$$ #
+# $ $ #.#    #
+#  ## ..*$$$##
+# $# $#.#   #
+##    ... # #
+ #$ #$#.#$  #
+ #    ... ###
+ ## #$#.###
+ #    *.* #
+ #   # .  #
+ ##########
+
+Author : Matthias Meger (remodelling)
+Comment : 2 walls moved, 1 goal moved
+
+Solution/Moves (Built-in)
+rddlDDlldllllDurrddlLLrrruuuullDDrrrrurruullDLLuuurrDDrDLLruuullddDrrr
+ruruulDLddlllDDrrUdlluuuuullDRurrrDrddLddlluuuUluRdddddrruuLrddlluUUUd
+drrruulDurrrdLdlLLrddlllllllUluuuurrdRRRlDDDldRRRuULrddlllldDrrrrddLLU
+drruuUUllllddrRRllluululuuuRRRRdDDldRRluuuulldRurDDDldRDullddrRddrruUr
+rUUUddrrUUUlLLLLrrruurDurrdLdLLLLrruurDrdLLLrrrdLrddlluUruLddddlldddrr
+uLdlluluuRRdDllLdlluRRRRdRUrrdLullluullDuuululuuRRurrdDDDDullddrRRluuu
+uuulldRurDDDDDullddrRddldlluRRRRRlllluuuuluUluRRRurDDDDDDDullddrRRlllu
+ulUUUUluRRRurDDDDDDDullddrR
+
+
+Back to Tradition
+
+    ######
+#####    ########
+#  $   $ $      #
+## ##$## ## # $ #
+#....  $ # $$ $ #
+#...#....#   #  #
+#...#....#   #  #
+# $. ....##$##$##
+###$### ##  #   #
+##   ##  $$ #$$ #
+#     ##$$ @#   ##
+#     #  $ ##$$  #
+#  #   .#$   $   #
+#      #   $ #   #
+######.   ########
+     ######
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+ldddlldlluulluuulUUrrrrruuuuuLulldDDuuurrdLulDDurrrdddlluLLLLuuRRllddr
+rrrdrruuuulllDDurrrdddlluLLLrruullldDrdLurrrrdddlllUluurrrDDrdLLruuull
+lddrDDDDldRRddrrdrrrururrRRdrruuluuulUUruuuulllllLLLLulDDDDDrdLLruuull
+lddrDDDDrrDDrddrrruruuuruuUUluRUUdddddddlddrrrrdrruuluuuluuruuuulllLdd
+ddddlDruuuuuuurrddLruullLLLLLulDDDDDrrdddrRRuruuuUUdrruulLLLLLLulDDull
+lddddldRurDrRRuuuLLLrruullldDDuuurrrrrrrrrddddddldllluUUdlllluLrdDDldd
+RRdrrddrrruruuUrUUUUUUUdrruulLLLLLLulDDDDDrrdddrrRdrUUUUUUUdrruurrdLul
+lLLLLLLulDDullldddddrrRRurruuuurrrddrrUruLLLLLrrdddddddlllluUluuuLLLrr
+uullldDDuuurrrrrurDDDLLLLLrruullldDrrrdddllddrdddrrrurRlldlddrrruruUUd
+llURuRlddrUrUUddlluRurUUUUUdrruulLLLLLLulDDDDDrdLLrrrddRRdrrUUUUUUUdrr
+uulLLLLLLulDDurrrddllLLLrrrdddrddrrRddddlUUUrrUUUUUUUdrruulLLLLLLulDDD
+DDrdrddrRRdddrrrrdrruulullDurrdrddlUlLLLrdLLUUUrUUUUUUUdrruulLLLLLLulD
+DDrrrDDLdddrrRdrUUUUUUUdrruulLLLLLLulDDurrrdddLddddrddldllluuuluUrRRll
+lddrdddrrddrrrUUUUluRRdrUUUUUUUdrruulLLLrrddddrUlddddlllluUUruullLLrDD
+uurrrddldddrddldllluuuluurRRluuuuuurrrDDDDuuurrrrrddLdlUUdrruulLLLLLLu
+lDDDDDuuuurrrrrrrrrrddLLrrddlUUUruLLLLLLrrdddddddlllluUddrddldllluuulu
+urRRluuuuuurrrDrrrrrrddddddrddlUUUUUUUruLLLLLLLLLulDDDDDuuuurrrrrrdddd
+ddddllldldllluuuluurRllddrddddRurrurrrdrrrrUUUUUUUUUruLLLLLLLLLulDDurr
+rDDllLuurrrrrrrrrddddddlDDDrdrruLdlUUUUUUUUUruLLLLLLLLLulDDDDDuuuurrrr
+rrddddddddlddrrRurrddlUUUUUUUUUUruLLLLLLLLLulDDDDuuurrrrrrrrddLdlUUdrr
+uulLLLLLLulDDDuurrrrrrddddddddllldldlllulUUUddrrDldRRD
+
+
+Narrow Passage
+
+   #######
+   #     #
+   # # # #
+   # .$. #
+#####*##$########
+#    .# $ $ $   #
+# #.#*# $   $ $ #
+# #.#.  #$  $   #
+# #.#.#   $## # #
+# #.#*##.#    # ##
+#   #+.  # $###  #
+# # #$#$ $       #
+# #  ... #########
+#   ######
+#####
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+rrruuluuRRDrruuRRllddlluuRRlldlluRUUlLuullddRRuurrDDDDldddrddddllllluu
+uuuuurrUdlldddddddrrrrruulDrdLLLLrrrruuuulullUUllllddddddddrrUUUUUUddd
+ddrrrruullDurrruuluuurRddrDDrrruurrddddlllllLLdllLLrrrruuuululluulllld
+dddddddrrUUUUUddddrruurrDruuuluuurrddrddrDurruurrddddlllLLLLdLLLLrrrUr
+rrruulDrdLLLuLDruuuRlluuRuuuuullddRluurrdDDDrDDrDDDrdLLLuuuRlluuRurDDr
+DDDuuuruuLLdlUUUlluurrDDDDldRurrDDDDrrruuuuLLLLDlUUUlluurrDDDDldRRurrr
+rddrruuLDuLLLLLdlUUUlluullddRRuurrDDDDlddlluuUdllllddddddddrrUUUUdddrr
+uuUUUrrdrddlLrrddLLLLrrrUruuulullUUllllddddddddrrUUUddrruUUUUUdrrdrddL
+LrddlluUUUUrruurrrrddlddrddLLLdlUruLLrddlluUUUddrrrdrrruulDrdLLLdlUruL
+LrddlluUUdrrruuluuurrrDDDDDrdLLLdlUruLLrruuRlluuRRDrDDDrdLLLdllluUrrDr
+uuuRurDDDrdLLLdLLrUruuuruuurDDDDDrdLLLuLLrDrrrruurruuLLulDDDDrdLLLdLUr
+rrruurruuuLLulDDDDDrdLLruuullddLddrUrrrrrrruuuuLLLLulDDDDrdLLLUlD
+
+
+Ant-Hill
+
+   #######
+   #     #
+   # # # #
+   # .*. #
+#####*##$########
+# .  .## $ $  $ #
+# #.#.# $       #
+# #.# $ #$  $   #
+# #.#.    ###$# #
+# #.#*##*#    # ##
+#    *@  #$ ###  #
+# # #*## $       #
+#     .* #########
+#   ######
+#####
+
+Author : Matthias Meger (remodelling)
+Comment : 3 walls moved, 3 goals moved
+
+Crazy Monk is Copyright (c) 2008 by Jean-Pierre MARTEL and Matthias MEGER.
+These levels may be freely distributed provided they remain credited with this copyright and all commentaries.
+
+Note :
+The Disciple levels range from easy to moderately difficult. They have been designed for Sokoban players who enjoy "optimizing" solutions.
+Some levels present an arranged version designed by Matthias Meger (codified changes). Those remodels are more difficult than the initial mazes.
+
+Send comments and best solutions to :
+sokomonk@laposte.net
+
+Solution/Moves (Built-in)
+LLrrrrddLLLLLuUlluuuuurrrrdddDuuuulllldddddrrUUUUddddddrrrrruullLuurru
+uRRRdrRRurrdddddlllllLrruurrUURurDllluRdllluRRlllllddrrUdllllddrrrUdll
+luurruurRRlluUUlLuurrDDDDuuuullllddRRlDDlLdddddddrrrrrUUllluuuUUUddddd
+dLrrrrddllllluUUUUdddrrrrrdrrruurruulllldLLLruuRuuuuullllddRddddDDurrr
+ruruuLrddldlluurRdrrruuLDrdrddllddllluUdllLLruuuuuuuluurrrrdddDrdRRuLL
+dddLLuuRRRlddlddddllllluUUUddrruuuuuuuluurrrrdddDrdddllLruuRRluuuuulll
+lddrddddDDurrrddllLLrrrrddllllluUUdrrrrrdrrruurruurrDDDrdLLLLLLLrrrrrr
+uuuuuuLLLLLLddrRRRRllllldllllddllddrrrrrUUUdllluuuuuuuluurrrrdddDrrrrr
+rDrDDDDrdLLLLLLLrruurruulllldLLLrrddllluUUUUUddddddllddrrrrrUUUddrrruu
+rruuRurDDDDrdLLLLLLLrruurruulllldLLLrrddllluUUUUdddddllddrrrrrUUUddrrr
+uulDrdLLrruurruulllluurDlddLLLrrddlllllddrrrrrUUUdllluUUUddrruLruRRdRR
+RRRurDDDDrdLLLLLLLrruurruulllldLLrddlllllddrrrrrUUUdllluuUrrdLulDDuurr
+urrurDlddLddllLLrrrruuLLulDDurrrddddllllluUrRDuuurrrddddllLLrrrruuuuru
+RRRRRurDDDDrdLLLLLLLrruurruulllldllllddddrrrUUUddrrruurruuruullDullddr
+RRluRRurDDDDDrdLLLLLLLrruurruulllldLLulldddddrrrUUUdddllluuuuurrdLruur
+rrRRRRurDDDDDrdLLLLLLLrruurruulllldLLullDDDlllldddrrUrrrrrUUUddrrruurr
+uuRurDDDDrdLLLLLLLrruurruuulllllldlldddlllldddrrurrrrrUdllllldlluRRRRR
+llllluurrDullddrRRRlluurruuurrdLulDrruurrddLLLrrrurrrrddlllddllUlL
+
+
+Zen Garden
+
+ ######   #########
+ #    #####       #
+ # $#  # .#   $ $ #
+##  $ $  $  ##$# ##
+# $$  #  .#    # #
+# $ ####$####    #
+# # #.. *...#$$$ #
+# .  ...@...   # #
+###$#...#...#  $$#
+# $ #... ...# ## #
+#   ####$####    #
+# $ #   $    $$ ##
+# # $ $ $   ##  #
+#   ## ## #######
+######    #
+    #######
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+rrrrrdddrrddlUruLdLLLdlluRldddllluUruRUdldlddrrruuruRRRUUUruLLLLulDlld
+dRRRuurrrdddrrddlUruLdllllLdddllluurRUUdrrrrrUUUruLLLdldlLLLrrdddllddr
+rruUruLdlUUdrrrrrrruruULLullldldlLddrrrrruuUruLLrddddllllluuLuurrurrDu
+lldlluRRRDrrrrdrrUUUlllullulLdlDuruulDDulLululllddrDrrUrrrrrrdrrrdDDll
+llllluRRdlllllllluuuRRDDuulldddrRRRlluuuuRRRRdrDululldLulDDDuulldRlddr
+RRlDDDlldddrruUUUUddddRRuRRdrrddllluUrrUUdrrrrruuuullllllullDurrdddRRl
+lulUruRuululllldDllddrRRRlldddlldRlddrruUUUUddddrruRRdrUUdrrrrrrruruul
+LulllllllddRluuuLDrruuuruulDlllllluurrrDullDDrRRRRDrUlllllllddlddrRRRR
+llldddddrrrrruuuluUruUddlluRdlllllluurrDullddrRRRRllldddddrrrrruuuluUd
+drddrrrrruuUruLLLLLLULDDulllluuluurDDDullddrRRRRllldddlluRdrUUddddrrrr
+rrrrurruuuulllllulDlllLuuuurrrrdRDuurrruurrrrdLDDldDrdLLLLLLLLrrrrrrrr
+drruuLuLulDDurrdLdLLLLLLLrrrrrrruuuuuurrrdLLulDDDldDrdLLLLLLrrrrrrurru
+UUddlLuuuurrrdLLulDDDlDDrdLLLLrrrruruLulDDrdLLLrruuulluurRurDDDDrdLulD
+rdLL
+
+
+Kare-San-Sui
+
+ ######   #########
+ #    #####       #
+ # $#  # .# $ $ $ #
+##  $ $  $  $#$# ##
+# $$  #  .#    # #
+# $ ####$#### #  #
+# # #.. *...# #$$#
+# . ....+....  $ #
+###$#...#...#    #
+# $ #... .*.# ##$#
+#   ####$#$##    #
+# $ #   $    $$ ##
+# # $ $ $   ##  #
+#   ## ## #######
+######    #
+    #######
+
+Author : Matthias Meger (remodelling)
+Comment : 2 walls moved, 1 wall removed, 3 goals added
+
+Solution/Moves (Built-in)
+luRdrddRuurrrdddrrddlULLLdlluRUUluRurrrddddlLdlUUddlddllluUruRUdRdrrur
+ruuurrruLLLuuullulLdlDDldRRluuuruulDDDDRRDlLLruuuulLululllddrDrrUdlluR
+RRlllluurrrDrdRdrruulDDDDllDDullluUUruRRRdrruulDDDuulllldldddlluuRlddr
+rrrrrRluRuuurrruurrdLulDurrrrdLLLurrrrrdLdddlDDrdLLuluuulULLLulDDDDRDr
+rRRDrruuuruuuLullllDurrdLddrdddRdrUrUUUUddddllluuuluLLLulDDulllldlDDul
+lddrRRRurDrRRRRRRuuuluuulDurrrrdLLLurrrrrdLLLullddLLLdlDDldddRddrdrrur
+rrrurUUUUUUUdddddddldlllldllulldRuuuluullllDDDlldddrruUUUUddddRRRRuruu
+luuuruulullldldllddrRRldddlldRlddrruUUUUddddrrrruruuluuullDDuurrruuruu
+lDDDuulllldldllddrRRRlllluuuRuRRRRRllllDDDullddrRRldddlluRdrUUddddrrrr
+uruuluuullDlLrrurrdLLrrRRRRRllluLLLrruuruulDDDDuuurrrruulDrdLLLulDDDuu
+rrrruurrdLLulDrdLLLrrruurrrrrdLLLLLrrrrddddddlllUllllLLuRuuruulDDDDuuu
+rrrrurrrrddddddlllullllLuuuurrrruulDrdLLLulDDDDuuurrrrdrrUdlluuurrrdLL
+LulDrdLLLulDllluullDldRRRRRRDrUlllllldddddddddrrrruruuluURuUddlLuRdddr
+ddldlllluuuuuuuuurrrrrrrrrurrrrddddddlllulllLLLrrrrrrdrruLLLLLLLrrrrrr
+rruuuuullllldlllllllldddddddddrrrruruuluUddrddrRRRRuUUruLLLLLLULDDurrr
+rrrrrruulDrdLLLLLLLLulDrrrrrrrrrdddlLrddlUlUUUruLLLLLLrrrrrrrruuuuulld
+dldDuullulllldRDuullllldddddddddrruRRRRRRRRuuuruLLLLLrrrrrrrdddlLrddlU
+lUUUruLLLLrrrrrrdddlLdlllllllldddrrruUddllluurRuRRRRRUUUruLLLrrdddrrdd
+lUruLdlllllllldddrrruUluRRRRRUUUruLLrdddrrddlUruLdlUUUruL
+
+
+The Teotihuacan Equation
+
+###################
+#                 #
+# #$#$#$#.#$#$#$# #
+# $      $      $ #
+# # $    $    $ # #
+# $  #$#$#$#$#  $ #
+# #  $.......$  # #
+# $  #... ...#  $ #
+# #  $.......$  # #
+# $  #...+...#  $ #
+# #  $.......$  # #
+# $  #.......#  $ #
+# #  $.......$  # #
+# $  #$#$#$#$#  $ #
+# # $         $ # #
+# $             $ #
+# #$#$#$#$#$#$#$# #
+#                 #
+###################
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+llldddDDldlUluurRRddrrUUUdddllllUluuurRRlluuRRdrDRddddrrUUdddrrrrUUULL
+LrrrruulLLLdLUruLuulllDlllluuuuurDrrrrDDuullllDDDldRRRRlddddRRddrruUrr
+rrUruLLLulDrrruuLLrrruuuuLLLDDDDuuuuullLrdDDDDulLuuuRurDDDDrDLrruuuuLu
+lDDDldRuuuuluurrDDuurrrrrrddddLLrrddLLulDrdLLLLrrruuLLuuLulDDDuuuruurr
+DDrdLrDrrruuLLLLLruulldDrDDDuuLulDDuurrruurrDDDDDurrddlLuLLrDrdLLLrrru
+rrddLLrrddddLLrrddddllUUUlUUUruLLLLrrrUruLLrrdrrddLLrrddlLddddllUUddll
+UUruUUrrUruLLLrrrdddrrddLLLuUruLLLUdrrddLrrdddlluUlUUUrrddLdlUUdLdddll
+UUddllUUddllllUUddlluuuuRRlluuRRdRRRddRdrUUUUUdddddrrUUdLdlUUUUddddldd
+llUUluUluRUllluuRRlluuRRlluuRRdrRRRRuuruuullDDldDDDDuuuuRuuullDDldRlDl
+lluuRRRRRluurrdDRDDDuurUlllDDDuuRurDDuullluullDDDullddrRdRRRuullDldRRl
+DldRRRlllddRRRllldddllddRRRlUdlluurRdrRRRdrUUUdddlddlluUluRdRlddrruUlU
+UUddRdrUUdllllUURlUluRRlUluRR
+
+
+Optimizer's Challenge
+
+###################
+#                 #
+# #$#$#$#.#$#$#$# #
+# $  $ $ $ $ $  $ #
+# #      $      # #
+# $$ # #$#$# # $$ #
+# #   ...*...   # #
+# $$ #.......# $$ #
+# #   .......   # #
+# $$#....+....#$$ #
+# #   .......   # #
+# $$ #... ...# $$ #
+# #   .......   # #
+# $$ # # # # # $$ #
+# #      $      # #
+# $  $ $ $ $ $  $ #
+# #$#$#$# #$#$#$# #
+#        #        #
+###################
+
+Authors : J-P Martel and Matthias Meger
+Comment : 2 walls moved, 1 wall added, 1 goal moved, 2 goals added
+
+Solution/Moves (Built-in)
+rrruuuuuuRdllluRldDDDDrdLuulllluuurrDDuuRluRuurrDDLDDDDDulLrrrruuuLuuu
+rrDDLruulldDuulldDrDDDrrrruuLrruLLLDLrDDDDuurrrUldddrUluuuuluulldDuurr
+rrrrddLLLrrrddddLLrruuLLDlDururrddlLdLLLLuLrruuuullDDDuuLulDlluRdrDDDD
+uulllllUruuRdrrrruuullDDuullDDldRuRDRlDDDDlllUruuuuruullllddddddRRlluu
+RRlluuRRRllluurrrrdDldRuuurrdDRDDDuuullDDDuuRurDDurUrruurrdDrdDuurDDDL
+LLrrDuurrrddlLdLLLrddrrUUddlddrUlullluUdRuuurrDuuuLulDDDuuuruurrDDDurr
+ddlLulDrrrddddddLLdlUrrruuuulLdLLLrrrdDuuurrddLrddlLuLLLdlUrdddddRurrU
+luUruLLLuurrrDDurrddlLrrddLLUlUdrddlUrrruulLuLLrrddLLLuUrrrdddrrddddll
+llUUddrrUUUdddrruuLruulLdlUdLdlUUULrddlluUluRddddRurrdddllUUddrrrruUUd
+rruulLuLLLLLrrddLrrrUruLLLrrUruLLrruuuuLLrDrdLLruuuullLulDDullllllDuul
+DullddrRDRDuRRuullDlllddrRdRRRRRllllluuRRlDldRRRRddllllUUddrddlUruruul
+uuulllddddddRRdrUllluuuurRurDlddDuuRRRlluuuuuruullDDDDDullddddddrRuRRR
+RRluLddddddLullUruUluRRRllldllddRRllddddrrrrUUddllUUUrRdrUUdrrdLulllUU
+rRllUllluuRluurRurDldRRllDDRRllullddrRllddrRddRlddrruUluRRRdrUUUUlUdlU
+ddllUluRRRllldllddddRRRlddrrrrUUddlluUluRdRUUUddRlldddrruUrUUUdddRRUUU
+UlLrrdddrrrrrdLrddlllluUddrruUruLdLUUdLrrdddlluUlUUUdddrruLdlUUdLdlUUU
+dddlluRdrUUdllllUlUdlluurRdRRlUluRR
+
+
+Options Palace's Contest
+
+    #############
+  ###      #    #
+  # $ $  #$$$ $ ##
+###.# $ $  # $#  #
+#....##$$$ #     #
+#.....#  $ # #$# ##
+#....    # #      #
+#..+.      $ # #$$#
+#....   #  # $    #
+#....#  # $ # $ # ##
+#....#$#    $ #    #
+## ###  $# #       #
+ #   $ #   #  # $###
+ ###$$ $ $  # $  #
+   #    ###   ####
+   ############
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+rrrrrrdddrddlldRuruuruLdllDllUUruLLLulDDuurrrrrrrdddddldlLdlUUUUUruLLL
+LrrrdddrrDrdLLdlUUUUUruLLLddLLddrrRllluuuluurDurDrrrdddrrddllUUUUruLLr
+dddrrurUUruLLLLLLDrrddddddllURdrUUUUUruLLLLDLdddrRRdrUUUUruLLLuLDurrrr
+rrrdddrRddrddlluLLLLdlUUUUUddrrurrrrdrrrddLrrUluurrdLLLLdlUrrruuuluull
+dLLLLLLLLdDLuLDuUUrDrrrrrrrrrdRdDLLulldlddrruUruLdlUUrdddddrdrrUrruuuu
+LrddlLrrddllUlUdrdrruulLuLLulldlddrruUrrrddlUruLLuLuuLLLdLUruLLLrrdddd
+drrdrruUlUUruLLLLLLLUULdrrrrruUURuulDDDDrdLLLLLLDDurrrrrrrrrrurrrrrDDD
+DrdLLLLLdlUruLLuLuurrdrDDurrddlLdlUrdddlluluuUlUUrurrurrdDrdLulDDLLuLu
+uLLLLLLdLUrrrddddrrdrruUlUUruLLLLLLLUrrrruuuuurrrDDDDDuuuLLulDDDrdLLdr
+rrdddrrrruululLrruuurrruuLullDLrurrrdddrddDrdLLdddlLdlUruLLuLuuLLLLLLr
+rddddrrurUUruLLLLLUrruuuuulldRurDDDDrdLLLLLDDuLUrruuLLruuRRRurDDDDrdLL
+LLLUruLuurrdRurDDDrdLLLLDlUUUdddrrrddddrrdrruUruLdlUUruLLLLLLDlUUUdrrr
+ruuuuurrrDDDDDuLLrruullldDrdLLLLrrrrurruuurrurrdLLLrrrrddllUdldddlLLLL
+LLLLUrrrruuuuurrrDDDDDuuuurrurrdLLLrrddldddlLLLLLdLUruLrruuuuurrrDDDDD
+uuuurrrddlUruLLrddddrrUddDrdLulDDurrddlLdlUruLLrruululLLLLLLLUUdrrruuu
+uurrrDDDDDuuuurrrrrddLLrddlluUUruLLrdddddlLLLLLLdLUUrrruuurrDLulDDrdLL
+LLrrrruuuuurrDDDDDuLLulDrrruuurrdddddlLLLLLrruLLLDrdLrdddrrdrruUruLdlU
+UruLLLLL
+
+
+Vertical Warehouse
+
+  #####     ####
+  #   #######  #
+ ## # ##  $    #
+ #   $   # ##$ #
+ # #  #  #$    #
+ # # $# $#  #$ #
+ # #$ #  #$.#  #
+## # $#.$# .#$.#
+#  #@ #. #$.# .#
+# $#  #*$# .#$.#
+#  # $#..##.# .#
+#  #  #.* $ #*.#
+#  $ #   #  ...#
+##  $  # #. ##.#
+ #  ####       #
+ ####  #########
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+uUUUrUrrdddddDDrDrRdrrrruulDrdddllluurRuuruuuuuulllddddddDldddrrrruUUd
+llLullluluuuuuuururRRRRDrdddddlDDDrdddllluurRurDluuurDlddlluuuuuuulUUd
+rrRurDDDDDDuuuuuuluurDDDDDDDlddddllullluluuuuuuururRRRRurDDDDDlDDDDDuu
+uuuruullldddlUUUUddddrdddddddllluUlURRRlllUUUrDDlddrddrrruuUUUUUddddll
+LdlUUUdddldlLuuuuuuuuururrrurRRRllllddlddrDDDDlddrddrrruuullLdlUUddldl
+lLdlUURlluuuuruuuuurRRRRdrDDDDDDldRRRDrUUUUdlUUUUUrrrruuulDlllllDDulll
+lluurrDullddrRRRdrDDDDDDldRRRdrrRuuuuuuruuuullllllDDuurrrrrrddllllUddd
+dddrdDDulllldldllUUUUUUUUUrurrrurRlldllluullddRRRRdrDDDDDDldRRRdrUUUlu
+uuuuuullDDulllldddrUUluRRRdrDDDDDDldRRRdrUUddrruuuuuuruulllluullDDulll
+ldddddrUUUUluRRRdrDDDDDDldRRRdrrruuuuuuruulllluullDDDDDDDDuuuuuuuurrdd
+rrrrddDldddddlllulLdlUdldlllluluurDldRRdrUUUUUUUUUruuullddRRRRdddrdddd
+drrdrrruuuuuuruulllluullDDDDDDDDuuuuuuuurrRRRurDDDDDlddddddlllulLdlldl
+luurUUUUUUUluRRRdddrdddddrrdrrruuuuuuruuuullllllDDDuulllllldddddDDDldR
+RdrUUUUUUUUUruuullddRRRRlllddddddddddrrurrurrdrrruuuuuuruulDDDDDDDuuuu
+uuuruulDDDDDDDDuuuuuuuulllllDllllddddddddddrrurrddrrrUdllluuurrdRUllld
+lldlluuuuuuuuuurrrddrDDDDDuuuuuluurDDDDDD
+
+
+Run, Chicken!
+
+           #########
+        ####  #    #
+#########          #
+##    ...     #    ##
+#  ######           #
+#     $ # #### ###  #
+#  ###  #   ....... #
+# ..+#$ #####  ######
+# ...#  $   $  #    #
+##...#$    $#. #$$$ #
+###### $ $  #### $  #
+     #$ $ $$ $ $ $$ #
+     #              #
+     ################
+
+Author : Jean-Pierre Martel
+
+Crazy Monk is Copyright (c) 2008 by Jean-Pierre MARTEL and Matthias MEGER.
+These levels may be freely distributed provided they remain credited with this copyright and all commentaries.
+
+Note :
+The Disciple levels range from easy to moderately difficult. They have been designed for Sokoban players who enjoy "optimizing" solutions.
+Some levels present an arranged version designed by Matthias Meger (codified changes). Those remodels are more difficult than the initial mazes.
+
+Send comments and best solutions to :
+sokomonk@laposte.net
+
+Solution/Moves (Built-in)
+lluuuurrrrrrrdddrrrrddLLDldLulluuuuLLLLrrrrddddrruRRRRdrUUUUdllllluurr
+rrRRRRllllllllullllllldDDDldRRurDlluuurrrrrdddlUUruLLLLrrrrddddrrrrurr
+uulllluuullllllldDDldRuurrrrrddddrrdddlluUlUUUUruLLLLrrrdddddrddrrrUUU
+llLrruRRRRdrUUUUdllllluurrrrRRRlllllllullllllldDDDldRuRDluuurrrrrddddd
+lUUUUruLLLLrrrrddddrruLLrrrrrruulllluuullllllldDDldRuurrrrrddddlUUUruL
+LLLrrrrdddrrrrrruulllluuullllllldDDDldRRluuurrrrrdddddddlUUUUUUruLLLLr
+rrrdddrrrrrruulllluuullllllldDDDldRuuurrrrrdddddddrrrrruLUUddLdlUUdLLd
+lUUUUUUruLLLLrrrrdddrrrRRRdrUUUUdrrrruUUlldRurDlllLLLLullllllllldDDDDu
+uurrrrrdddddddrrrrrrruLLdlUUUlLLrdLLdlUUUUUruLLLLrrrrdddrrrRRRdrUUUUdl
+lllluuurrrrdRRRlllllLulllllllldDDDuurrrrrdddrdLdlUUUUruLLLLrrrrddddddd
+rrrrrrrrruLLLLdlUUUluRRRdrUUUUdrrrrruulullldLLLulllllllllldDDurrrrrddd
+ddddrrrrrrrrrrrruuuulllDDuurrrddlLrrddllULLLLLdlUUUluRRRdrUUUUdllllluU
+rurrdLLuurrrrrddLLLLrrrddddlllddddrrrrrrrruLLLLLLLdlUUUluRRRdrUUUUdrrr
+rruulullldLLrddddllldddrrrrrrrruuullldDuurrDDLdLLLLLdlUUUluRRRdrUUUUdd
+dlllddddrrrrrrrruLLLLLLLdlUUUluRRRdrUUUddllldddrrrrrrruuulDDrdLLLLLLdl
+UUUluRRRdrUllldddrrrrrruulDrdLLLLLdlUUUluRRlllllluuulllluurrrrrrRurrdL
+LLLrrrrrrurrrrdrdrddlllllllllluUddrrrrrrrrrruululllullllddLuLLrrrrrurr
+rrdrdrddlllllldDrUlulllluUruLurrrrrrrrdrdrddllllLLrrrrrruulDrdLLLLLrrr
+ruuuluurDDDDrdLLLrruuulldRurDDrdLLruuuulllllddRRRRurDDrdLuullllDululld
+RRRRRRurDD
+
+
+Discharge
+
+           #########
+        ####  #    #
+#########          #
+##.   ...    ##    ##
+#  ######        #  #
+#       # #### ###  #
+#  ### $#   *.*..*. #
+# ..+#$ ##### .######
+# ...#  $   $  #    #
+##...#$    $#..#$$$ #
+###### $ $  #### $  #
+     #$ $ $$ $ $ $$ #
+     #              #
+     ################
+
+Author : Matthias Meger (remodelling)
+Comment : 2 walls added, 3 goals added
+
+Solution/Moves (Built-in)
+lluurrrrrDullllluurrrrrrrrrrdrrdDlddLLDllllulUUruLLLLrrrdddrdrrrrurruu
+ruulllllullllllldDDDldRRurDlluuurrrrdddrdrrrrurrrUUUdddllldlllluluuull
+lluurrrrrrrdddrrRRddlldldLddlluUlUUUUruLLLLrrrdddddrddrrrUUlulLrruRRRR
+uulllluuullllllldDDDldRuuurrrrdddrddlUUUUruLLLLrrrddddrrruLLdlUUdrrrrr
+rruulllluuullllllldDDldRRDluuurrrrrdDlUruLLLLrrrddddrruLrrrrrruulllluu
+ullllllldDDldRuurrrrrddddlUUUruLLLLrrrrdddrrrrrruulllluuullllllldDDDld
+RRluuurrrrrdddddddlUUUUUUruLLLLrrrrdddrrrrrruulllluuuurrrrrrddLLLLLull
+lllllldDDDldRuuurrrrrdddrrrrrrurUUdllllluUddrrrrddlldLdlUddLLdlUUUUUru
+ullllluurrrrrrRRRurrrrddLLLLLrrUdrrddllllluUddrrrrdddrUUUUdddllllLLLuu
+ullllluurrrrrrRurrRRRRRRurDDllldLddddlllllllulUruLLLLrrrrdddrrrrrruull
+lluuullllllldDDDDuuurrrrrddddlUUUruLLLLrrrrdddrrrrrrruuuuLLLLUllllllll
+dDDDuurrrrrddddddrUddrrrruLUUluRRRdrUUUUdllllluUddrrrrddllllllluuullll
+uurrrrrrRuRRRRRRRRllddLLLLLUdrrrrddddlllddddrrruLLdlUUUluRRRdrUUUUdlll
+lluUddrrrrddllllllluuulllluurrrrrrRuRRRRRRRddlLLLLLrrrrddddlllddddrrrr
+ruLLLLdlUUUluRRRdrUUUUdllllluUrUrrurrrddLLLLLrrrrddddlllddddrrrrrrrruu
+uulllDDuurrrddlLrrddllULLLLLdlUUUluRRRdrUUUUdddlllllllluuulllluurrrrrr
+RRRurrrrddLddddlllddddrrrrrrrruLLLLLLLdlUUUddLLLLdlUUUUUUruLLLLrrrrddd
+rrrRRRuuruuLLUlllllllllldDDurrrrrdddrrrrrrdrUUUUdllllluUrurrdLLruuRRRR
+ddLLLLrrrddddllldddrrrrrrrruuullldDuurrDDLdLLLLLdlUUUluRRRdrUUUUdddlll
+ddddrrrrrrrruLLLLLLLdlUUUluRRRdrUUdllldddrrrrrrruuulDDrdLLLLLLdlUUUluR
+RRurDllldddrrrrrruulDrdLLLLLdlUUUluRRlllllluuulllluurrrrrrRRRurrrrddLd
+DldDlllldLLdlUUUUruLLLLrrrrdddrrrrrruuruuruulllldllllllllldlddrUUdrrrr
+rdddrrrrrruulllluUddrrrrruuruullllddLuLLLrrrrurrrrddlddllllluUruLLrddd
+rrrrruuLLLLrrrrddllllluUrrrrrrrurrDrddlLLLLLrrrrrruulDrdLLLLLuuruuurrr
+DDDDrdLLLLrrruuuuullDRurDDDDrdLLLrruuuullllllldlLuRRRRRRRRurDDDDrdLLru
+uuullldRRurDDDrdLuuullldlllUluRRRRRRurDDDD
+
+
+Scrabbleban
+
+      ##############
+#######            #
+#  ####** $ ####$$ #
+# .  $   ## $  .$  #
+# .# *....... #.#$ #
+# .# $  ##### #.#  #
+# .#  $ #. .. #.#$ #
+# ##$####+ ##$#. $ #
+#.  ......... #  $ #
+# $#  #.  $ $ #$#$ #
+#  # $#..####* $ $ #
+# $#.$ $#  $ . $ $ #
+#  #.     $##.$$ $ #
+# $#$$$$$$$ $....$.#
+#                  #
+####################
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+urrrruulluuullllDurrrrdddrruLdlllllluRuurrrrdDuurrrrrrrddlLLLLLdLLLLLu
+uurrrrdDuulllldddrrrRuuulldLDldRRluuurrrddrrdddlllddrdLLulllllllluuuuu
+rrrRRRlllllldddddrrrUUUUddddddddrrrUUrUrruuurrruuulluullldDlllLLrddddd
+lllddddddrrrUUUUUUUUUUdRldddllluuuuuurDrRRRRdRlddLLuluullDDldddrrruUUU
+ddddrrrRRuurrrruuulluLulldDlllLLrdddddlllddrUluRRlluuuuuurDDurrrrrruur
+rrrrrrrrDrdLLLLLLrdddlllldddrUUluRRlldddldlUddlLUluUUUUUddrrruuullLLrd
+ddddrrRRRllllllllddddrUUUluRRllddddddrUUUUUluuuuuuurDrrrrrruurrrrrrrrD
+rdLrrddddddddddLdlllluuurDlddllllllUUUUUddlluluUlLrrrrRRdrrUUluRddrrrd
+LLLLUUdlDldddrrurRRRdddllllULdlUUUUUddlluluurrRRdrUllddddddrrrruLLLdlU
+UUUUddlluluurrRRRRRllllddddddlUdlUdrrrrrrrruLLLLLLdrrrrrrrruLLLLLLLdlU
+UUUUddlluluurrRRRRdrrrDDDrdLLLLLLdlUUUUUddlluluurrRRRdrrrrdrDDlddrruLL
+LLLLLdlUUUUUddlluluurrRRdrrrrrddlllDLLdlUUUUddlluluurrRddddddrrrruLLLd
+lUUUUUddlluUluRlUUUUddrrruuullLLrddrRdrUllluurrrruurrdLrrDrrdddDDDDDDr
+dLLLLLLdlUUUUdddLLUUUUdddlUUUrdddddlUUddrrrrrrrrrrrrruLLLrruLLdLLLLLLd
+lUUUdLLrrrrrurrrDrrruuLDDrdrruLruuuuuLLdlUUUddrrruulDrdLLdlDDrRldDuLLr
+uuuUUdrrrdLLrrdDDLLLuLDDruuuUUrrruuuulDDDrdLLrdDDDrDLLLL
+
+
+Crazy Temple
+
+#####################
+#    #  #  #  #  #  #
+# # $  $ $ #  # $   #
+# #  #$ #  #$ #  #  #
+# #$$# $#$$#  # $#$ #
+# #     #  $ $#$    #
+#  $ #$ $  #@ $  #$##
+# #  #  #  #$ #  #  #
+# ########## ###### #
+#...................#
+## ### ##### ##### ##
+#   #  #  # $       #
+#   # ....#   #  #  #
+#      #         #  #
+#   #  #  #   #     #
+#####################
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+DDDrrrrrrddllllldlluRddrrrruurruullllllDDDrdLLLLdlUruLLLuuurrrrrruuurR
+RUrrrUUddllldllluurDuuulDDDDDDDDDuurrrrrrruulUUllldlLulDDDuurrrurrrddr
+ddllllllLLLLLLLddlDrdLLLuuluuluuurRurrrrdRRurRlldllulllldlldddrdddrdrr
+rurrrdrrrruLuuuuuuruulDDDDuuulllddrUluRRlldllullllUUrDlddlldddrdddrdrr
+ruuuurrrrrRuuurrrdrUllluulDllldllullLrrrddlUrrrrurrDDDDDDDrdrrruurruur
+uuluuruulDruuulDlLdlDDuururrrddlDlLdLLLdldddddrdLLLLdlUruLLLdllluuluul
+uuuuuuuurrrDrrDrDDuuluurDrRdDDrrrDDurrrrurrruuullldDlDuururrrdddllLdLL
+LdlDDDDDrdrrruurruuruulUdrddlddlllddllLuuuuRRRRRRlllllluuruulDDDuuulll
+uuulllllulllddddddddrdddrdrrruuuurrrrrRRRRRRllllluuurrrruulDrdLLLulDDD
+uuullluurDldRRlluuulllllulllddddddddrdddrdrrruuuurrrrrRRRRRlllluuuruul
+DDDDuuullluuuurDDDldRRlluuulllllulllddddddddrdddrdrrruuuurrrrrRRRRlllu
+uuruulDDDDuuullddlUruuuullllllullldddddrrUrrRdRRRdrUllllullldlluuuuurr
+rdrrrrrddDRRlluuulllllullldddddrrurrrdrrRlllullldlldddrdddrdrrruuuurrr
+rrRRRlluuuruulDDDDuuulllddrUluRRlldlllullldlldddrdddrdrrruulDrdLLrruuu
+urrrrrRRluuuruulDDDDuurrrruuuuulDDDDrdLLLulllluuullldDrDuUluRRRlllllul
+llddddddddrdddlddrUdrUrrruuuurrrrrRddddLLLdlUruLLrrdrrruuuullllllddldd
+rUdllllluuruurrRRRRRRllllllllluuurrurrRdRRRurrrDDDDDDDrdLLLLulllUUddrr
+rddlUruLLrrdrrruuuuuuuulllddrUluRRlldlllullldlldddrrrrRRRRlllddlddrUUU
+ddrrrdrrruuuuuuuruulDDDDDDDDrdLLLLdlUruLLrrdrrruuuuuuuullluuullddDldRR
+RdrUluRRlldlllullldlldddrrrrRRRllddlddrUUUddrrrdrrruuuuuuuruulDDDDDDDD
+rdLLLLdlUruLLrrdrrruuuuuuuullluuuurDDDldRRlldlllullldlldddrrrrRRlddldd
+rUUUddrrrdrrruuuuuuuruulDDDDDDDDrdLLLLdlUrrrruuuuuuurrrruuuurrrdddLLLu
+lDrdLLLulDDDDDDDrdLLLLuLLLdllllluuruuluuurrdrUluRRRurDldRRRdrUluRRlldl
+llullldlldddrrrrRddddllllUUUdddrrrruulDrrrrddlUrrrruuuuuuuruulDllluuul
+llllDDulDDuuruulllddddddddRRRllluuurRuRRRurDldRRRurrrDDDDDDDrdLLLLuLLL
+dLLLdlUUUUdddrrrrurrrddlUruLLrrdrrruuuuuuuulllddrUluRRlldlllullldllddd
+RRlddddrrrrUUUdlDrrrrdrrruuuuuuuruulDDDDDDDDrdLLLLdlUruLLLdLLLdlUluuru
+uluuurrdrUluRRRurDldRRRdrUluRRlldlllullldlldddrddlddrUUUdddrrrruulDrdL
+LLdlUrrrrurrrdrrruulDrdLLLdlUruLLLulDrdLLLrrrurrrdrrruuuuuuuruulDDDDDD
+DDrdLLLLdlUruLLrrdrrruuuuuuurrrruuuurrDDrdLLLulDrdLLLulDDDDDDDrdLLLrru
+uuuuuuullldlllullldlldddRddldddrrurruurDrrddrUrrruuuuuuuullluuulllllul
+DDDDrdLLruuuuullddddDDDuurrrurrrdrrrurrddddddddrrruulLdlUUdddllllullld
+drUluRRlldlldlluRRRRdrUluRdllllUUUdrDldRRRdrU
+
+
+Senate and Parliament
+
+     ####
+######  #############
+#       #....##     #
+#  #### #....## $ $ ##
+## #  # #....  $$# $ #
+ # #  .......# #   $ #
+ # #    #....@ ##$ $ #
+ # #  # ## ###    #  #
+ # #  #  ....  #  #  #
+## ####### ##     #$ #
+# $  $ $ #  #   $ $  #
+#  $      #$ #####   #
+### $ $$$$$    $  #  #
+  #       # $$$ $    #
+  ######  #       #  #
+       ###############
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+lllddddrDDrrrRddrrurruuuUruuuLruuLuulldLurrrddDlllULLLrddllluuurDDldRR
+luurrrrdrrruuullllDurrdLdLLLLrrrruulDrdLLLrdDDDldRRluuullluUUrDDldRRlu
+urrrruurrrdLLLulDrdLLLrdDlluUUdrrrrdrrUrrdddlUUruLuLLLulDrdLLLrddllluu
+urDDurrddDrrrURuUruLLLulDrdLLLLLrrrrrdRdrUUrrdddlUUruLuLLLulDrdLLLLrrr
+rdrrUrrdddddlUUUUruLuLLLulDrdLLLrdddDlllluurRRllluUUrrDLdlllluuullllld
+ddddddDrrdrddlluUrrrrrrDRRuuluurrrrurrrdddRdrUUUUUUlUdrruLuLLLulDrdLLL
+LDllllluuulllllddddddddldRuuuuuuuuurrrrrddddddrrrddrddllullllluLrdrddl
+luUlUUUUUUUUluRRRRRurDDDuullllldddddddddrrrrrrrdrruuluullluuluRRldddrr
+rrrrddrruLdrRRRdrUUUUUUlUdrruLuLLLulDrdLLLrdDDDlllluurRRllllUUUrrrDDlU
+ddlddddrddllullllluLdlUUUUUUUUluRRRRRurDDDuullllldddddddddrrrrrrrdrruu
+luullluuluRRldddrrrddrddllullluLLLdlUUUUUUUUluRRRRRurDDDuulllllddddddd
+ddrrrrrrrdrruuluuuuuUlDlLLrrrrdddddrddlluluLLLLLdlUUUUUUUUluRRRRRurDDD
+uullllldddddddddrrrddrrUUddrUrrruuluullluuluRRRRurrrrrrdrrUruLLLulDrdL
+LLrrrdrrrddddddddlldlluRRRlllullLLLLuLuLLLLLdlUUUUUUUUluRRRRRurDDDuull
+llldddddddddrrrddrUrUrrdrruuluullluuluRRRurrDrUllldRRurrrrrdrrrrdddddd
+dddlUUUUUUUUUruLdlUruLLLulDrdLLLLLLddddddrddlluluLLLLLdlUUUUUUUUluRRRR
+RurDDDuullllldddddddddrrrdrUrrrdrruuluullluuluRRRRdddddrddllLLuuLLLLdl
+UUUUUUUUluRRRRRurDDDuullllldddddddddrrrrrrrdrruuluullluuluRRRUrDlllddd
+rrrddrddlllddrUlllUdllUUlluuuuuuuuurrrrrddddddrrrddrddlLLdlUULLuLLdlUU
+UUUUUUluRRRRRurDDDuullllldddddddddrdrrrrrrrruuluullluuluRRRlldddrrrddr
+ddllluuLLLLLdlUUUUUUUUluRRRRRurDDDuullllldddddddddrdrUdrrrrrrruuluulll
+uuluRRldddrrrddrddrrrrddllURRRRRllllldllURuLLLLLdlUUluLLdlUUUUUUUUluRR
+RRRurDDDuullllldddddddddrrrrrrrdrruuluullluuluRdllluRdrrddrrrrrrrurrrd
+ddllllUdrruLdrrrrrrddddlUUUUUUUUUruLdlUruLLLulDrdLLLLLLrrrrdDDDLLLLddr
+dddrRRRRRRlllluLdlluuuluurrrrurrrdddrrrddddlUUUUUUUUUruLdlUruLLLulDrdL
+LLLLrrrddddllllddrdrDldRRRRRRRluLLLLdlluuuluurrrrurrrdddrrrddddlUUUUUU
+UUUruLdlUruLLLulDrdLLLLrrddddllllddrdrDldRRRRRRRllllllluuuluurrrrurrrd
+ddllllUdrrrrrrrddddlUUUUUUUUUruLdlUruLLLulDrdLLLrddddLLLrrddrruLdlUruL
+LrrddrrruLLLdlUruLddrrrrrrdddllllllllulllluuLLLLdlUUUUUUUUluRRRRRurDDD
+
+
+Tough Rider
+
+     ####
+######  #############
+#       #....##     #
+#  #### #....##$ $ $##
+## #  # #..#.$   #$  #
+ # #  .......# # $   #
+ # #    #....*  #$$  #
+ # #  # ##@###    #$ #
+ # #  # ..**.. # $#  #
+## ####### ##     #$ #
+#           # $ $ $  #
+#         #  ##### $ #
+###     # # $   $ #  #
+  # $ $ $ #  $$$$ $$ #
+  ######  #       #  #
+       ###############
+
+Author : Matthias Meger (remodelling)
+Comment : 2 walls moved, 1 wall added, 1 goal moved, 2 goals added
+
+Solution/Moves (Built-in)
+DRRRdrrruulluuuLrddLLLrrrdDlllluUUUUrrDDurrrruulDurrrdLLddRRUrrddlUruL
+dllluLLLrddlLLrrrddlllluUluuuuRdrrDDurrrruulDrdLLLrddlLLuLLLLLdlluurDD
+rrddrrruUruLuurrDDurrrruurrrDLLLulDrdLLLrddlLLrrrddlllluUlUUUrrrDDurrr
+rdrrUdrruLuLLLulDrddrrUrrddddlUUUrdddddlUUUUrddddddlUUUUrddddddlUUUUru
+uuuuuLuLLLdLLLrddlLLuLLLLLruuulllllddddddddrrrrrrrrrddddrrrrrruRldllll
+lluuuullllllllluuuuuuuurrrrrddddddrrrDuuUUUUrrDDurrrruulDrdLLLrddlLLul
+uurrDDurrrrdrrUrrddlUruLuLLLulDrdLLLrrrdrrrrdddddddddlUlldlllllluuuuLL
+LLLLLLrrrrrrruuuUruLLLLuuullllldddddddDldRRurrrrrrruurrrruulLLulDDDDuu
+uuuurrDDurrrrdrrUrrddddlUUUruLuLLLulDrdLLLrddlLLuluurrDDurrrrdrrUrrddd
+dddlUUUUUrddddddddllldlllllluuuuLLLLLLLLrrrrrrruuuUlulluuulllllddddddd
+DrrrrrrrrrdrDlddrrrrrrurrUUUUUUUruuLuLLLulDrdLLLrddlLLuLDDDDurrrrurrdd
+rdRdrUdddlldlllllluuuuLLLLLLrrrrruuuuuuurrDDurrrrdrrUrrdLuuLLLulDrdLLL
+rddlLLuluurrDDllDDDDurrrrurrddrdrrUUUUdddddddlldlllllluuuuLLLLrrruurrr
+rurrrURUUruLLLulDrdLLLrddlLLulDDDDuuuuuurrDDurrrrdRdrUUrrdLuuLLLulDrdL
+LLrddlLLuluurrDDldRRluurrrrdrdrUUrrdddlUUruLuLLLulDrdLLLrdDDrrddldRRRd
+rUUUUUdddddddlluLLLLrrrrddllURRRllldlllluuuuLuuuUULuurrrDDurrrrdrrUrrd
+LuuLLLulDrdLLLrddlLLulluurrrDDllDDDrrrdRRdrUUdrUUUrUUruLLLulDrdLLLrddl
+LLruUUdrrrrdRdrUUruLLLulDrdLLLrdddDlllluUluuurrrDDldRRlllddrrrdRRdrUdr
+rrrddddlUUUUUUUUUruLdlUruLLLulDrdLLLrdDDDuullllluuurrrDDldRRlllddrrrdR
+RlldRRRRRdrUUUUUUruLdlUruLLLulDrdLLLrdDDDlddrruLdrrrrrdddlllldllURRRRR
+llllldlluuuulLdlllldlluuluuuuuuuurrrrrddddddrrrrrrrddrrrrrrddddlUUUUUU
+UUUruLdddddddddlllllldlluRRRRRRRllllllluuulldlllldlluuluuuuuuuurrrrrdd
+ddddrrruuluuurrrDDldRRluurrrrdrrUruLLLulDrdLLLrrrdrrrrdddddddddlUUUUUU
+UUUruLdddddddddlllllllluurDldRRRRRRRllllllluuulldlllldlluuluuuuuuuurrr
+rrddddddrrruuluuurrrDDurrrrdrrUrrddddddddddlUUUUUUUUUruLuLLLulDrdLLLrd
+DDDlllluurRRlllluuurrrDDurrrrdrrUruLLLulDrdLLLrrrdrrrddddddddllllluLdl
+luurDldRRRRRRRllllllluuulldlllldlluuluuuuuuuurrrrrddddddrrruuluuurrrDr
+rrrdrrrrdddddddddlUUUUUUUUUruLdlUruLLLdllllullldddrruLUluRdddlUUrddddl
+lluuuRldddrrruulUlldllluurDRRRRdrddrrrruUlLLLUUdllluuulllllddddddddrdd
+rrrrurrurrdddrrrrrrrruuuuuuuulllullllDllllluuulllllddddddddldRuuuuuuuu
+urrrrrdddrrrrrurrrrdrrrddddddddllluLLLdlluuulldlllluLLrrddllUlUUUUUUUU
+luRRRRRurDDDuullllldddddddddrdrrrrurrurrdddrrrrrrrruuuuuuuulllulllldll
+dddllluuluRRRlluuullllldddddddddrdrruulLdlUUUUUUUUluRRRRRurDDDuullllld
+dddddddrrrdrrrrurrdrDrrrrrdrruuuuuuuulllulllldldlUdddllluuluRRRRRldddr
+rrruulLLulllluuulllllddddddddrrrdrrrrurrdddRRRRurrdrruuuuuuuulllullllD
+urrrruulDrdLLLrrrdrrrddddddddllulldRRRllllllluuulldlluLLddlluuluuuuuuu
+urrrrrddddddrrrrrrruulLuUrrDulldllllldddrrrrrrruruLuurrdrrrrdddddddddl
+UlllllllluuullLLdlluLLdlUUUUUUUUluRRRRRurDDDuulllllddddddddrrrdrrrrurr
+dddrrrrrrrrUUUUUUUUlllullddddllllllluuluRRRRRlllluuulllllddddddddrrrdr
+ruLLLLdlUUUUUUUUluRRRRRurDDDuulllllddddddddrrrrrrrrrdddrrrrrrrruuuuuuu
+ulllullllDurrddddllllllluululldRRuRRRRRlllluuulllllddddddddrrrrrrrrrdd
+drrrrrrrrruuuuuuuuuLdlUruLLLulDrdLLLrddddllllllluUluRRRRllluuulllllddd
+dddddrrrrrdddRdrUUUllllullluuuuuuuurrrrrddddddrrrrrrruuuurrdrrrddddddd
+dlllllllluuulLLLLLLLdlUUUUUUUUluRRRRRurDDDuulllllddddddddrrrrrrrrrdddr
+rrrrrrruuuuuuuulllullddddllllllluuluRRRlluuulllllddddddddrrrdddRRRdrUU
+UllllullluuuuuuuurrrrrddddddrrrrrrruuuurrdrrrddddddddlllllllluuulLLLLL
+LLdlUUUUUUUUluRRRRRurDDDuulllllddddddddrrrrrrrrrdddrrrrrrrruuuuuuuulll
+ullddddllllllluuluRRluuullllldddddddddrddRRRRRdrUUUllllullluuuuuuuurrr
+rrddddddrrrrrrruuuurrdrrrddddddddlllllllluuulLLLLLLLdlUUUUUUUUluRRRRRu
+rDDDuullllldddddddddrdrUrrrrrurrdddrrrrrrrruuuuuuuulllullddddllllllluu
+luRllldddrUUluRdrrddrrrrrrruuuurrdrdddddllllUdrruLuLLLLLrrrrrddlUruLLL
+LrrrrddrrruLLLdlUrrrruuLLulDDLLrddrruLdlUruLrurrDrdLLLdlUdrrrrrrdddlll
+llllluuulUdlllllLLdlUUUUUUUUluRRRRRurDDD
+
+
+The Galley
+
+    ########
+#####      #########
+#  $ .#.##         #
+#  ##.    .##  $ $ #
+#  #..# ##..#$ $ $ #
+#   ........# #  # #
+#  #.... ...#   $  #
+## #####@####$$ #  #
+ #   ###  ## $ $   #
+ #   #  #        $ #
+ ##       ##  $# $ #
+  #  ##    #$$ $ $ #
+  ## ###  .#  $$$# #
+  #    # ###$ $ $  #
+  #      # #       #
+  ######## #########
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+drdrrrrrrUUUlluUUruLLLrrrrrrrddddddddddddllllluuUUlullluluuuluuuurrrDD
+DrdLLLdddrdrrruRUUUUUruLLLrrddddddldllluluuuLuuuurrrDDDDrdLLLddrdrrrdr
+UUUUUUUruLLLrrddddrrddLdllllluluuuluuuurrrDDDrdLLLdddrdrrrrUUUUUUruLLL
+rrddddddddddddrruLdlUUUUlullluluuLUUdLLdlUruuuurrrrrDrrrddddrrdLddLLLL
+rrrruuuluuuulllDDrdLLLdddrDDlddrruLdlUruurrrruUUUUUruLLLrrdddddddllllu
+luulUlluuuurrrrrDDDuurrrrrrrrddLUruLLLLLLLrrdddddddlllluluuurRuullLuur
+rrDDDuurrrrrrrrddddlLuUUruLLLLLLrrdddddddlllluluurrrULLLLUUdddLLuuuuur
+rrrrDDDuurrrrrrddLUruLLLLLrrdddddddlllluluurrruLLLdllluuuuurrrrrDDDuur
+rrrrrddddLLdlUUUUruLLLrrdddddddlllluluurrruLLdlllluuuuurrrrrDrrrrrrrrd
+ddddddLLLLLLLLrrrrruuuUUUdLuullllDDDrdLLLddrDrrrruuuuUUruLLLrrdddddddl
+lllDLLLLLdlUUruLdlUUUUrrruuuurrrrrDDDuurrrrdrruLLLLLrrdddddddlllluluur
+uRdllddrddlddrruLdlUruLLLLLdlUUluuuurrruuuurrrrrDDDDldRllddrdrrrrrrrrr
+ddddlLLLdlUUUUdrUULLLLrrruuuuuuulllullllldddddrRRddrDDlddrruLdlUruurrr
+rdddlUUruLLLrrrrUruLuluuuullldllldDRdLrddrDrrrruUUUUUruLLLrrdddddddlll
+lDLLLLLulluuuurrrRluuuurrrrrDDDDuullldDlllllddddrruLdlUUUluRRRllddddrr
+ddlUUruLddrrrrrddrruLdlUruurrrrdddddlUUUUruLLLrrruuuuuuullldlllddrdddr
+DDLLLLLdlUUdrrrrrddrruLdlUruurrrrddddrUUUdddrrUULLdlUUrULLLLrrrrUUluuu
+uulllullllldddDlllUluurRRllldddrrrrrrrdddrDDLLLLLrrrrddrruLdlUruurrrrr
+rrrrddLLLrdLLUrrUdrUUruLLrdLLLLLLLrrruuuuuuullldlllddrdddrDDLLrddrruLd
+lUruurrrddddrUUUdrUULLLLrrrrrULrUUUUUllulllulllllDDuurrrrrddlllLrddrdd
+drDrrrrUUUUUUruLLLrrdddddddllllDDldRlddlllluuuuullUUUluRRRRRRllllldddd
+rruLdlUUUluRRRRRllllddddrrddlUUruLdlUUUluRRRRlllluuurrrrurrrrrDDDuurrr
+rdrruLLLLLrrdddddddllllddlluLLLdlUUruLdlUUUluRRRllluuurrrrurrrrrDDurrr
+rrddddLdlUUUUruLLLrrdddddddlllldLLLLLdlUUruLdlUUUluRRlluuurrrrurrrrrDu
+llllldllllddrUluRRR
+
+
+On-Site Parking
+
+    ########
+#####      #########
+#  ...#.##         #
+#  ##.    .##$ $$$ #
+#  #..# ##..#  $ $ #
+#  .........#$#  # #
+#  #.... ...#   $  #
+## # ###@####$$ #$ #
+ #   ###  #  $ $   #
+ #   #  #    #   $ #
+ ##       ##  $# $ #
+  #  ##    # $ $ $ #
+  ## ### #.$$ $$$# #
+  #    # ### $$ $  #
+  #      # #       #
+  ######## #########
+
+Author : Matthias Meger (remodelling)
+Comment : 2 walls moved, 1 wall removed, 3 goals added
+
+Crazy Monk is Copyright (c) 2008 by Jean-Pierre MARTEL and Matthias MEGER.
+These levels may be freely distributed provided they remain credited with this copyright and all commentaries.
+
+Note :
+The Disciple levels range from easy to moderately difficult. They have been designed for Sokoban players who enjoy "optimizing" solutions.
+Some levels present an arranged version designed by Matthias Meger (codified changes). Those remodels are more difficult than the initial mazes.
+
+Send comments and best solutions to :
+sokomonk@laposte.net
+
+Solution/Moves (Built-in)
+uurruuurrrrrrrrddddddddddddllluRdlllluUrUdlddrURlluUrDlddrrrrrruuuuuuu
+ulLuuULulllllddddllddrdddrdRRddrrrrrruuuuuulUruuuuulLLLLLLrrrrrrrddddd
+dddddddlllllluulluluuuluuuluuuurrrDDDuurrrrrrdddlUUruLLLLLrrrrrrrddddd
+dddddddlllllluulluluuuluurrruLLLLLLLLrrrruuuurrrDDDuurrrrrddlUruLLLLrr
+rrrrrddddddddddddlllllluulluluuuluurrruLLLLLLulDDDDDlluuuUUUddrrrrruuu
+urrrDDDrdLLLLLLLLrrrrrrruuurrrrddlUruLLLrrrrrrrddLUrdddddlldlluRuUUUUd
+ddllUUUrrrrrdddLLLrrrddddddddlllllluullulllullLdlUUluuuUUdrrrrruuuurrr
+DDDDrdLLLLLLulDDDDDDDuurrrrrurrruRUUUUruuLLLrrrddlddddlldlluluuuluuuur
+rrDDDuurrrrddlUruLLLrrrddrdddLrurrddLdllUllldlluluurrruLLLLLLuuuurrrrr
+DDDDrdLLLLLLuLLrDDDDDrrrrrurrrurUUUUUruLLLrrrddrdddLdllldlluluuuluuuur
+rrDDDDrdLLLLLLulDDDDldRRRRRdrrdrrurrUUUlUUUUUruLLLrrrddrdddLddddllUUll
+luluuuluuuurrrDDDDrdLLLddrdrruRRUUUUUruLLLrrddddddlldlluluuuluuuurrrDD
+DuurrrrdrruLLLLLrrddddddlldlluluurrruLLLLLLdlUrrruuuurrrDDDDuuurrrrrrd
+rruLLLLLLLrrddddddlldlluluuLLLuuuuurrrrrDDDrdLLLLLLLDDDDldRRRRdrrrdrrd
+drrrruUUUUlUUUUUUruLLLLLrrrrddddLrrrddLrrdddddLdlUUUUUllUllldlluluuulu
+uuurrrDDDrdLrdLLLddrdrrruruUUUUruLLLrrrrdddddLdllldlluluuuluuuurrrDDDD
+rdLuLLdddrdrrrurUUUUUruLLLrrddddddlldlluluuuLuuuurrrDDDrdLLLdddrdrrrdd
+dddrruUUUUUdrUULdlUUUUUruLLLrrddddddlldlluluuLUUUlluurrrrrDDDrdLLLdddr
+drrrdRdrUUUUrUUUUruLLLLLrrddddddlldlluluulUUddLLulDDDDuuuuruuuurrrrrDD
+DrdLLLrruuurrrrrdddrUUruLLLLLLrrddddddlldlluluulULLuuuurrrrrDDDrdLLLLr
+dddrdrrrddddRdrUUUUUUruLdlUUUUUruLLLrrddddddlldlluluullluuuuurrrrrDDDu
+urrrrrddddLrrrddLdddLrddLUlUUUUUlUUUUruLLLrrddddddlldlluluuurRdLulDlll
+uuuuurrrrrDDDuurrrrrddddLdlUUUUruLLLrrddddddlddddllulllullLuuuurrrrrrr
+ULLdlllluuuuurrrrrDDDuurrrddddddrdrUrrrdLLddLdlUUUUrULdlUUUUUruLLLrrdd
+ddddlddddllulllullluuuuruuuuurrrrrDullllldddddrruLdrrruLLdrrrruLLdllll
+lddddrrrdrrrdrrddrrUUUUUUUrUUUUllulllDDuurrrddddddlddddllulllullluuuur
+rrrruRuuuullllldddDuuuurrrrrdrrrrdrruLLLLLrrrrddddLrrrrdddddLLLdlUlldl
+lulllullluuuuRuuuuurrrrrDDDDldRuuuuullllldddddRRRluRdlllldddlluuuluuuu
+RRRlllddddrdddrrdrrrdrrrdrrurrUUUUlUUUruullllulllllDDDDuuuurrrrrdrrrrd
+dlUruLLLrrddddddlddddllulllullluuuuRRluuuuurrrrrDDDDuullLLrrrruullllld
+DDDuuullllddrUluRRRlllddddrdddrruuuRuuurrrrruulllllDDDDuuullllddddrUUU
+luRRRlldddddddrrdrrrdrrrdrrurrrrrUUruLLdLUUULrUUUllulllulllllDDDuullld
+ddddddrruLdlUUUUUUluRRRlldddddddrrdrrrdrrrdrruurrUUUlUUUruullllulllllD
+DrrDurrrurrrrddlUruLLLrrddddddlldllulUUddrdDLddddllllluRuUUUddlUUrUUdL
+dlUUUUUluurrrrurrrrrDDDuurrrrdrruLLLLLrrddddddlddddlluLulLLLLddddrruLd
+lUUUlUUruLdlUUUluuuurrrrurrrrrDDurrrrrddddLdlUUUUruLLLrrddddddrddddLLL
+ruuullldllllLdlUUluuuluuuurrrrurrrrrDullllldllllddrUluRRRlllddddrdddrr
+drrrrrurrruruuuuuulllulllllDllllddddrUUUluRRRlldddddddrruLdlUUUUUUluRR
+ldddddddrrdddddrrrruuUruLLLLLdlUUruLdlUUUUUUluR
+
+
+Excalibur
+
+################
+#     #   #    #
+# $$ $#$#    # #
+#  $  #  *#    #
+# #$#$#$ .#    #
+#  $  #...# #  #
+#+.*..*...*..# #
+#  $  #...#    #
+# #$#$#$ .#  # #
+#  $  #  .   # #
+# $$ $#$ # #   #
+#     #  #     #
+################
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+dddddrrruurUUluLrdrddlddllluuuurRururDRRRurDRRuuuullDldddllllldlluuuuu
+urrrddrDDldRRRRRRlDDldRRRuuUUUUdddlllllluuuluurDDDDldRRRRRRldddrruuUUU
+ddlllllllldlluuuurRRurDDDldRRRRRRllllllldllddddrrruuruUddlddllluuuuuur
+RddRuRRRRllluuuuulllDRRurDDDDuullDDRdRRRurrDDDluUlllldlllddddrrruuruUl
+uRRRuRDuuururRurrrdddllldDDullllllluluurrdDldRRRdRUUdllldddlddrUUUUluR
+RRurDlllldlllddrRRdrUUUluRRRRRRllllldddddlllURRdrUUUUluRRRRRDulllldddl
+lUdLdlUUUrRRlddrruUluRRRRllllullluuRRRurDDDldRRRdRddRRddrrrruuuuuuuuuu
+llDllldllDDrDLLLrruuurruullDDDDrdLLruuurrurrrurrddddddddddlllluulllUUd
+drrrddrrrruuuuuuuuuullldlldllddrdLuuurrurrrurrdddlllUdrruLuLLrrddrrddd
+ddddlllluullddlUUruUluuuuuurrDrrrddrrddddddllULLLrrrdrruuulllDurrruuuu
+llulllullddrDldddrdDlUUUdddddrUUUdrrddrruuLLLLdlUUUddrrrrrUddrruuuuuul
+lldDDDrdLLLLdlUUdrrrrrdrruuulLrruuulllddDDrdLLruuuuuruulDDD
+
+
+Random Warrior
+
+#################
+#...............#
+# #.#.#...#.#.#.#
+#       .   #  .#
+##  #  #..    $.#
+## #    ##.#..*##
+#    #  #    #@ #
+# $     $ #   $ #
+#  #$#  $ $$### #
+##$ $  $$$#   $ #
+#    # #    # $ #
+# # $$ #$# $# # #
+# $  $#     $ $ #
+# # #   # # # # #
+# $$$$    $$ $$ #
+#     #     #   #
+#################
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+rdddLLdddLLLuuruUUruuururrdLuluulldddlddRdrUUrULLrddlluUddrddddlddrrru
+uuLrdddllluurUUUddrrrruuLuUUlUUdRdrUUddlllluuurRllllddRdddlddRluurRdrU
+UrrddrddllllUUdlluurRluurUUddRRdrUdddLLUUdlllddrrUdlluLLdRRRllllUUUUdl
+ldlllddrUUUUruuullddRdrUUdlluurRddrrRRRuurrRdddRllddRdrUUrULLrrUUdRdrU
+lddddrddllllUUdlluurRdrUUddrrrddddddddllUUUUUddllUUUUUdlluuruUrRRllllU
+UdRdddRdrUUrrUlLLUUddrdddldddddlLdddrrUUUUUUUUdlluurRdrUUddldddddllddR
+drUUUUUUUUdlluurRluUrRRRdddrdddLuLLrrrdddddLLLruuuUddlluuUUUrUUddldddl
+lUdlUURuLLdlUUUUluRRlddddddlLUddllUUUUUUruuullddRRlddddrRRldddlddrUUUU
+dLdlUUUUUUruuullddRddddrRddrrddLruuurrdLulUUUUluuuLLLrrrrrddLdlUUdrruu
+lLLLrrddddldlluurUUddlddddddldddddrrUUUUUddrUrruUUUUUUluLruurrrRdddlUl
+LddlldlluurUlddddddRRRllddrrruUUUUUUlUUdRRRdrUULullLddddlddRlddrruUUUU
+luRRUruLdrrddlUruLdrRdrRllddRddddddllddlllulUluUUUdrrddLdlUUluRRlddrru
+UUUUUUluRRUrrddlUUdlllllldddddddlddddRdrUUUUUluRRRlddrruUUUUUUluRRurrd
+dlUruLdlllllldddddddlddRlddrruUUUluRRRlddrruUUUUUUluRRllddldldRRlddddd
+ldddrrUUUdrruRUUUUllUUUUdddddrrdddRdddrrUUUUUUUUrUUrUURdlLLUlldlUlLddd
+dddddLdlUUUUddddrddLdlUUUUUluRRRlddrruUUUUUUlUUdRRRdrUrrdLLrddRllddRld
+drruUUrUUruLLLddRdrUUdlluurRdddrrrdddddLLLrddlluUUUUUUdlluurRlldLLdlUU
+UUdlldldRRlddrrrrdddrRlddrruUUUUUUrUUrruulDLLullllLdddrdrrurRdrUUdllld
+lluuluurrrrDrRRurDlldddrrrddlLLrdddlluuUUUdlluurRdrUlllddlllUUUUlURR
+
+
+What a Mess!
+
+  ##############
+  #..... #  #  #####
+  #.....           #
+  #.....    # $#$# #
+  #....### ##$ $ $ #
+  #...#.    # $# # #
+  #...#.    $  $ # #
+ ####### ###$# # $ #
+ #         #.......#
+ # # # # # #$ # # ##
+ #@$ $ $ $ $  #   #
+ ##$ # # #$ # # $ #
+ #  $ $ $ $ # $ # #
+## $# # #  $# # $ #
+# $ $  $ $  # $ # #
+# # # # # # $ # $ #
+#           #   # #
+###################
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+uurrrrrruuurruuurrrrrrrrddddddlllluuluUrUdlddrddrrrruuuuuulllLLLLLLLLL
+LdlUrrrrrrrrrrddlUdddLLLrrrrddrruuuuLLuuLLLLLLLLLLdlUrrrrrrrddddrrrrUl
+UUruLLLLLLLLrrrrrrrddddrddllUdrddddRlddddrruuuUUUUdrruuluuLruulLdlUUru
+rrrrddLLLLuuLLLLLLLrrrdddlldddrrddRRUUrruUUUrrUdrruulLLLLLLLLLrrddddLr
+rRRururrrrdddLdlUUddrdddddddLruuuuullddllddddrrUUURlddrruUUUUUddddllUl
+luUllluulluUluRRldddrrddLrrruuUdrruUlLLLLrUUddrrruUrUdrruulLLLLLLrrdLL
+LLLULDDurrUdrruLLLrrrrddddrrddddlddDlluRUruLuulluUluRRdrUUddrrrrrrddRl
+uuUUUdrruulLLLLLLLLLrrrdLLLLLLULDDurrrrrrdddrrddddlldddrUUddllDlLuuRRl
+uUUUUUluRRdrUUddrrruuUruLLLdLLLLLulDrrrrrdddllddrrddLrdrddlUlluUUUUUlu
+RRdrUUddrrruuuulldLLLLLdLLulDDurrDLuuurDrrrrrdddrrddddLLLrrddlUdlluUUU
+UUluRRdrUUddrrruuuulldLLLLLdLLuurDDurrrrrdddrrddddlLLrddlluUUUUUluRRdr
+UUddrrruuuulldLLLLLLulDDDuurrrrrrdddllddddddlddddrrUUUdlluurRdrUUruLLr
+ddddlllddlluuRluuRRRRdrUUdlluUUUUUluRRdrUUddrrruuuulldLLLLLLulDDurrrrr
+rdddllddllddRlddrruUUUUUluRRdrUUddrrruuuulldLLLLLLulDrrrrrrdddrrddddlL
+LrddlluUUUUUluRRdrUUddrrruuuulldLLLLLrruLLLDrrrrrdddllddllllddRRRlddrr
+uUUUUUluRRdrUUddrrruuuulldLLLLrrrruLLLLLDrrrrdddllddllllllddRRRRRlddrr
+uUUUUUluRRdrUUddrrrrUUUdrruulLLLLLLLLrrrrdLLLLLLLrrrrrrdddllddddddrddd
+dlluUUdddlllluuRlddlluuRuurUruuullddRRlddlddRUUUruRRRlddRRRdrUUdlluUUU
+UUluRRdrUUddrrruuuulldLLLLLLrrrrrdddrrddddlLLrddddlddrruRlUUUUdllluUUU
+UUluRRdrUUddrrruuuulldLLLLLrrrrdddrrddddLLLrddlluUUUUUluRRdrUUddrrruuu
+ulldLLLLrrrdddllddllllllddRRRRRlddrruUUUUUluRRldddddddlddddlluULrddllu
+UUUUruuullddRRRRRlddlLrrrddllUdlluUUdrRRRRuUUUUUluRdddllllllddRRRRRldd
+rruUUUUdddddRdrUUrurrUluuullUUUdddlLuRdrUUddrrrrddRlLddddrrddddllUUUUU
+UUlURddddrrUUUddRlddrruUUUddddlldLrddlluUUUUUUdllLLrddlluUUUUUruLdrrrr
+DuruuuullLLLrrrdLLL
+
+
+Storeman's Work
+
+ ###################
+ #  ##    #        #
+ #.     # $ $   $$ #
+## # #.###### $  $ #
+#  # ###....## $$  #
+#  # # ..#...  #@  #
+# $    ......#$##$##
+####$##*.*#.#      #
+# $     #     #$#$ #
+#  #$   **# $$  $  #
+##      #     #    #
+####################
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+rruuLruulDDuullddRluulllldRRdRddllldddddrURuLdlUUdllUlulDullluuuullddd
+ldRRRuuuurrrurrdRRurrddrddlllldLLdlDlllUUUUUdddlluuuurRRlddddddrrruUrr
+rurrdLLLruulldDllLrrddllluUUUUdddrruRdrrrrddrrurrrrrdddllluLLLdlUUUUru
+LddddrrrrdrruLLLLLdlUUUdlluurUruLLrrdrdLddrrurrrrDrdLLLLLLdlUUUUruLdLL
+LLrrrUruLdrrrruuluurrdRurrddddlDDDrdLLLLLLdlUUUUruLdddrrurrrruulUUddrr
+uuLDDDDDrdLLLLLLdlUUUUUrrruuluurrrrDDDDDDDrdLLLLLLdlUUUUrurrDuuuluurrd
+RurDDDDDDDrdLLLLLLdlUUUdlluurURRdLLLLrrrddrruRRRlluuuRRdrdDDrdLLLLLLdl
+UUUUruLdddrruruuuuluRRRDrDDDDDrdLLLLLLdlUUUdlluurRddddllUUUdrrrruruuuu
+uullldRRRlllllulllDlLLrddddddrrruUrRddrrrruruuuuuurrrDDDDDDDrdLLLLLdlU
+ruLLLrddlluUUdrrrruruuuuRRurDDDDDDrdLLLLLdlUruLLLrddlluUrrrruruuuuuRRu
+rDDDDDDDrdLLLLLLdlUUUUddrruruuurRurDDDDDrdLLLLLLdlUUUdrrurrDurrddlLLLL
+dlUUrruruuLruuulllllullldllddddddrrddrURllluluurRRdDllddllluluRRRRRdRU
+UdddlllUdlluurRRRdrU
+
+
+Storeman's Tricky Work
+
+ ###################
+ #  ##    #        #
+ #.     #  $ $$$$$ #
+## # #.######    $ #
+#  # ###....##$$$  #
+#  # # ..#...  #@  #
+# $    ......# ##$##
+####$##*..#.#  $   #
+# $   # #     #$#  #
+#  #$   .*# $$ $ $ #
+##      #     #    #
+####################
+
+Author : Matthias Meger (remodelling)
+Comment : 1 wall added
+
+Solution/Moves (Built-in)
+rruuuulllllldLurrrDLurrrDLurrrdLDuulldRldRuullldRullldRRdRDDllldddrrur
+UUllldddddllUUUdddrrrrULdlUUUUruLdlLdlUUldDDuullluuuurrrurrdRRurrrrrrr
+ddddlDDrdddlluLLLdlUrrrrdrruLLLLLLdlUUUddrrrrrrruulDrdLLLLLLdlUUlluurU
+ruLdrrdLurrrddRRlllDLLLrUUUdLLdllullluuuurrrurrdrrurrddrDDDuuuluurrrrr
+ddddldDDrdLdllulLLdlUUUdddllulLdlluulUUUUUdddrrrurDrrurrdLLLdDrrrrdrrd
+rruLLLLLdlUUUdrruRRRlluuuuluulldllullldlLddddrrrdRluurDlllluuuuLulDDDl
+ddRRlluuruurrrrrurrdrrRurrDDDDDulllldlllddddlluuluUUUUdddllluuruurRRld
+dddddrddlUUUdddrrruLruuurrrurrdLLLLulDDDuurrrrrurruuuurrrrddddldDDrdLL
+LLLLdlUUUdrruRRRlluulldLLLLulldlLddddrruRdllluRdrruuuUrrrrrurruuuurrrr
+ddddldDDrdLLLLLLdlUUUdrruruulldLLLLLLLruRdrrrrrurruuuurrddLruulldDDDDu
+uuuurrrrddLDDDDDrdLLLLLLdlUUUdrruRuulldLLLLLrrrrrurruuuurrrDDDDDDDrdLL
+LLLLdlUUUUruLrrruuuRRurDDDDDDDrdLLLLLLdlUUUUrurruurRurDDDDDDrdLLLLLLdl
+UUUdrruruulldLLLLrrURRldddrruruuuuuulldRRRRurDDDDlUrdDDDrdLLLLLLdlUUUU
+ruLdddrruruuuurRurDDDDDDrdLLLLLLdlUUUdrruruuuuulllllulllDlldddDDDrddrr
+uuuUrrrRddrruruuuRRurDDDDDrdLLLLLLdlUUUUddrrurRRlluuurrrddDDrdLLLLLLdl
+UUUdrrurrDurrddlLLLLdlUUrruruuLruuulllllullldllddddrRRRRllllluuuullddl
+ddrRRRRRRlddddlllUUUdddlluluRRlddrrrrruuuullLuuuullddlddrRRRRRddddlluR
+drUUdlllUUUllluuruurrddDuuullddlddrUUUdddrRRR
+
+
+Kheops' Tomb
+
+#####################
+#                   #
+# ########$######## #
+# #     $   $     # #
+# # ............. # #
+# # .##### #####. # #
+# # .#         #. # #
+# # .# $$$$$$$ #. # #
+# #$.# $     $ #.$# #
+# # .# $ $$$ $ #. # #
+# $ .$$$ $@$ $$$. $ #
+# # .# $ $$$ $ #. # #
+# #$.# $     $ #.$# #
+# # .# $$$ $$$ #. # #
+# # .#         #. # #
+# # .##### #####. # #
+#   ............. # #
+# #     $ $ $     # #
+# ########$######## #
+#                   #
+#####################
+
+Author : Jean-Pierre Martel
+
+Solution/Moves (Built-in)
+DDDDDulllluuuULrddddrrrruurruuuullUUUUlllllldddddDrrddddrrrruuuuUUUUUd
+ddrrdLrdddllddlllluuuullDDDldddlluuuuuuRRlluuuuuuuuurrrrrrrrrrrrrrrrrr
+dddddddddLLdlddrUUlUUUUUruulllllluRdlLLuRdlLLLullddddddldlluuuuuuuuurr
+rrrrrrrDDuurrrrrrrrrdddddddddlLuluuuruullllluLdLLLLulllddddddlddrUlllu
+uuuuuuuurrrrrrrrrdDrdLLLrrrrrruLLLrrrrrrddddDDlDDDDDrddlllllldRulLLdRu
+lLLLLdllulldddrrrrrrrrrUUddrrrrrrrrruuuuuuuuulLrruuuuuuuuullllllllldDr
+dLLrrrrrrrrddlUddddDDDrddddllllldLuLuurrrruuuURlddddlllluuuuUUUUUddddd
+ddddlllluuuullUUUUUluurrrrRRdRRRRurrrrdddddddrruuuuuuuuullllllllldDldR
+RlddddllddLLLrrruurruulDrdddLLuuRDrUUUUdddddddddddLLLdlllluuuuruuUUUUU
+luuurrrrrrrrdLurrrdLurrrdLLurrrrdLLLrrrdddddddlUUUUUUruLLulllllddddddr
+rdRRRllldLdDldddrrrrrrruuuuulUUUUUUruLulllllldddddddRRRRRlllldddldddrr
+rrrrruuuuulUUUUUUruullllllldddrrDDDldRRRRlllldddldddrrrrrrruuuuulUUUUU
+ddddlllluuuurrddDuuullddddrRRlllllulldLLLrrrddrDrdddllldlllluuuuruuUUU
+UdddllldddddddddrrrrrrrrruUruLLrrrrrrrruulDruuulDuuUUUUdddllddddllLulD
+DuuurrRUluRRRlllllLLLLLrrrruuuulllddDuuurrrruuulllllllddddrddlddrUUUdd
+dddlddddrrrrRRuRRRRRdrrruuuuuulUUUddlllluuRDldRRRllddDLLdlddrrrrdrrruu
+uuuulUUdlllluuuurDDDldRRRllllllllLLrrrrruuuuuuurrrrrrrddddddlDDullluuu
+rDDldRRllllddddlddrrrrdrrruuuuuulUrdddlUrdddlUUrddddlUUUdddlluRdrUUruu
+uuurrdddddddddllllllllluUluRRRRRRdlLLLulldlllllluuuuruuUUdlllddddddddd
+rrrrrrrrruUluRRRRRlllluuruulDDDuuullLUruLLLrrrrrrrrrrrrdddddddlUdlluRd
+lllllluRRRRRdllllllllllluuuuruuluurDDurrrruuLDrdLLLrrrrrDDDDDuuuuuuuuu
+uuuuullllllllldddddddddrrdrUlllddddddrruuurUdlddrUUlddddrUUUdddrrrrruR
+RRRllluuuulllDRRurDDDuuuuuuuuulllDDDldllldDDDDuuuuullddddddrRdrUUddrrr
+rruRRRlluuulldRurDDuuuuuuuuuuuulllllllddddDDDDDDDDuuuuullddddddrRdrUdr
+rrrruRRluuurrrrdLLLulDDuuulUluLLLLrrrruurruuuuulllllllddddddDDDDDDuuuu
+ullddddddrRdrrrrrruRdllluRdllluRRdlllluRRRdrrrruuuuuuuLLLLLLrrrrrruuuu
+uuulllllllddddddDDDDDDuuuuullddddddrRRRdrrrrruuuullllUUruLLLrrrrrruuuu
+uuulllllllddddddDDDDDDuuuuullddddddrRRluuuuuurrrruuulDDrdLLLrrddddRRRu
+rDDuurrrrUUluRRllluuuLuluuulllllllddddddDDDDDDuuuuullddddddrRuuuuuurrr
+rrrruuUUUdllDDDrdLLLL
+
+
+Mental Connection
+
+ ####################
+ #     #            #
+ #  $  # $ $$$$$$$$ #
+ #   ### ##$    $   #
+ # #$  .*.#  $   $  #
+ #   #.*..##$##$$$$ #
+##.#  ###.#    $ $  #
+# ..#.....# # #  $$ #
+# .....#....  #  $  #
+# .....#. ## ####$###
+####.#.#.##  #      #
+ # ..#.      #$ # $##
+ #    .#    @#  $  ##
+ #    ## #  ##$$  $ #
+ #  #      # $  $$$ #
+ #     #     #      #
+ ####################
+
+Authors : J-P Martel and Matthias Meger
+
+Crazy Monk is Copyright (c) 2008 by Jean-Pierre MARTEL and Matthias MEGER.
+These levels may be freely distributed provided they remain credited with this copyright and all commentaries.
+
+Note :
+The Disciple levels range from easy to moderately difficult. They have been designed for Sokoban players who enjoy "optimizing" solutions.
+Some levels present an arranged version designed by Matthias Meger (codified changes). Those remodels are more difficult than the initial mazes.
+
+Send comments and best solutions to :
+sokomonk@laposte.net
+
+Solution/Moves (Built-in)
+uuuullluuuuLLLdRRurDDDlddddrrrruuullLuuuuluuurrdLulDDDldRurDDDlDDDDDDu
+rrddlLLLrrrruuurruuullLuuuuluuurrrrrrrrrrrddllLdllulldRurRdrRurruullll
+lllDLLLulDDDldRurDDDlDDDDDDuurrrruuullLdlUruuuuluuurrrrrrDLLLLLulDDDld
+RurDDDLLLdlllluuuuuuurrrdLLulDDDDDurrUUluurrdLulDrddddrDDrdLulDDDDrdLu
+rrurrrrrruuullLdlUruuuuluurrrrrddlUruLLLLulDDDllLrrdRurDDDLddddrrrruuu
+llLrruurUUUruurrrrrrddllLdlLLrUluLLLLulDDDldRurDDDlDDDuuuLLdllllluRuur
+rdrDDrdLulDDDldDrruLdlUldddrrrUrrRuuruLLrrrrruuullLdlUrrruuruUUdrrrruL
+LLuLLLLulDDDldRurDDDLLLdlllluuurrdrDDurrrddddrrrruuullLdlUrrruuruuUrrr
+rrrrdLLLLLLuuLLLLulDDDldRurDDDLLLddLullluuurrdrDDlDDDDrrUrrrrrruuullLd
+lUrrruuruUUruLLLLulDDDldRurDDDLLLddLullluuurrdrDrrrddddrrrruuullLdlUrr
+ruuruulUruLLLulDDDldRurDDDLLLdLLDDDuulluuuurrdrDrrrruuuluuurrrrrrrDLLL
+LLLulDDDuuurrrrrrrrrDLLLLLLLLulDDurrrrrrrrdLLLLdddlddlLdlUruLLLrrddddl
+ldlLuuuuRdllluuuurrUULuurrdLulDlDDDrrdrDrrrruuuLLLLrrdRurDDDuuuluuurrr
+rrrrrrrrdLLLLLLLLLLulDDurrrrddddlddlLuuuuLuurrrrrrrrrrdLLLLLrrrdDDRUUU
+ruLLLLLLLLLulDDDLdRurDDDlDDDuuulllDlddddrruUdrRRRdrruuuullLulDDDuurrrr
+ddlDrdLLulLLruuurrruurrrRUUUruLLLLLLLulDDDldRurDDDlddddrrrruuullLrruur
+uuUruLLLLulDDDldRurDDDlDDDuuullldldlluRdrdddrrUrRRRRuruullLrrrruurrddr
+RULUUUdddrUUUULLLrrrruLLLLLLLLLulDDDldRurDDDlDDDuuulllulullDDldRdrrddd
+rrurRRRdrrUUlDllluuuRRRuurrrrrddlUUUUUruLLLLLLLulDDDldRurDDDuuuluurrrr
+ddddlddlLulDDDuuullluluUULuurrdLulDlDDDDDlddrrrdddrrurRRRddddrruRRdrrr
+rruuLuluuUUUUUUUruLLLLLLLLLulDDDlLLrrdRurDDDlllluluUULulDuurrrdLLrddrr
+rruurrrrddlUruLLLulDDDuurrrrddrUruLLLLLulDDurrrrddddlddlLuuuuLLLLrrdRu
+rDDDlDDuullluluUUluRddrrrruurrrrrrrrrrrddddLLrUUUruLLLLLLLLLLulDDurrrr
+ddddlddlLdlUruLLLrrruuuLdllullddrDrrrrdrruurrrrddrrddllddRdRUUUUUUUUUU
+ruLLLLLLLLLulDDDLLLrrdRurDDDlllluluUrrrruurrrrddddlddlLdlUrrruurrrrdrU
+UUUruLLLLLLLLulDDDldRurDDDLLLrrddDDrrddddrrurrdrrUdrUUUUUUUUUUUruLLLLL
+LdddlddlLdlUdddrrddddrrurrdrrrrruLdlUUUUUUUUUUUUruLLLLLLLLLulDDDldRurD
+DDLLrddddrrddddrrurrRRdrUUUlllDurrrUUUUUUrrddLUUULLrrUruLLLLLdllddlddl
+LdlUdddrrddddrrurRuurrruuuUUUUUUruLLLLLLLLLulDDDldRurDDDuuuluurrrrdddd
+lddlLdlddrrddddrrurrRRdrUUUUUUUUUUUUruLLLLLLLLLulDDDldRurDDDLDDDuuuruu
+uluurrrrddddlddlLulDDurrruurrrrrrddddddddrruLdlUUUUUUUUUUUruLLLLLLLLLu
+lDDDldRurDDDuuuluurrrrddddlddlLdlUrrruurrrrUUUruLLLLLLLulDDDldRurDDDuu
+uluurrrrddrUruLLLLLulDDurrrrddddlddlLuuuuLuurrrrddddrddLLuurrrrrrddddr
+DDllllddlldlluuuuRurUdldlddrUrUUlDlddddrrurrrrrrruLdlUUUUUUUUUUUruLLLL
+LLLLullddddllulldllddlddrrrdddrrurRRRddddllulllUdrrrdrrrrurrrURdrUUUUU
+UUUUUUruLLLLLLullllddddrddddlDuruuuulllulldllddlddrrrdddRddrrrdrruuuul
+LLruuruuuuuluuurrdLulDDDrdddddlddrrddddllullluuluuullluurDldRuuuurruUl
+lDDDDDuuuuuruulDDDDDDuuuuuurrDurrdLLLulDDDDDurruUluurrdLLulDDDDrrurrdr
+RuuuurrrrdLLLulDDDuurrrrrrrrrddddddddlllDDRddllldlluuuulluuruuuULLruuu
+rrrrddlUruLLLulDDDuurrrrrrrrrddddddddddddllllldlluuuulluuruuuuLuuurrrr
+ddddlddLruurrrrrrddddddddllllldlluuuulluurUUUddrruurrddLLLrrruurrrrddd
+dddddllllldlluuuuRurUdldllluurUUdrruurrddLLLrrddldlddrUrUUUdddlluRlllu
+urUrruurrddLLLrrddldddlddllullldllluuuuRlddrUrUUddlluRlddddrUUUrrdLuUd
+lluRldddrUUrrddrrruUUUddRRdrUrUUUdddlldddrrurrruulDurRdrUUUUUUUUUUruLL
+LLLLLLLulDDDuurrrrddddrddLLrddddllddLdlUUUUrrRdrUUUdddlldddrrurRRRdrUU
+UUUUUUUUUUruLLLLLLLLLulDDurrrrddddrddL
