@@ -39,14 +39,14 @@
 #define BLOCK_COLOR 1.0f,0.25f,0.0f,1.0f
 const float BLOCK_COLOR_mat[4]={1.0f,0.5f,0.0f,1.0f};
 
-#define PUSH_BLOCK_COLOR 1.0f,1.0f,0.0f,1.0f
 const float PUSH_BLOCK_COLOR_mat[4]={1.0f,1.0f,0.5f,1.0f};
+const float PUSH_BLOCK_COLOR_trans_mat[4]={1.0f,1.0f,0.5f,0.5f};
 
 #define ROTATE_BLOCK_COLOR 0.0f,1.0f,1.0f,1.0f
 const float ROTATE_BLOCK_COLOR_mat[4]={0.5f,1.0f,1.0f,1.0f};
 
-#define TARGET_BLOCK_COLOR 0.0f,1.0f,0.0f,1.0f
 const float TARGET_BLOCK_COLOR_mat[4]={0.5f,1.0f,0.5f,1.0f};
+const float TARGET_BLOCK_COLOR_trans_mat[4]={0.5f,1.0f,0.5f,0.5f};
 
 #define TARGET_COLOR_OVERLAY 0.0f,0.5f,0.0f,0.75f
 

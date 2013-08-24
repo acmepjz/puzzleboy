@@ -29,7 +29,11 @@ public:
 	void Redo();
 
 	void OnTimer();
-	void OnKeyDown(int nChar,int nFlags);
+	bool OnKeyDown(int nChar,int nFlags);
+	void OnKeyUp(int nChar,int nFlags);
+
+	//nType: SDL_MOUSEBUTTONDOWN or SDL_MOUSEBUTTONUP or SDL_MOUSEMOTION
+	void OnMouseEvent(int nFlags, int xMouse, int yMouse, int nType);
 public:
 	GNUGetText m_objGetText;
 
