@@ -191,11 +191,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Level_PathFinding.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\MFCSerializer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MyFormat.cpp"
 				>
 			</File>
 			<File
@@ -228,6 +236,10 @@
 			</File>
 			<File
 				RelativePath=".\RecordManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SimpleBitmapFont.cpp"
 				>
 			</File>
 			<File
@@ -277,6 +289,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MyFormat.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MySerializer.h"
 				>
 			</File>
@@ -306,6 +322,10 @@
 			</File>
 			<File
 				RelativePath=".\RecordManager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SimpleBitmapFont.h"
 				>
 			</File>
 			<File

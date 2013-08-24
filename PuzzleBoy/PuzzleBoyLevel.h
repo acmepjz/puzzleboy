@@ -106,4 +106,14 @@ public:
 	PuzzleBoyLevelGraphics *m_Graphics;
 };
 
+#define PUSH_BLOCK_COLOR 1.0f,1.0f,0.0f,1.0f
+#define PUSH_BLOCK_COLOR_trans 1.0f,1.0f,0.0f,0.5f
 
+extern const float PUSH_BLOCK_COLOR_trans_mat[4];
+extern const float PUSH_BLOCK_COLOR_mat[4];
+
+#define TARGET_BLOCK_COLOR 0.0f,1.0f,0.0f,1.0f
+#define TARGET_BLOCK_COLOR_trans 0.0f,1.0f,0.0f,0.5f
+
+extern const float TARGET_BLOCK_COLOR_mat[4];
+extern const float TARGET_BLOCK_COLOR_trans_mat[4];

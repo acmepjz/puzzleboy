@@ -3,10 +3,13 @@
 #include "PuzzleBoyLevel.h"
 #include "PushableBlock.h"
 #include "FileSystem.h"
+#include "VertexList.h"
+#include "main.h"
 
 #include <string.h>
 
 #include "include_sdl.h"
+#include "include_gl.h"
 
 extern SDL_Event event;
 
@@ -70,7 +73,85 @@ bool PuzzleBoyApp::LoadFile(const u8string& fileName){
 }
 
 void PuzzleBoyApp::Draw(){
-	if(m_objPlayingLevel) m_objPlayingLevel->Draw();
+	m_bShowYesNoScreenKeyboard=false;
+
+	if(m_objPlayingLevel){
+		//draw level
+		m_objPlayingLevel->Draw();
+
+		//draw selected block in game mode
+		if(!m_bEditMode && m_nEditingBlockIndex>=0 && m_nEditingBlockIndex<(int)m_objPlayingLevel->m_objBlocks.size()){
+			PushableBlock *objBlock=m_objPlayingLevel->m_objBlocks[m_nEditingBlockIndex];
+
+			if(objBlock->m_nType==ROTATE_BLOCK){
+				std::vector<float> v;
+				std::vector<unsigned short> idx;
+
+				AddScreenKeyboard(float(m_nEditingBlockDX),
+					float(m_nEditingBlockDY),
+					1.0f,1.0f,SCREEN_KEYBOARD_NO,v,idx);
+
+				if(m_nEditingBlockDX==objBlock->m_x){
+					if(m_nEditingBlockX<=objBlock->m_x){
+						//left
+						AddScreenKeyboard(float(m_nEditingBlockDX-1),
+							float(m_nEditingBlockDY),
+							1.0f,1.0f,SCREEN_KEYBOARD_LEFT,v,idx);
+					}
+					if(m_nEditingBlockX>=objBlock->m_x){
+						//right
+						AddScreenKeyboard(float(m_nEditingBlockDX+1),
+							float(m_nEditingBlockDY),
+							1.0f,1.0f,SCREEN_KEYBOARD_RIGHT,v,idx);
+					}
+				}else{
+					if(m_nEditingBlockY<=objBlock->m_y){
+						//up
+						AddScreenKeyboard(float(m_nEditingBlockDX),
+							float(m_nEditingBlockDY-1),
+							1.0f,1.0f,SCREEN_KEYBOARD_UP,v,idx);
+					}
+					if(m_nEditingBlockY>=objBlock->m_y){
+						//down
+						AddScreenKeyboard(float(m_nEditingBlockDX),
+							float(m_nEditingBlockDY+1),
+							1.0f,1.0f,SCREEN_KEYBOARD_DOWN,v,idx);
+					}
+				}
+
+				DrawScreenKeyboard(v,idx);
+			}else{
+				//enable screen keyboard
+				if(m_bTouchscreen) m_bShowYesNoScreenKeyboard=true;
+
+				//draw floating normal blocks
+				glTranslatef(float(m_nEditingBlockX-objBlock->m_x),
+					float(m_nEditingBlockY-objBlock->m_y),0.0f);
+
+				if(objBlock->m_faces){
+					glDisable(GL_LIGHTING);
+					if(objBlock->m_nType==NORMAL_BLOCK) glColor4f(PUSH_BLOCK_COLOR_trans);
+					else glColor4f(TARGET_BLOCK_COLOR_trans);
+					objBlock->m_faces->Draw();
+				}
+
+				if(objBlock->m_shade){
+					glEnable(GL_LIGHTING);
+					glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,
+						(objBlock->m_nType==NORMAL_BLOCK)?PUSH_BLOCK_COLOR_trans_mat:TARGET_BLOCK_COLOR_trans_mat);
+					objBlock->m_shade->Draw();
+				}
+
+				glDisable(GL_LIGHTING);
+				if(m_bShowLines && objBlock->m_lines){
+					glColor4f(0.0f,0.0f,0.0f,1.0f);
+					objBlock->m_lines->Draw();
+				}
+
+				glLoadIdentity();
+			}
+		}
+	}
 }
 
 bool PuzzleBoyApp::StartGame(){
@@ -131,26 +212,25 @@ void PuzzleBoyApp::FinishGame(){
 	if(pDoc) m=pDoc->m_objLevels.size();
 
 	if (m_bEditMode || !pDoc || m_nCurrentLevel<0 || m_nCurrentLevel>=m) {
-		//TODO: complain
-		//AfxMessageBox(_T("ÊÅ≠Âñú‰Ω†ÂÆåÊàêÊú¨ÂÖ≥Âç°!"),MB_ICONINFORMATION);
+		//TODO: AfxMessageBox(_T("πßœ≤ƒ„ÕÍ≥…±æπÿø®!"),MB_ICONINFORMATION);
 		return;
 	}
 
 	/*CLevelFinished frm;
 
 	if(m_nCurrentLevel>=0 && m_nCurrentLevel<m-1){
-		frm.m_sInfo=_T("ÊÅ≠Âñú‰Ω†ÂÆåÊàêÊú¨ÂÖ≥Âç°! ËøõÂÖ•‰∏ã‰∏ÄÂÖ≥");
+		frm.m_sInfo=_T("πßœ≤ƒ„ÕÍ≥…±æπÿø®! Ω¯»Îœ¬“ªπÿ");
 	}else{
-		frm.m_sInfo=_T("ÊÅ≠Âñú‰Ω†ÂÆåÊàêÊú¨ÂÖ≥Âç°! ÂõûÂà∞Á¨¨‰∏ÄÂÖ≥");
+		frm.m_sInfo=_T("πßœ≤ƒ„ÕÍ≥…±æπÿø®! ªÿµΩµ⁄“ªπÿ");
 	}
 
-	frm.m_sInfo.AppendFormat(_T("\nÊ≠•Êï∞: %d - ÊúÄ‰Ω≥Á∫™ÂΩï: "),m_objPlayingLevel->m_nMoves);
+	frm.m_sInfo.AppendFormat(_T("\n≤Ω ˝: %d - ◊Óº—ºÕ¬º: "),m_objPlayingLevel->m_nMoves);
 
 	if(m_nCurrentBestStep>0) frm.m_sInfo.AppendFormat(_T("%d"),m_nCurrentBestStep);
-	else frm.m_sInfo+=_T("‰∏çÂ≠òÂú®");
+	else frm.m_sInfo+=_T("≤ª¥Ê‘⁄");
 
 	if(m_nCurrentBestStep<=0 || m_nCurrentBestStep>m_objPlayingLevel->m_nMoves){
-		frm.m_sInfo+=_T("\nÊÅ≠Âñú‰Ω†ÊâìÁ†¥ÊúÄ‰Ω≥Á∫™ÂΩï!");
+		frm.m_sInfo+=_T("\nπßœ≤ƒ„¥Ú∆∆◊Óº—ºÕ¬º!");
 	}
 
 	frm.m_objCurrentLevel=pDoc->GetLevel(m_nCurrentLevel);
@@ -317,11 +397,12 @@ void PuzzleBoyApp::Undo()
 	if(m_bEditMode){
 		//TODO: edit undo
 	}else if(m_objPlayingLevel && !m_objPlayingLevel->IsAnimating() && m_sRecord.empty()){
-		if(m_objPlayingLevel->Undo()){
+		if(!m_objPlayingLevel->CanUndo()){
+			//TODO: MessageBeep(0);
+		}else if(m_objPlayingLevel->Undo()){
 			m_nEditingBlockIndex=-1;
 		}else{
-			//TODO: complain
-			//AfxMessageBox(_T("Âá∫Áé∞ÈîôËØØ"));
+			//TODO: AfxMessageBox(_T("≥ˆœ÷¥ÌŒÛ"));
 		}
 	}
 }
@@ -331,16 +412,17 @@ void PuzzleBoyApp::Redo()
 	if(m_bEditMode){
 		//TODO: edit redo
 	}else if(m_objPlayingLevel && !m_objPlayingLevel->IsAnimating() && m_sRecord.empty()){
-		if(m_objPlayingLevel->Redo()){
+		if(!m_objPlayingLevel->CanRedo()){
+			//TODO: MessageBeep(0);
+		}else if(m_objPlayingLevel->Redo()){
 			m_nEditingBlockIndex=-1;
 		}else{
-			//TODO: complain
-			//AfxMessageBox(_T("Âá∫Áé∞ÈîôËØØ"));
+			//TODO: AfxMessageBox(_T("≥ˆœ÷¥ÌŒÛ"));
 		}
 	}
 }
 
-void PuzzleBoyApp::OnKeyDown(int nChar,int nFlags){
+bool PuzzleBoyApp::OnKeyDown(int nChar,int nFlags){
 	if(m_bEditMode){
 		//TODO: edit mode
 		/*if(m_nEditingBlockIndex>=0){
@@ -377,8 +459,9 @@ void PuzzleBoyApp::OnKeyDown(int nChar,int nFlags){
 		if(nFlags){
 			if(nChar==SDLK_r && (nFlags & KMOD_CTRL)!=0){
 				StartGame();
+				return true;
 			}
-			return;
+			return false;
 		}
 
 		if(m_sRecord.empty()){
@@ -406,17 +489,70 @@ void PuzzleBoyApp::OnKeyDown(int nChar,int nFlags){
 					break;
 				case SDLK_u:
 					Undo();
-					return;
+					return true;
+					break;
 				case SDLK_r:
 					Redo();
-					return;
+					return true;
+					break;
+				case SDLK_ESCAPE:
+					if(m_nEditingBlockIndex>=0){
+						//cancel moving blocks
+						m_nEditingBlockIndex=-1;
+						return true;
+					}
+					return false;
+					break;
+				case SDLK_RETURN:
+					if(m_nEditingBlockIndex>=0 && m_nEditingBlockIndex<(int)m_objPlayingLevel->m_objBlocks.size()){
+						//move a moveable block to new position
+						u8string s;
+						int idx=m_nEditingBlockIndex;
+						m_nEditingBlockIndex=-1;
+
+						PushableBlock *objBlock=m_objPlayingLevel->m_objBlocks[idx];
+
+						if(objBlock->m_nType==ROTATE_BLOCK){
+							int dx=0,dy=0;
+							if(m_nEditingBlockDX==objBlock->m_x){
+								if(m_nEditingBlockX<objBlock->m_x) dx=-1;
+								else if(m_nEditingBlockX>objBlock->m_x) dx=1;
+							}else{
+								if(m_nEditingBlockY<objBlock->m_y) dy=-1;
+								else if(m_nEditingBlockY>objBlock->m_y) dy=1;
+							}
+
+							int xx=m_nEditingBlockDX-dx;
+							int yy=m_nEditingBlockDY-dy;
+
+							if(m_objPlayingLevel->CheckIfCurrentPlayerCanMove(dx,dy,xx,yy)
+								&& m_objPlayingLevel->FindPath(s,xx,yy))
+							{
+								s.push_back(dx<0?'A':dy<0?'W':dx>0?'D':'S');
+							}
+						}else{
+							m_objPlayingLevel->FindPathForBlock(s,idx,m_nEditingBlockX,m_nEditingBlockY);
+						}
+
+						if(!s.empty()){
+							m_sRecord=s;
+							m_nRecordIndex=0;
+						}else{
+							//TODO: MessageBeep(0);
+						}
+
+						return true;
+					}
+					return false;
+					break;
 				default:
-					return;
+					return false;
+					break;
 				}
-				//TODO: complain
-				/*if(!b){
-					MessageBeep(0);
-				}*/
+				if(!b){
+					//TODO: MessageBeep(0);
+				}
+				return true;
 			}
 		}else{
 			switch(nChar){
@@ -425,12 +561,270 @@ void PuzzleBoyApp::OnKeyDown(int nChar,int nFlags){
 				m_bPlayFromRecord=false;
 				m_sRecord.clear();
 				m_nRecordIndex=-1;
+				return true;
 				break;
 			default:
-				//TODO: complain
-				//MessageBeep(0);
+				//TODO: MessageBeep(0);
 				break;
 			}
 		}
 	}
+
+	return false;
+}
+
+void PuzzleBoyApp::OnKeyUp(int nChar,int nFlags){
+	//TODO: key up
+}
+
+void PuzzleBoyApp::OnMouseEvent(int nFlags, int xMouse, int yMouse, int nType){
+	//FIXME: currently we don't process mouse up event
+	if(nType==SDL_MOUSEBUTTONUP) return;
+
+	//process mouse move event
+	if(nType==SDL_MOUSEMOTION && (nFlags&(SDL_BUTTON_LMASK|SDL_BUTTON_RMASK))==0){
+		if(!m_bEditMode && m_objPlayingLevel
+			&& m_nEditingBlockIndex>=0 && m_nEditingBlockIndex<(int)m_objPlayingLevel->m_objBlocks.size())
+		{
+			int x,y;
+			TranslateCoordinate(xMouse,yMouse,x,y);
+
+			if((m_objPlayingLevel->m_objBlocks[m_nEditingBlockIndex])->m_nType!=ROTATE_BLOCK){
+				x+=m_nEditingBlockDX;
+				y+=m_nEditingBlockDY;
+			}
+
+			if(x!=m_nEditingBlockX || y!=m_nEditingBlockY){
+				m_nEditingBlockX=x;
+				m_nEditingBlockY=y;
+			}
+		}
+		return;
+	}
+
+	if(!m_bEditMode){
+		//process in-game mouse events
+		if(nType==SDL_MOUSEBUTTONDOWN && (nFlags&(SDL_BUTTON_LMASK|SDL_BUTTON_RMASK))!=0
+			&& m_objPlayingLevel
+			)
+		{
+			if(nFlags&SDL_BUTTON_RMASK){
+				if(m_nEditingBlockIndex>=0){
+					//cancel moving blocks
+					m_nEditingBlockIndex=-1;
+				}else if(!m_sRecord.empty()){
+					//skip demo
+					m_bPlayFromRecord=false;
+					m_sRecord.clear();
+					m_nRecordIndex=-1;
+				}else if(!m_objPlayingLevel->IsAnimating()){
+					//undo
+					if(m_objPlayingLevel->CanUndo()) Undo();
+					else{
+						//TODO: MessageBeep(0);
+					}
+				}
+			}else if(
+				!m_objPlayingLevel->IsAnimating()
+				&& !m_objPlayingLevel->IsWin()
+				&& m_sRecord.empty()
+				)
+			{
+				int x,y;
+				TranslateCoordinate(xMouse,yMouse,x,y);
+
+				if(x>=0 && y>=0 && x<m_objPlayingLevel->m_nWidth && y<m_objPlayingLevel->m_nHeight){
+					if(m_objPlayingLevel->SwitchPlayer(x,y,true)){
+						//it's switch player
+						//do nothing in SDL version
+					}else if(m_nEditingBlockIndex>=0 && m_nEditingBlockIndex<(int)m_objPlayingLevel->m_objBlocks.size()){
+						//workaround on Android and other devices without mouse move event
+						OnMouseEvent(0,xMouse,yMouse,SDL_MOUSEMOTION);
+
+						//move a moveable block to new position
+						if(!m_bTouchscreen || m_objPlayingLevel->m_objBlocks[m_nEditingBlockIndex]->m_nType==ROTATE_BLOCK) OnKeyDown(SDLK_RETURN,0);
+					}else{
+						int x0=m_objPlayingLevel->GetCurrentPlayerX();
+						int y0=m_objPlayingLevel->GetCurrentPlayerY();
+
+						//check if a block clicked
+						int idx=m_objPlayingLevel->HitTestForPlacingBlocks(x,y,-1);
+						int nType=-1;
+						PushableBlock *objBlock=NULL;
+						if(idx>=0){
+							objBlock=m_objPlayingLevel->m_objBlocks[idx];
+							nType=objBlock->m_nType;
+						}
+						if(nType==NORMAL_BLOCK || nType==TARGET_BLOCK){
+							//clicked a moveable block
+							m_nEditingBlockIndex=idx;
+							m_nEditingBlockX=objBlock->m_x;
+							m_nEditingBlockY=objBlock->m_y;
+							m_nEditingBlockDX=m_nEditingBlockX-x;
+							m_nEditingBlockDY=m_nEditingBlockY-y;
+						}else if(nType==ROTATE_BLOCK && (x!=objBlock->m_x || y!=objBlock->m_y)){
+							//clicked a rotate block
+							m_nEditingBlockIndex=idx;
+							m_nEditingBlockX=x;
+							m_nEditingBlockY=y;
+							m_nEditingBlockDX=x;
+							m_nEditingBlockDY=y;
+						}else if(x==x0 && y==y0-1){ //check if the clicked position is adjacent to the player
+							OnKeyDown(SDLK_UP,0);
+						}else if(x==x0 && y==y0+1){
+							OnKeyDown(SDLK_DOWN,0);
+						}else if(x==x0-1 && y==y0){
+							OnKeyDown(SDLK_LEFT,0);
+						}else if(x==x0+1 && y==y0){
+							OnKeyDown(SDLK_RIGHT,0);
+						}else{
+							u8string s;
+
+							if(m_objPlayingLevel->FindPath(s,x,y) && !s.empty()){
+								//it's pathfinding
+								m_sRecord=s;
+								m_nRecordIndex=0;
+							}else{
+								//TODO: MessageBeep(0);
+							}
+						}
+					}
+				}
+			}
+		}
+		return;
+	}
+
+	//TODO: edit mode
+	/*CmfccourseDoc* pDoc = GetDocument();
+	if (!pDoc) return;
+
+	if(m_nCurrentLevel<0) m_nCurrentLevel=0;
+	if(m_nCurrentLevel>=pDoc->m_objLevels.GetSize()) m_nCurrentLevel=pDoc->m_objLevels.GetSize()-1;
+
+	CLevel *lev=pDoc->GetLevel(m_nCurrentLevel);
+	if(lev==NULL) return;
+
+	RECT r;
+	GetClientRect(&r);
+	r.top=40;
+
+	int nBlockSize=lev->GetBlockSize(r.right,r.bottom-40);
+	r=lev->GetDrawArea(r,nBlockSize);
+
+	if(point.x<r.left || point.y<r.top) return;
+	int x=(point.x-r.left)/nBlockSize;
+	int y=(point.y-r.top)/nBlockSize;
+	if(x>=lev->m_nWidth || y>=lev->m_nHeight) return;
+
+	//check if we are editing some pushable block
+	if(m_nEditingBlockIndex>=0 && m_nEditingBlockIndex<lev->m_objBlocks.GetSize()){
+		PushableBlock *objBlock=lev->m_objBlocks[m_nEditingBlockIndex];
+		if(objBlock->m_nType==ROTATE_BLOCK){
+			int idx=-1,value=-1;
+
+			if(x==objBlock->m_x){
+				if(y==objBlock->m_y){
+					if(nFlags&SDL_BUTTON_LMASK){
+						MessageBeep(0);
+					}else{
+						//delete this block
+						OnEditClear();
+					}
+				}else if(y<objBlock->m_y){
+					idx=0;
+					value=objBlock->m_y-y;
+				}else{
+					idx=2;
+					value=y-objBlock->m_y;
+				}
+			}else if(y==objBlock->m_y){
+				if(x<objBlock->m_x){
+					idx=1;
+					value=objBlock->m_x-x;
+				}else{
+					idx=3;
+					value=x-objBlock->m_x;
+				}
+			}else{
+				MessageBeep(0);
+			}
+
+			if(idx>=0){
+				if(nFlags&SDL_BUTTON_RMASK) value--;
+				if((*objBlock)[idx]!=value){
+					(*objBlock)[idx]=value;
+					Invalidate();
+					pDoc->SetModifiedFlag();
+				}
+			}
+		}else{
+			if((nFlags&SDL_BUTTON_LMASK)!=0 && lev->HitTestForPlacingBlocks(x,y,m_nEditingBlockIndex)!=-1){
+				MessageBeep(0);
+			}else{
+				int n=(nFlags&SDL_BUTTON_LMASK)?1:0;
+				if((*objBlock)(x,y)!=n){
+					(*objBlock)(x,y)=n;
+					Invalidate();
+					pDoc->SetModifiedFlag();
+				}
+			}
+		}
+		return;
+	}
+
+	switch(m_nCurrentTool){
+	case -1:
+		//TODO: other selection tool
+		{
+			if(nFlags&SDL_BUTTON_LMASK){
+				int idx=lev->HitTestForPlacingBlocks(x,y,m_nEditingBlockIndex);
+				if(idx>=0){
+					EnterBlockEdit(idx,true);
+				}
+			}
+		}
+		break;
+	case 0:
+	case 1:
+	case 2:
+	case 3:
+	case 4:
+	case 5:
+		{
+			int idx=m_nCurrentTool;
+			int idx0=(*lev)(x,y);
+
+			if(nFlags&SDL_BUTTON_RMASK) idx=0;
+			else if(idx==TARGET_TILE && (idx0==PLAYER_TILE || idx0==PLAYER_AND_TARGET_TILE)) idx=PLAYER_AND_TARGET_TILE;
+			else if(idx==PLAYER_TILE && (idx0==TARGET_TILE || idx0==PLAYER_AND_TARGET_TILE)) idx=PLAYER_AND_TARGET_TILE;
+
+			if(idx0==idx) break;
+
+			(*lev)(x,y)=idx;
+			pDoc->SetModifiedFlag();
+			Invalidate();
+		}
+		break;
+	case 100:
+	case 101:
+	case 102:
+		{
+			if(nFlags&SDL_BUTTON_LMASK){
+				int idx=lev->HitTestForPlacingBlocks(x,y,m_nEditingBlockIndex);
+				if(idx==-1){
+					PushableBlock *objBlock=new PushableBlock;
+					objBlock->CreateSingle(m_nCurrentTool-100,x,y);
+					EnterBlockEdit(lev->m_objBlocks.Add(objBlock),false);
+				}else if(idx>=0){
+					EnterBlockEdit(idx,true);
+				}else{
+					MessageBeep(0);
+				}
+			}
+		}
+		break;
+	default:
+		break;
+	}*/
 }
