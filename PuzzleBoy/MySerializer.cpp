@@ -1,4 +1,5 @@
 #include "MySerializer.h"
+#include "FileSystem.h"
 #include "blake2.h"
 #include <assert.h>
 #include <string.h>

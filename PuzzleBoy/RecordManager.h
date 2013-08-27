@@ -3,9 +3,9 @@
 #include "PuzzleBoyLevelData.h"
 #include "MySerializer.h"
 #include "UTF8-16.h"
-#include "FileSystem.h"
 #include <vector>
-#include <stdio.h>
+
+struct u8file;
 
 struct RecordItem{
 	u16string sPlayerName;

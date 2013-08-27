@@ -52,7 +52,7 @@ public:
 	//level checksum and best record in database
 	unsigned char m_bCurrentChecksum[PuzzleBoyLevelData::ChecksumSize];
 	int m_nCurrentBestStep;
-	u16string m_sCurrentBestStepOwner;
+	u8string m_sCurrentBestStepOwner;
 	std::vector<RecordItem> m_tCurrentBestRecord;
 
 	int m_nCurrentLevel;

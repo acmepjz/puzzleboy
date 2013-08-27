@@ -1,9 +1,10 @@
 #pragma once
 
 #include "UTF8-16.h"
-#include "FileSystem.h"
 #include <vector>
 #include <map>
+
+struct u8file;
 
 typedef std::pair<u8string,unsigned short> MFCObjectVersion;
 

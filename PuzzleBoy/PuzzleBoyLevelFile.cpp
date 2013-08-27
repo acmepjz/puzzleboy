@@ -5,6 +5,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <ctype.h>
 #include <string.h>
 #include <vector>
 #include <string>
