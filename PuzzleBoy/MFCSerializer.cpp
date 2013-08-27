@@ -1,4 +1,5 @@
 #include "MFCSerializer.h"
+#include "FileSystem.h"
 #include <assert.h>
 #include <string.h>
 

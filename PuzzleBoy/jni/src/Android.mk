@@ -26,6 +26,7 @@ LOCAL_SRC_FILES := $(SDL_PATH)/src/main/android/SDL_android_main.c \
 ../../PuzzleBoyLevelUndo.cpp \
 ../../RecordManager.cpp \
 ../../SimpleBitmapFont.cpp \
+../../SimpleListScreen.cpp \
 ../../UTF8-16.cpp \
 ../../VertexList.cpp
 

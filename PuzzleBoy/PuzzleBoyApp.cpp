@@ -192,7 +192,7 @@ bool PuzzleBoyApp::StartGame(){
 						m_sCurrentBestStepOwner.push_back(',');
 						m_sCurrentBestStepOwner.push_back(' ');
 					}
-					m_sCurrentBestStepOwner+=m_tCurrentBestRecord[i].sPlayerName;
+					m_sCurrentBestStepOwner+=toUTF8(m_tCurrentBestRecord[i].sPlayerName);
 				}
 			}
 		}
@@ -200,6 +200,9 @@ bool PuzzleBoyApp::StartGame(){
 
 	//create graphics
 	m_objPlayingLevel->CreateGraphics();
+
+	//FIXME: ad-hoc one
+	GameScreenFit(0,0,m_objPlayingLevel->m_nWidth,m_objPlayingLevel->m_nHeight);
 
 	return true;
 }
@@ -244,23 +247,23 @@ void PuzzleBoyApp::FinishGame(){
 	if(frm.m_sPlayerName!=theApp.m_sPlayerName){
 		theApp.m_sPlayerName=frm.m_sPlayerName;
 		theApp.SavePlayerName();
-	}
+	}*/
 
 	//save record
 	if(m_bPlayFromRecord){
 #ifdef _DEBUG
-		OutputDebugString(_T("Play from record, don't save it\n"));
+		printf("[PuzzleBoyApp] Play from record, don't save it\n");
 #endif
 	}else{
 #ifdef _DEBUG
-		OutputDebugString(_T("Not play from record, save it\n"));
+		printf("[PuzzleBoyApp] Not play from record, save it\n");
 #endif
-		theApp.m_objRecordMgr.AddLevelAndRecord(
+		m_objRecordMgr.AddLevelAndRecord(
 			*(pDoc->GetLevel(m_nCurrentLevel)),
 			m_objPlayingLevel->m_nMoves,
 			m_objPlayingLevel->GetRecord(),
-			frm.m_sPlayerName.IsEmpty()?(const wchar_t*)NULL:frm.m_sPlayerName);
-	}*/
+			m_sPlayerName.empty()?(const unsigned short*)NULL:m_sPlayerName.c_str());
+	}
 
 	//next level
 	if(m_nCurrentLevel>=0 && m_nCurrentLevel<m-1){
@@ -578,9 +581,6 @@ void PuzzleBoyApp::OnKeyUp(int nChar,int nFlags){
 }
 
 void PuzzleBoyApp::OnMouseEvent(int nFlags, int xMouse, int yMouse, int nType){
-	//FIXME: currently we don't process mouse up event
-	if(nType==SDL_MOUSEBUTTONUP) return;
-
 	//process mouse move event
 	if(nType==SDL_MOUSEMOTION && (nFlags&(SDL_BUTTON_LMASK|SDL_BUTTON_RMASK))==0){
 		if(!m_bEditMode && m_objPlayingLevel
@@ -604,7 +604,8 @@ void PuzzleBoyApp::OnMouseEvent(int nFlags, int xMouse, int yMouse, int nType){
 
 	if(!m_bEditMode){
 		//process in-game mouse events
-		if(nType==SDL_MOUSEBUTTONDOWN && (nFlags&(SDL_BUTTON_LMASK|SDL_BUTTON_RMASK))!=0
+		//FIXME: mouse up??
+		if(nType==SDL_MOUSEBUTTONUP && (nFlags&(SDL_BUTTON_LMASK|SDL_BUTTON_RMASK))!=0
 			&& m_objPlayingLevel
 			)
 		{

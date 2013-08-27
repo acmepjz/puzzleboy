@@ -1,35 +1,23 @@
 #pragma once
 
-#define USE_SDL_RWOPS
-
 #include "UTF8-16.h"
 #include <stdio.h>
 #include <vector>
 
-#ifdef USE_SDL_RWOPS
-#include <SDL_rwops.h>
-typedef SDL_RWops u8file;
-#define u8fopen(filename, mode) SDL_RWFromFile(filename, mode)
-#define u8fseek(file, offset, whence) SDL_RWseek(file, offset, whence)
-#define u8ftell(file) SDL_RWtell(file)
-#define u8fread(ptr, size, n, file) SDL_RWread(file, ptr, size, n)
-#define u8fwrite(ptr, size, n, file) SDL_RWwrite(file, ptr, size, n)
-#define u8fclose(file) SDL_RWclose(file)
-char* u8fgets(char* buf, int count, u8file* file);
-#else
-typedef FILE u8file;
-#ifdef WIN32
+struct u8file;
+
 u8file *u8fopen(const char* filename,const char* mode);
-#else
-#define u8fopen(filename, mode) fopen(filename, mode)
-#endif
-#define u8fseek(file, offset, whence) fseek(file, offset, whence)
-#define u8ftell(file) ftell(file)
-#define u8fread(ptr, size, n, file) fread(ptr, size, n, file)
-#define u8fwrite(ptr, size, n, file) fwrite(ptr, size, n, file)
-#define u8fclose(file) fclose(file)
-#define u8fgets(buf, count, file) fgets(buf, count, file)
-#endif
+int u8fseek(u8file* file,long offset,int whence);
+long u8ftell(u8file* file);
+size_t u8fread(void* ptr,size_t size,size_t nmemb,u8file* file);
+size_t u8fwrite(const void* ptr,size_t size,size_t nmemb,u8file* file);
+int u8fclose(u8file* file);
+char* u8fgets(char* buf, int count, u8file* file);
+const char* u8fgets2(u8string& s,u8file* file);
+
+void initPaths();
+
+extern u8string externalStoragePath;
 
 //Copied from Me and My Shadow, licensed under GPLv3 or above
 
@@ -45,3 +33,8 @@ std::vector<u8string> enumAllFiles(u8string path,const char* extension=NULL,bool
 //containsPath: Specifies if the return file name should contains path.
 //Returns: A vector containing the names of the directories.
 std::vector<u8string> enumAllDirs(u8string path,bool containsPath=false);
+
+//Method that will create a directory.
+//path: The directory to create.
+//Returns: True if it succeeds.
+bool createDirectory(const u8string& path);

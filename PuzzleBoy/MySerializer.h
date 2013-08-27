@@ -1,8 +1,9 @@
 #pragma once
 
 #include "UTF8-16.h"
-#include "FileSystem.h"
 #include <vector>
+
+struct u8file;
 
 class MySerializer{
 public:

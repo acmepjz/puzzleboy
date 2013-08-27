@@ -943,6 +943,10 @@ bool PuzzleBoyLevel::SwitchPlayer(int x,int y,bool bSaveUndo)
 			m_nPlayerX=x;
 			m_nPlayerY=y;
 			m_nSwitchAnimationTime=GetAnimationTime();
+
+			//FIXME: ad-hoc one
+			GameScreenEnsureVisible(x,y);
+
 			return true;
 		}
 		return false;
@@ -975,6 +979,10 @@ bool PuzzleBoyLevel::SwitchPlayer(int x,int y,bool bSaveUndo)
 			m_nPlayerX=x;
 			m_nPlayerY=y;
 			m_nSwitchAnimationTime=GetAnimationTime();
+
+			//FIXME: ad-hoc one
+			GameScreenEnsureVisible(x,y);
+
 			return true;
 		}
 	}

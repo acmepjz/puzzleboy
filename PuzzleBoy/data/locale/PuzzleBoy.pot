@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PuzzleBoy 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-08-16 23:58+0800\n"
+"POT-Creation-Date: 2013-08-27 20:57+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,7 +16,19 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: main.cpp:126
+#: main.cpp:234
+msgid "User level: "
+msgstr ""
+
+#: main.cpp:241
+msgid "Choose Level File"
+msgstr ""
+
+#: main.cpp:293
+msgid "Choose Level"
+msgstr ""
+
+#: main.cpp:519
 msgid "Puzzle Boy"
 msgstr ""
 
@@ -24,6 +36,6 @@ msgstr ""
 msgid "Unnamed level"
 msgstr ""
 
-#: PuzzleBoyLevelFile.cpp:28 PuzzleBoyLevelFile.cpp:60
+#: PuzzleBoyLevelFile.cpp:29 PuzzleBoyLevelFile.cpp:61
 msgid "Unnamed level pack"
 msgstr ""

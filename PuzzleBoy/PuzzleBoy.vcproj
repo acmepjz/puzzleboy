@@ -243,6 +243,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SimpleListScreen.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\UTF8-16.cpp"
 				>
 			</File>
@@ -326,6 +330,10 @@
 			</File>
 			<File
 				RelativePath=".\SimpleBitmapFont.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SimpleListScreen.h"
 				>
 			</File>
 			<File
