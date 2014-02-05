@@ -200,21 +200,6 @@ public:
 
 	virtual int DoModal(){
 		//enum internal files
-#ifdef ANDROID
-		u8file *f=u8fopen("data/levels/list.txt","rb");
-		if(f){
-			u8string s;
-			while(u8fgets2(s,f)){
-				u8string::size_type lps=s.find_first_of("\r\n");
-				if(lps!=u8string::npos) s=s.substr(0,lps);
-				if(!s.empty()){
-					m_files.push_back("data/levels/"+s);
-					m_fileDisplayName.push_back(s);
-				}
-			}
-			u8fclose(f);
-		}
-#else
 		{
 			u8string fn="data/levels/";
 			std::vector<u8string> fs=enumAllFiles(fn,"lev");
@@ -223,7 +208,6 @@ public:
 				m_fileDisplayName.push_back(fs[i]);
 			}
 		}
-#endif
 
 		//enum external files
 		{

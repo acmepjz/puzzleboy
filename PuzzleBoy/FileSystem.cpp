@@ -174,7 +174,44 @@ std::vector<u8string> enumAllFiles(u8string path,const char* extension,bool cont
 	DIR *pDir;
 	struct dirent *pDirent;
 	pDir=opendir(path.c_str());
-	if(pDir==NULL) return v;
+	if(pDir==NULL){
+#ifdef ANDROID
+		//ad-hoc workaround
+		u8file *f=u8fopen((path+"list.txt").c_str(),"rb");
+		if(f){
+			u8string s;
+			while(u8fgets2(s,f)){
+				u8string::size_type lps=s.find_first_of("\r\n");
+				if(lps!=u8string::npos) s=s.substr(0,lps);
+				if(s.empty()) continue;
+
+				//trim
+				lps=s.find_first_not_of(" \t");
+				if(lps>0) s=s.substr(lps);
+				if(s.empty()) continue;
+
+				lps=s.find_last_not_of(" \t");
+				if(lps+1<s.size()) s=s.substr(0,lps+1);
+
+				if(s.empty() || s[s.size()-1]=='/') continue;
+
+				if(len>0){
+					if((int)s.size()<len+1) continue;
+					if(s[s.size()-len-1]!='.') continue;
+					if(strcasecmp(&s[s.size()-len],extension)) continue;
+				}
+
+				if(containsPath){
+					v.push_back(path+s);
+				}else{
+					v.push_back(s);
+				}
+			}
+			u8fclose(f);
+		}
+#endif
+		return v;
+	}
 	while((pDirent=readdir(pDir))!=NULL){
 		if(pDirent->d_name[0]=='.'){
 			if(pDirent->d_name[1]==0||
@@ -248,7 +285,39 @@ std::vector<u8string> enumAllDirs(u8string path,bool containsPath){
 	DIR *pDir;
 	struct dirent *pDirent;
 	pDir=opendir(path.c_str());
-	if(pDir==NULL) return v;
+	if(pDir==NULL){
+#ifdef ANDROID
+		//ad-hoc workaround
+		u8file *f=u8fopen((path+"list.txt").c_str(),"rb");
+		if(f){
+			u8string s;
+			while(u8fgets2(s,f)){
+				u8string::size_type lps=s.find_first_of("\r\n");
+				if(lps!=u8string::npos) s=s.substr(0,lps);
+				if(s.empty()) continue;
+
+				//trim
+				lps=s.find_first_not_of(" \t");
+				if(lps>0) s=s.substr(lps);
+				if(s.empty()) continue;
+
+				lps=s.find_last_not_of(" \t");
+				if(lps+1<s.size()) s=s.substr(0,lps+1);
+
+				if(s.size()<2 || s[s.size()-1]!='/') continue;
+				s=s.substr(0,s.size()-1);
+
+				if(containsPath){
+					v.push_back(path+s);
+				}else{
+					v.push_back(s);
+				}
+			}
+			u8fclose(f);
+		}
+#endif
+		return v;
+	}
 	while((pDirent=readdir(pDir))!=NULL){
 		if(pDirent->d_name[0]=='.'){
 			if(pDirent->d_name[1]==0||
