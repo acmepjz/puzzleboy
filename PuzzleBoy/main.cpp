@@ -7,17 +7,15 @@
 #include "SimpleBitmapFont.h"
 #include "SimpleListScreen.h"
 #include "MyFormat.h"
+#include "clsTiming.h"
 
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <iostream>
 
 #include "include_sdl.h"
 #include "include_gl.h"
-
-using namespace std;
 
 PuzzleBoyApp *theApp=NULL;
 SDL_Window *mainWindow=NULL;
@@ -192,7 +190,7 @@ public:
 
 	virtual int OnClick(int index){
 		if(!theApp->LoadFile(m_files[index])){
-			cout<<"Failed to load file"<<endl;
+			printf("[ChooseLevelFileScreen] Failed to load file %s\n",m_files[index].c_str());
 			return -1;
 		}
 		return 1;
@@ -400,6 +398,27 @@ static bool OnKeyDown(int nChar,int nFlags){
 		return false;
 	}
 
+	//ad-hoc solver test
+	if(nChar==SDLK_t && (nFlags & KMOD_CTRL)!=0){
+		PuzzleBoyLevelData *dat=theApp->GetDocument()->GetLevel(theApp->m_nCurrentLevel);
+		if(dat){
+			printf("--- Solver Test ---\n");
+
+			clsTiming t;
+			t.Start();
+			PuzzleBoyLevel *lev=new PuzzleBoyLevel(*dat);
+			lev->StartGame();
+			u8string s;
+			int ret=lev->SolveIt(s,NULL,NULL);
+			t.Stop();
+
+			printf("SolveIt() returns %d, Time=%0.2fms\n",ret,t.GetMs());
+			if(ret==1) printf("The solution is %s\n",s.c_str());
+
+			delete lev;
+		}
+	}
+
 	if(theApp->OnKeyDown(nChar,nFlags)) return true;
 	return false;
 }
@@ -464,7 +483,7 @@ int main(int argc,char** argv){
 
 	//TEST: load default level file
 	if(!theApp->LoadFile("data/levels/PuzzleBoy.lev")){
-		cout<<"Failed to load file"<<endl;
+		printf("[main] Failed to load default level file\n");
 	}
 
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK)==-1) abort();

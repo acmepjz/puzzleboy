@@ -66,6 +66,10 @@ const char* u8fgets2(u8string& s,u8file* file){
 	return NULL;
 }
 
+size_t u8fputs2(const u8string& s,u8file* file){
+	return u8fwrite(s.c_str(),1,s.size(),file);
+}
+
 u8file *u8fopen(const char* filename,const char* mode){
 #ifdef USE_SDL_RWOPS
 	return (u8file*)SDL_RWFromFile(filename,mode);
@@ -352,6 +356,7 @@ void initPaths(){
 	wchar_t *s=new wchar_t[size];
 	SHGetSpecialFolderPathW(NULL,s,CSIDL_PERSONAL,1);
 	externalStoragePath=toUTF8((const unsigned short*)s)+"/My Games/PuzzleBoy";
+	delete[] s;
 #else
 	const char *env=getenv("HOME");
 	if(env==NULL) externalStoragePath="local";

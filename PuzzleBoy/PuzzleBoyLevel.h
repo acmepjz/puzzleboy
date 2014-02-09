@@ -7,9 +7,12 @@ class PuzzleBoyLevelUndo;
 struct BlockBFSNode;
 
 struct LevelSolverState{
-	int nCurrentNodeCount;
+	int nAllNodeCount;
 	int nOpenedNodeCount;
 };
+
+//return value: non-zero=abort (?)
+typedef int (*LevelSolverCallback)(void* userData,const LevelSolverState& progress);
 
 class VertexList;
 struct PuzzleBoyLevelGraphics;
@@ -57,9 +60,9 @@ public:
 
 	//highly experimental function.
 	//rec: the output record
-	//return value: 1=success 0=failed -1=error or abort
+	//return value: 1=success 0=no solution -1=abort -2=error
 	//note: call StartGame() before calling this function
-	int SolveIt(u8string& rec,void* userData,int (*callback)(void*,LevelSolverState&));
+	int SolveIt(u8string& rec,void* userData,LevelSolverCallback callback) const;
 
 	bool CanUndo() const {return m_nCurrentUndo>0 && m_nCurrentUndo<=(int)m_objUndo.size();}
 	bool CanRedo() const {return m_nCurrentUndo>=0 && m_nCurrentUndo<(int)m_objUndo.size();}
@@ -68,7 +71,7 @@ public:
 
 	void SaveUndo(PuzzleBoyLevelUndo* objUndo);
 
-	u8string GetRecord();
+	u8string GetRecord() const;
 	bool ApplyRecord(const u8string& rec);
 
 	int GetCurrentPlayerX() const {return m_nPlayerX;}
@@ -88,15 +91,19 @@ private:
 
 public:
 	int m_nMoves;
-private:
 	std::vector<unsigned char> m_bMoveableData,m_bTargetData;
 	int m_nPlayerCount;
+	int m_nTargetCount,m_nTargetFinished;
+	int m_nExitCount;
+
+	unsigned char GetMoveableData(int x,int y) const {return m_bMoveableData[y*m_nWidth+x];}
+	unsigned char GetTargetData(int x,int y) const {return m_bTargetData[y*m_nWidth+x];}
+private:
 	int m_nPlayerX,m_nPlayerY;
 	int m_nMoveAnimationX,m_nMoveAnimationY,m_nMoveAnimationTime;
 	int m_nBlockAnimationIndex,m_nBlockAnimationFlags;
 	int m_nSwitchAnimationTime;
-	int m_nTargetCount,m_nTargetFinished;
-	int m_nExitCount,m_nExitAnimationTime;
+	int m_nExitAnimationTime;
 
 	std::vector<PuzzleBoyLevelUndo*> m_objUndo;
 	int m_nCurrentUndo; //point to current state, 0 to m_objUndo.GetSize()

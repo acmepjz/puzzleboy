@@ -427,7 +427,7 @@ int RecordManager::SerializeAndFindLevel(const PuzzleBoyLevelData& lev,MySeriali
 			//found a level with same checksum, assume the level is the same
 			//do nothing, exit
 #ifdef _DEBUG
-			printf("[RecordManager] Level found\n"); //debug
+			printf("[RecordManager] Debug: Level found\n"); //debug
 #endif
 			return lp;
 		}
@@ -436,7 +436,7 @@ int RecordManager::SerializeAndFindLevel(const PuzzleBoyLevelData& lev,MySeriali
 	}
 
 #ifdef _DEBUG
-	printf("[RecordManager] Level not found\n"); //debug
+	printf("[RecordManager] Debug: Level not found\n"); //debug
 #endif
 
 	return 0;
@@ -587,20 +587,20 @@ void RecordManager::AddLevelAndRecord(const PuzzleBoyLevelData& lev,int nStep,co
 			//check if there is a better record already in database
 			if(nStep>=st){
 #ifdef _DEBUG
-				printf("[RecordManager] Better record already exists\n"); //debug
+				printf("[RecordManager] Debug: Better record already exists\n"); //debug
 #endif
 				return;
 			}
 
 			if(u8ftell(m_pFile)-lp+sz>=(int)ar2->size()+4){
 #ifdef _DEBUG
-				printf("[RecordManager] Overwrite existing record, reuse current chunk\n"); //debug
+				printf("[RecordManager] Debug: Overwrite existing record, reuse current chunk\n"); //debug
 #endif
 				//we can reuse this chunk of data
 				//do nothing
 			}else{
 #ifdef _DEBUG
-				printf("[RecordManager] Overwrite existing record, allocate a new chunk\n"); //debug
+				printf("[RecordManager] Debug: Overwrite existing record, allocate a new chunk\n"); //debug
 #endif
 				//we should allocate a new one.
 				//TODO: mark this chunk unused
@@ -623,7 +623,7 @@ void RecordManager::AddLevelAndRecord(const PuzzleBoyLevelData& lev,int nStep,co
 	//no any record, allocate a new one
 	if(lp==0){
 #ifdef _DEBUG
-		printf("[RecordManager] Create new record\n"); //debug
+		printf("[RecordManager] Debug: Create new record\n"); //debug
 #endif
 		lp=AllocateAndMoveToBlock(ar2->size()+4);
 
