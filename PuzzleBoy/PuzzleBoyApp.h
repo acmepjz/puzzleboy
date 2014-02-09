@@ -15,7 +15,7 @@ public:
 	~PuzzleBoyApp();
 
 	PuzzleBoyLevelFile* GetDocument() const {
-		return (PuzzleBoyLevelFile*)m_pDocument;
+		return m_pDocument;
 	}
 
 	void Draw();
@@ -47,7 +47,7 @@ public:
 	u8string m_sFileName;
 
 	//level file object
-	PuzzleBoyLevelFile* m_pDocument;
+	mutable PuzzleBoyLevelFile* m_pDocument;
 
 	//level checksum and best record in database
 	unsigned char m_bCurrentChecksum[PuzzleBoyLevelData::ChecksumSize];

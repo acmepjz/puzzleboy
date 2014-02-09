@@ -1336,7 +1336,7 @@ void PuzzleBoyLevel::OnTimer()
 	}
 }
 
-u8string PuzzleBoyLevel::GetRecord()
+u8string PuzzleBoyLevel::GetRecord() const
 {
 	u8string s;
 

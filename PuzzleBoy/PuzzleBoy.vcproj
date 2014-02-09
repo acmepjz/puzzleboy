@@ -183,6 +183,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\clsTiming.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\FileSystem.cpp"
 				>
 			</File>
@@ -247,6 +251,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TestSolver.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\UTF8-16.cpp"
 				>
 			</File>
@@ -266,6 +274,10 @@
 			</File>
 			<File
 				RelativePath=".\blake2.h"
+				>
+			</File>
+			<File
+				RelativePath=".\clsTiming.h"
 				>
 			</File>
 			<File
@@ -334,6 +346,10 @@
 			</File>
 			<File
 				RelativePath=".\SimpleListScreen.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TestSolver.h"
 				>
 			</File>
 			<File

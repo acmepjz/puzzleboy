@@ -13,7 +13,9 @@ size_t u8fread(void* ptr,size_t size,size_t nmemb,u8file* file);
 size_t u8fwrite(const void* ptr,size_t size,size_t nmemb,u8file* file);
 int u8fclose(u8file* file);
 char* u8fgets(char* buf, int count, u8file* file);
+
 const char* u8fgets2(u8string& s,u8file* file);
+size_t u8fputs2(const u8string& s,u8file* file);
 
 void initPaths();
 
