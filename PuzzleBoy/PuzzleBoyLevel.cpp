@@ -890,6 +890,9 @@ void PuzzleBoyLevel::StartGame()
 		}
 	}
 
+	//ad-hoc bug fix
+	if(m_nPlayerCount==0) m_nPlayerCount=-1;
+
 	//init moveable data
 	m_bMoveableData.resize(m_nWidth*m_nHeight);
 	UpdateMoveableData();
@@ -1246,6 +1249,9 @@ void PuzzleBoyLevel::UpdateMoveableData(){
 			break;
 		}
 	}
+
+	//ad-hoc bug fix
+	if(m_nPlayerCount==0) m_nPlayerCount=-1;
 }
 
 void PuzzleBoyLevel::OnTimer()
