@@ -211,7 +211,8 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string& rec,void* userData,
 	}
 
 	//debug
-	printf("[TestSolver] Info: StateSize=%d (XSize=%d,YSize=%d), InitState="
+#ifdef  _DEBUG
+	printf("[TestSolver] Debug: StateSize=%d (XSize=%d,YSize=%d), InitState="
 #ifdef FORCE_64BIT_SOLVER_STATE
 #ifdef WIN32
 		"%016I64X"
@@ -228,6 +229,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string& rec,void* userData,
 		(void*)initState
 #endif
 		);
+#endif
 
 	//================ run solver
 	//TODO: use hashmap
@@ -343,7 +345,9 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string& rec,void* userData,
 						}
 
 						//debug
-						printf("[TestSolver] Info: Solution found. Nodes=%d (Opened=%d), Step=%d\n",nodes.size(),currentIndex,rec.size());
+#ifdef _DEBUG
+						printf("[TestSolver] Debug: Solution found. Nodes=%d (Opened=%d), Step=%d\n",nodes.size(),currentIndex,rec.size());
+#endif
 
 						return 1;
 					}
@@ -371,7 +375,9 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string& rec,void* userData,
 	}while(currentIndex<nodes.size());
 
 	//debug
-	printf("[TestSolver] Info: Solution not found. Nodes=%d\n",nodes.size());
+#ifdef _DEBUG
+	printf("[TestSolver] Debug: Solution not found. Nodes=%d\n",nodes.size());
+#endif
 
 	return 0;
 }
