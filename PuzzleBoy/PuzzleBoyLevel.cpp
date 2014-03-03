@@ -890,9 +890,6 @@ void PuzzleBoyLevel::StartGame()
 		}
 	}
 
-	//ad-hoc bug fix
-	if(m_nPlayerCount==0) m_nPlayerCount=-1;
-
 	//init moveable data
 	m_bMoveableData.resize(m_nWidth*m_nHeight);
 	UpdateMoveableData();
@@ -905,7 +902,7 @@ bool PuzzleBoyLevel::IsAnimating() const
 
 bool PuzzleBoyLevel::IsWin() const
 {
-	return m_nPlayerCount==0 || (m_nExitCount==0 && m_nTargetCount>0 && IsTargetFinished());
+	return (m_nPlayerCount==0 || (m_nExitCount==0 && m_nTargetCount>0 && IsTargetFinished())) && m_nMoves>0;
 }
 
 void PuzzleBoyLevel::SaveUndo(PuzzleBoyLevelUndo* objUndo){
@@ -1249,9 +1246,6 @@ void PuzzleBoyLevel::UpdateMoveableData(){
 			break;
 		}
 	}
-
-	//ad-hoc bug fix
-	if(m_nPlayerCount==0) m_nPlayerCount=-1;
 }
 
 void PuzzleBoyLevel::OnTimer()
