@@ -8,6 +8,7 @@
 #include "SimpleListScreen.h"
 #include "MyFormat.h"
 #include "clsTiming.h"
+#include "TestSolver.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -53,6 +54,7 @@ int m_nDraggingState=0;
 
 //FIXME: ad-hoc
 GLuint adhoc_screenkb_tex=0;
+//x,y: coord of top-left corner, zoom: size per pixel
 float adhoc_zoom=1.0f/48.0f;
 float adhoc_x=0.0f;
 float adhoc_y=0.0f;
@@ -66,7 +68,7 @@ u8string adhoc_debug;
 static void OnMouseWheel(int which,int x,int y,int dx,int dy,int nFlags);
 
 void WaitForNextFrame(){
-	SDL_Delay(20);
+	SDL_Delay(30);
 }
 
 void SetProjectionMatrix(int idx){
@@ -281,7 +283,11 @@ public:
 
 void GameScreenFit(int x,int y,int w,int h){
 	//FIXME: ad-hoc workspace size
+#ifdef _DEBUG
+	SDL_Rect r={16,8,screenWidth-16,screenHeight-136};
+#else
 	SDL_Rect r={0,0,screenWidth,screenHeight-128};
+#endif
 
 	if(w*r.h>h*r.w){ // w/h>r.w/r.h
 		adhoc_zoom=float(w)/float(r.w);
@@ -294,9 +300,15 @@ void GameScreenFit(int x,int y,int w,int h){
 	}
 }
 
+static void OnMultiGesture(float fx,float fy,float dx,float dy,float zoom);
+
 void GameScreenEnsureVisible(int x,int y){
 	//FIXME: ad-hoc workspace size
+#ifdef _DEBUG
+	SDL_Rect r={16,8,screenWidth-16,screenHeight-136};
+#else
 	SDL_Rect r={0,0,screenWidth,screenHeight-128};
+#endif
 
 	if(float(r.x)*adhoc2_zoom+adhoc2_x>float(x)+0.5f
 		|| float(r.y)*adhoc2_zoom+adhoc2_y>float(y)+0.5f
@@ -305,6 +317,8 @@ void GameScreenEnsureVisible(int x,int y){
 	{
 		adhoc_x=float(x)+0.5f-(float(r.x)+float(r.w)*0.5f)*adhoc_zoom;
 		adhoc_y=float(y)+0.5f-(float(r.y)+float(r.h)*0.5f)*adhoc_zoom;
+
+		OnMultiGesture(0.0f,0.0f,0.0f,0.0f,1.0f);
 	}
 }
 
@@ -379,10 +393,55 @@ static void OnMultiGesture(float fx,float fy,float dx,float dy,float zoom){
 	adhoc_y-=dy*f;
 
 	//zoom
-	f*=(1.0f-1.0f/zoom);
+	float new_zoom=adhoc_zoom/zoom;
+
+	//ad-hoc range check
+	//FIXME: ad-hoc workspace size
+#ifdef _DEBUG
+	SDL_Rect r={16,8,screenWidth-16,screenHeight-136};
+#else
+	SDL_Rect r={0,0,screenWidth,screenHeight-128};
+#endif
+
+	f=1.0f/float(r.w>r.h?r.w:r.h);
+	if(new_zoom<f) new_zoom=f;
+
+	int w=1,h=1;
+	if(theApp->m_objPlayingLevel){
+		if(theApp->m_objPlayingLevel->m_nWidth>0) w=theApp->m_objPlayingLevel->m_nWidth;
+		if(theApp->m_objPlayingLevel->m_nHeight>0) h=theApp->m_objPlayingLevel->m_nHeight;
+	}
+
+	if(w*r.h>h*r.w){ // w/h>r.w/r.h
+		f=float(w)/float(r.w);
+	}else{
+		f=float(h)/float(r.h);
+	}
+	if(new_zoom>f) new_zoom=f;
+
+	//apply zoom
+	f=float(screenHeight)*(adhoc_zoom-new_zoom);
 	adhoc_x+=fx*f;
 	adhoc_y+=fy*f;
-	adhoc_zoom/=zoom;
+	adhoc_zoom=new_zoom;
+
+	//move view if necessary
+	if(float(r.w)*adhoc_zoom>float(w)){
+		adhoc_x=float(w)*0.5f-(float(r.x)+float(r.w)*0.5f)*adhoc_zoom;
+	}else{
+		f=-float(r.x)*adhoc_zoom;
+		if(adhoc_x<f) adhoc_x=f;
+		f+=float(w)-float(r.w)*adhoc_zoom;
+		if(adhoc_x>f) adhoc_x=f;
+	}
+	if(float(r.h)*adhoc_zoom>float(h)){
+		adhoc_y=float(h)*0.5f-(float(r.y)+float(r.h)*0.5f)*adhoc_zoom;
+	}else{
+		f=-float(r.y)*adhoc_zoom;
+		if(adhoc_y<f) adhoc_y=f;
+		f+=float(h)-float(r.h)*adhoc_zoom;
+		if(adhoc_y>f) adhoc_y=f;
+	}
 }
 
 static void OnMouseWheel(int which,int x,int y,int dx,int dy,int nFlags){
@@ -392,173 +451,565 @@ static void OnMouseWheel(int which,int x,int y,int dx,int dy,int nFlags){
 	}
 }
 
-static void RandomTest(){
-	theApp->GetDocument()->CreateNew();
+static int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel){
+	struct{
+		inline int operator()(int st,int blockUsed){
+			return st+blockUsed*16;
+		}
+	}CalcScore;
 
-	PuzzleBoyLevelData &level=*(theApp->GetDocument()->m_objLevels[0]);
-	level.Create(8,6);
+	struct RandomTestData{
+		PuzzleBoyLevelData *level;
+		int bestStep;
+		int bestScore;
 
-	memset(&(level.m_bMapData[0]),0,level.m_bMapData.size());
+		static int Compare(const void* lp1,const void* lp2){
+			const RandomTestData *obj1=(const RandomTestData*)lp1;
+			const RandomTestData *obj2=(const RandomTestData*)lp2;
 
-	//ad-hoc: drop some non-random number
-	rand();
+			return (obj1->bestScore>obj2->bestScore)?-1:(obj1->bestScore<obj2->bestScore?1:0);
+		}
+	};
 
-	//random start and end (ad-hoc) point
-	{
-		int y=int((float)level.m_nHeight*(float)rand()/(1.0f+(float)RAND_MAX));
-		level(0,y)=PLAYER_TILE;
-		y=int((float)level.m_nHeight*(float)rand()/(1.0f+(float)RAND_MAX));
-		level(level.m_nWidth-1,y)=EXIT_TILE;
+	//fake genetic algorithm
+#ifdef _DEBUG
+	const int PoolSize=8;
+#else
+	const int PoolSize=16;
+#endif
+	const int IterationCount=20;
+	RandomTestData levels[PoolSize*2]={};
+
+	//init pool
+	for(int i=0;i<PoolSize;i++){
+		PuzzleBoyLevelData &level=*(new PuzzleBoyLevelData());
+
+		level.Create(width,height);
+
+		memset(&(level.m_bMapData[0]),0,level.m_bMapData.size());
+
+		//random start and end (ad-hoc) point
+		int y1=int((float)height*(float)rand()/(1.0f+(float)RAND_MAX));
+		level(0,y1)=PLAYER_TILE;
+		int y2=int((float)height*(float)rand()/(1.0f+(float)RAND_MAX));
+		level(width-1,y2)=EXIT_TILE;
+
+		y1-=y2;
+		if(y1<0) y1=-y1;
+		levels[i].bestScore=levels[i].bestStep=width-1+y1;
+
+		levels[i].level=&level;
 	}
 
 	//random rotate blocks (buggy!!!1!!)
+//#define USE_TMP2
 	unsigned char tmp[8][8];
+#ifdef USE_TMP2
 	unsigned char tmp2[8][8];
-	int bestStep=0;
+#endif
 
-	for(int r=0;r<10;r++){
-		size_t bestCount=level.m_objBlocks.size();
+	for(int r=0;r<IterationCount;r++){
+		printf("[RandomTest] Generating...%d/%d\r",r,IterationCount);
 
-		//re-init hit test area
-		memset(tmp,0,sizeof(tmp));
-		memset(tmp2,0,sizeof(tmp2));
-		for(size_t i=0;i<bestCount;i++){
-			PushableBlock *block=level.m_objBlocks[i];
-			int x=block->m_x;
-			int y=block->m_y;
-			tmp[y][x]=1;
-			if(block->m_bData[0]) tmp[y-1][x]=1;
-			if(block->m_bData[1]) tmp[y][x-1]=1;
-			if(block->m_bData[2]) tmp[y+1][x]=1;
-			if(block->m_bData[3]) tmp[y][x+1]=1;
+		for(int levelIndex=0;levelIndex<PoolSize;levelIndex++){
+			PuzzleBoyLevelData &level=*(new PuzzleBoyLevelData(*(levels[levelIndex].level)));
+			int bestStep=levels[levelIndex].bestStep;
+			int bestScore=levels[levelIndex].bestScore;
 
-			for(int jj=-1;jj<=1;jj++){
-				for(int ii=-1;ii<=1;ii++){
-					int xx=x+ii,yy=y+jj;
-					if(xx>=0 && xx<8 && yy>=0 && yy<8){
-						tmp2[yy][xx]=tmp2[yy][xx]/2+0x80;
+			size_t oldCount=level.m_objBlocks.size();
+			size_t bestCount=oldCount;
+
+			//re-init hit test area
+			memset(tmp,0,sizeof(tmp));
+#ifdef USE_TMP2
+			memset(tmp2,0,sizeof(tmp2));
+#endif
+			for(size_t i=0;i<bestCount;i++){
+				PushableBlock *block=level.m_objBlocks[i];
+				int x=block->m_x;
+				int y=block->m_y;
+				tmp[y][x]=1;
+				if(block->m_bData[0]) tmp[y-1][x]=1;
+				if(block->m_bData[1]) tmp[y][x-1]=1;
+				if(block->m_bData[2]) tmp[y+1][x]=1;
+				if(block->m_bData[3]) tmp[y][x+1]=1;
+
+#ifdef USE_TMP2
+				for(int jj=-1;jj<=1;jj++){
+					for(int ii=-1;ii<=1;ii++){
+						int xx=x+ii,yy=y+jj;
+						if(xx>=0 && xx<8 && yy>=0 && yy<8){
+							tmp2[yy][xx]=tmp2[yy][xx]/2+0x80;
+						}
 					}
 				}
+#endif
 			}
-		}
 
-		//some random tries
-		for(int i=0;i<100;i++){
-			int x=int((float)level.m_nWidth*(float)rand()/(1.0f+(float)RAND_MAX));
-			int y=int((float)level.m_nHeight*(float)rand()/(1.0f+(float)RAND_MAX));
-			unsigned char d[4]={};
+			//some random tries
+			for(int i=0;i<10;i++){
+				int x=int((float)width*(float)rand()/(1.0f+(float)RAND_MAX));
+				int y=int((float)height*(float)rand()/(1.0f+(float)RAND_MAX));
+				unsigned char d[4]={};
 
-			if((x==0 || x==level.m_nWidth-1) && (y==0 || y==level.m_nHeight-1)) continue;
-			if(level(x,y) || tmp[y][x]) continue;
+				if((x==0 || x==width-1) && (y==0 || y==height-1)) continue;
+				if(level(x,y) || tmp[y][x]) continue;
 
-			if(y>0) d[0]=unsigned char(2.0f*(float)rand()/(1.0f+(float)RAND_MAX));
-			if(x>0) d[1]=unsigned char(2.0f*(float)rand()/(1.0f+(float)RAND_MAX));
-			if(y<level.m_nHeight-1) d[2]=unsigned char(2.0f*(float)rand()/(1.0f+(float)RAND_MAX));
-			if(x<level.m_nWidth-1) d[3]=unsigned char(2.0f*(float)rand()/(1.0f+(float)RAND_MAX));
+				if(y>0) d[0]=unsigned char(2.0f*(float)rand()/(1.0f+(float)RAND_MAX));
+				if(x>0) d[1]=unsigned char(2.0f*(float)rand()/(1.0f+(float)RAND_MAX));
+				if(y<height-1) d[2]=unsigned char(2.0f*(float)rand()/(1.0f+(float)RAND_MAX));
+				if(x<width-1) d[3]=unsigned char(2.0f*(float)rand()/(1.0f+(float)RAND_MAX));
 
-			if(d[0] && (level(x,y-1) || tmp[y-1][x])) d[0]=0;
-			if(d[1] && (level(x-1,y) || tmp[y][x-1])) d[1]=0;
-			if(d[2] && (level(x,y+1) || tmp[y+1][x])) d[2]=0;
-			if(d[3] && (level(x+1,y) || tmp[y][x+1])) d[3]=0;
+				if(d[0] && (level(x,y-1) || tmp[y-1][x])) d[0]=0;
+				if(d[1] && (level(x-1,y) || tmp[y][x-1])) d[1]=0;
+				if(d[2] && (level(x,y+1) || tmp[y+1][x])) d[2]=0;
+				if(d[3] && (level(x+1,y) || tmp[y][x+1])) d[3]=0;
 
-			if(d[0]==0 && d[1]==0 && d[2]==0 && d[3]==0) continue;
+				if(d[0]==0 && d[1]==0 && d[2]==0 && d[3]==0) continue;
 
-			//probability test. doesn't work well
-			if(unsigned char(255.0f*(float)rand()/(1.0f+(float)RAND_MAX))<tmp2[y][x]) continue;
+#ifdef USE_TMP2
+				//probability test. doesn't work well
+				if(unsigned char(255.0f*(float)rand()/(1.0f+(float)RAND_MAX))<tmp2[y][x]) continue;
+#endif
 
-			//OK, we find a position to place rotate block
-			PushableBlock *block=new PushableBlock();
-			block->CreateSingle(ROTATE_BLOCK,x,y);
-			memcpy(&(block->m_bData[0]),d,4);
-			level.m_objBlocks.push_back(block);
+				//OK, we find a position to place rotate block
+				PushableBlock *block=new PushableBlock();
+				block->CreateSingle(ROTATE_BLOCK,x,y);
+				memcpy(&(block->m_bData[0]),d,4);
+				level.m_objBlocks.push_back(block);
 
-			//now try to solve it
+				//now try to solve it
+				{
+					PuzzleBoyLevel lev(level);
+					lev.StartGame();
+					u8string s;
+					TestSolverExtendedData ed;
+					int ret=TestSolver_SolveIt(lev,s,NULL,NULL,&ed);
+
+					if(ret==1){
+						int n=s.size();
+						int sc=CalcScore(n,ed.blockUsed);
+						if(sc>bestScore){
+							bestStep=n;
+							bestScore=sc;
+							bestCount=level.m_objBlocks.size();
+						}
+						//debug
+#ifdef _DEBUG
+						printf("Debug: blockUsed=%d\n",ed.blockUsed);
+#endif
+					}else{
+						level.m_objBlocks.pop_back();
+						delete block;
+						continue;
+					}
+				}
+
+				//update hit test area
+				tmp[y][x]=1;
+				if(d[0]) tmp[y-1][x]=1;
+				if(d[1]) tmp[y][x-1]=1;
+				if(d[2]) tmp[y+1][x]=1;
+				if(d[3]) tmp[y][x+1]=1;
+
+#ifdef USE_TMP2
+				for(int jj=-1;jj<=1;jj++){
+					for(int ii=-1;ii<=1;ii++){
+						int xx=x+ii,yy=y+jj;
+						if(xx>=0 && xx<8 && yy>=0 && yy<8){
+							tmp2[yy][xx]=tmp2[yy][xx]/2+0x80;
+						}
+					}
+				}
+#endif
+			}
+
+			//remove superfluous blocks - step 1
+			while(level.m_objBlocks.size()>bestCount){
+				delete level.m_objBlocks.back();
+				level.m_objBlocks.pop_back();
+			}
+
+			//check if nothing added
+			if(bestCount==oldCount){
+				//random remove something
+				if(oldCount>0){
+					int i=int((float)oldCount*(float)rand()/(1.0f+(float)RAND_MAX));
+					delete level.m_objBlocks[i];
+					level.m_objBlocks.erase(level.m_objBlocks.begin()+i);
+				}
+
+				//remove some wall
+				int m=1+int(3.0f*(float)rand()/(1.0f+(float)RAND_MAX));
+				for(int i=0,j=0;i<64 && j<m;i++){
+					int x=int((float)width*(float)rand()/(1.0f+(float)RAND_MAX));
+					int y=int((float)height*(float)rand()/(1.0f+(float)RAND_MAX));
+					if(level(x,y)==WALL_TILE){
+						level(x,y)=0;
+						m++;
+					}
+				}
+
+				/*//then add something
+				int m=1+int(3.0f*(float)rand()/(1.0f+(float)RAND_MAX));
+				for(int i=0,j=0;i<64 && j<m;i++){
+					int x=int((float)width*(float)rand()/(1.0f+(float)RAND_MAX));
+					int y=int((float)height*(float)rand()/(1.0f+(float)RAND_MAX));
+
+					if(level(x,y) || tmp[y][x]) continue;
+
+					level(x,y)=WALL_TILE;
+					j++;
+				}*/
+			}else{
+				//remove superfluous blocks - step 2
+				for(;;){
+					std::vector<PushableBlock*> tmp=level.m_objBlocks;
+					int m=tmp.size();
+					int bestIndex=-1;
+
+					for(int i=0;i<m;i++){
+						level.m_objBlocks.clear();
+						for(int j=0;j<i;j++) level.m_objBlocks.push_back(tmp[j]);
+						for(int j=i+1;j<m;j++) level.m_objBlocks.push_back(tmp[j]);
+
+						//now try to solve it
+						PuzzleBoyLevel lev(level);
+						lev.StartGame();
+						u8string s;
+						int ret=TestSolver_SolveIt(lev,s,NULL,NULL,NULL);
+						int n=s.size();
+
+						if(ret==1 && n>=bestStep){
+							bestStep=n;
+							bestIndex=i;
+						}
+					}
+
+					if(bestIndex==-1){
+						level.m_objBlocks=tmp;
+						break;
+					}
+
+					level.m_objBlocks.clear();
+					for(int j=0;j<bestIndex;j++) level.m_objBlocks.push_back(tmp[j]);
+					for(int j=bestIndex+1;j<m;j++) level.m_objBlocks.push_back(tmp[j]);
+					delete tmp[bestIndex];
+				}
+			}
+
+			//check deadlock blocks
+			TestSolverExtendedData ed;
 			{
 				PuzzleBoyLevel lev(level);
 				lev.StartGame();
 				u8string s;
-				int ret=lev.SolveIt(s,NULL,NULL);
+				TestSolver_SolveIt(lev,s,NULL,NULL,&ed);
+				bestStep=s.size();
+				bestScore=CalcScore(bestStep,ed.blockUsed);
+			}
 
-				if(ret==1){
-					int n=s.size();
-					if(n>bestStep){
-						bestStep=n;
-						bestCount=level.m_objBlocks.size();
+			if(ed.deadlockBlockCount>0){
+				//remove deadlock blocks
+				for(int i=level.m_objBlocks.size()-1;i>=0;i--){
+					if((ed.blockStateReachable[i] & (ed.blockStateReachable[i]-1))==0
+						/*&& rand()<(RAND_MAX/2)*/)
+					{
+						PushableBlock *block=level.m_objBlocks[i];
+						int x=block->m_x,y=block->m_y;
+
+						level(x,y)=WALL_TILE;
+						if(block->m_bData[0]) level(x,y-1)=WALL_TILE;
+						if(block->m_bData[1]) level(x-1,y)=WALL_TILE;
+						if(block->m_bData[2]) level(x,y+1)=WALL_TILE;
+						if(block->m_bData[3]) level(x+1,y)=WALL_TILE;
+
+						delete block;
+						level.m_objBlocks.erase(level.m_objBlocks.begin()+i);
 					}
+				}
+
+				//now try to remove some walls
+				//TODO: use random order
+				for(;;){
+					bool changed=false;
+					for(int j=0;j<height;j++){
+						for(int i=0;i<width;i++){
+							if(level(i,j)==WALL_TILE){
+								level(i,j)=0;
+
+								//now try to solve it
+								PuzzleBoyLevel lev(level);
+								lev.StartGame();
+								u8string s;
+								int ret=TestSolver_SolveIt(lev,s,NULL,NULL,NULL);
+								int n=s.size();
+
+								if(ret==1 && n>=bestStep){
+									bestStep=n;
+									changed=true;
+								}else{
+									level(i,j)=WALL_TILE;
+								}
+							}
+						}
+					}
+
+					if(!changed) break;
+				}
+			}
+
+			//over, save newly generated level
+			delete levels[levelIndex+PoolSize].level;
+			levels[levelIndex+PoolSize].level=&level;
+			levels[levelIndex+PoolSize].bestStep=bestStep;
+			levels[levelIndex+PoolSize].bestScore=bestScore;
+		}
+
+		//sort levels
+		qsort(levels,PoolSize*2,sizeof(RandomTestData),RandomTestData::Compare);
+	}
+
+	//output some message
+	printf("[RandomTest] Done. Step=%d            \n",levels[0].bestStep);
+
+	//get return value
+	outputLevel=new PuzzleBoyLevelData;
+	outputLevel->Create(width+1,height);
+	for(int i=0,m=levels[0].level->m_objBlocks.size();i<m;i++){
+		outputLevel->m_objBlocks.push_back(new PushableBlock(*(levels[0].level->m_objBlocks[i])));
+	}
+	for(int j=0;j<height;j++){
+		for(int i=0;i<width;i++){
+			unsigned char c=(*levels[0].level)(i,j);
+			if(i==width-1){
+				if(c==EXIT_TILE){
+					c=0;
+					(*outputLevel)(width,j)=EXIT_TILE;
 				}else{
-					level.m_objBlocks.pop_back();
-					delete block;
-					continue;
+					(*outputLevel)(width,j)=WALL_TILE;
 				}
 			}
-
-			//update hit test area
-			tmp[y][x]=1;
-			if(d[0]) tmp[y-1][x]=1;
-			if(d[1]) tmp[y][x-1]=1;
-			if(d[2]) tmp[y+1][x]=1;
-			if(d[3]) tmp[y][x+1]=1;
-
-			for(int jj=-1;jj<=1;jj++){
-				for(int ii=-1;ii<=1;ii++){
-					int xx=x+ii,yy=y+jj;
-					if(xx>=0 && xx<8 && yy>=0 && yy<8){
-						tmp2[yy][xx]=tmp2[yy][xx]/2+0x80;
-					}
-				}
-			}
-		}
-
-		//remove superfluous blocks - step 1
-		while(level.m_objBlocks.size()>bestCount){
-			delete level.m_objBlocks.back();
-			level.m_objBlocks.pop_back();
-		}
-
-		//remove superfluous blocks - step 2
-		for(;;){
-			std::vector<PushableBlock*> tmp=level.m_objBlocks;
-			int m=tmp.size();
-			int bestIndex=-1;
-
-			for(int i=0;i<m;i++){
-				level.m_objBlocks.clear();
-				for(int j=0;j<i;j++) level.m_objBlocks.push_back(tmp[j]);
-				for(int j=i+1;j<m;j++) level.m_objBlocks.push_back(tmp[j]);
-
-				//now try to solve it
-				PuzzleBoyLevel lev(level);
-				lev.StartGame();
-				u8string s;
-				int ret=lev.SolveIt(s,NULL,NULL);
-				int n=s.size();
-
-				if(ret==1 && n>=bestStep){
-					bestStep=n;
-					bestIndex=i;
-				}
-			}
-
-			if(bestIndex==-1){
-				level.m_objBlocks=tmp;
-				break;
-			}
-
-			level.m_objBlocks.clear();
-			for(int j=0;j<bestIndex;j++) level.m_objBlocks.push_back(tmp[j]);
-			for(int j=bestIndex+1;j<m;j++) level.m_objBlocks.push_back(tmp[j]);
-			delete tmp[bestIndex];
+			(*outputLevel)(i,j)=c;
 		}
 	}
 
+	//destroy pool
+	for(int i=0;i<PoolSize*2;i++){
+		delete levels[i].level;
+	}
+
 	//over
+	return levels[0].bestStep;
 }
 
+//ad-hoc random level TEST
+class RandomMapScreen:public SimpleListScreen{
+public:
+	virtual void OnDirty(){
+		if(m_txtList) m_txtList->clear();
+		else m_txtList=new SimpleBitmapText;
+
+		m_nListCount=0;
+
+		m_txtList->NewStringIndex();
+		m_txtList->AddString(_("Rotate block only 6x6"),0,float((m_nListCount++)*32),0,0,32,0);
+
+		m_txtList->NewStringIndex();
+		m_txtList->AddString(_("Rotate block only 8x6"),0,float((m_nListCount++)*32),0,0,32,0);
+
+		m_txtList->NewStringIndex();
+		m_txtList->AddString(_("Rotate block only 8x8"),0,float((m_nListCount++)*32),0,0,32,0);
+
+		m_txtList->NewStringIndex();
+		m_txtList->AddString(_("Random"),0,float((m_nListCount++)*32),0,0,32,0);
+	}
+
+	virtual int OnClick(int index){
+		return index+1;
+	}
+
+	virtual int DoModal(){
+		//show
+		m_fnt=adhoc_fnt;
+		m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
+		CreateTitleBarText(_("Random Map"));
+		return SimpleListScreen::DoModal();
+	}
+
+	static int DoRandom(int index,PuzzleBoyLevelData*& outputLevel){
+		const int MaxRandomTypes=3;
+
+		index--;
+		if(index<0 || index>=MaxRandomTypes) index=int((float)MaxRandomTypes*(float)rand()/(1.0f+(float)RAND_MAX));;
+
+		switch(index){
+		case 0: return RandomTest(6,6,outputLevel);
+		case 1: return RandomTest(8,6,outputLevel);
+		case 2: return RandomTest(8,8,outputLevel);
+		}
+
+		//shouldn't goes here
+		return 0;
+	}
+};
+
+class MainMenuScreen:public SimpleListScreen{
+public:
+	virtual void OnDirty(){
+		if(m_txtList) m_txtList->clear();
+		else m_txtList=new SimpleBitmapText;
+
+		m_nListCount=0;
+
+		m_txtList->NewStringIndex();
+		m_txtList->AddString(_("Choose Level"),0,float((m_nListCount++)*32),0,0,32,0);
+
+		m_txtList->NewStringIndex();
+		m_txtList->AddString(_("Choose Level File"),0,float((m_nListCount++)*32),0,0,32,0);
+
+		m_txtList->NewStringIndex();
+		m_txtList->AddString(_("Exit Game"),0,float((m_nListCount++)*32),0,0,32,0);
+
+		//test feature
+		m_txtList->NewStringIndex();
+		m_nListCount++;
+
+		m_txtList->NewStringIndex();
+		m_txtList->AddString("Test Solver",0,float((m_nListCount++)*32),0,0,32,0);
+
+		m_txtList->NewStringIndex();
+		m_txtList->AddString("Random Map",0,float((m_nListCount++)*32),0,0,32,0);
+
+		m_txtList->NewStringIndex();
+		m_txtList->AddString("Random Map x10",0,float((m_nListCount++)*32),0,0,32,0);
+
+		m_txtList->NewStringIndex();
+		m_txtList->AddString("Save Temp Level File",0,float((m_nListCount++)*32),0,0,32,0);
+
+		//debug output
+		m_txtList->NewStringIndex();
+		m_nListCount++;
+
+		m_txtList->NewStringIndex();
+		m_txtList->AddString(u8string("Debug output:\n")+adhoc_debug,0,float((m_nListCount++)*32),0,0,16,DrawTextFlags::Multiline);
+	}
+
+	virtual int OnClick(int index){
+		switch(index){
+		case 0:
+			//choose level
+			if(ChooseLevelScreen().DoModal()) return 1;
+			break;
+		case 1:
+			//choose level file
+			if(ChooseLevelFileScreen().DoModal()){
+				ChooseLevelScreen().DoModal();
+				return 1;
+			}
+			break;
+		case 2:
+			//exit game
+			m_bRun=false;
+			return 0;
+			break;
+		case 4:
+			//ad-hoc solver test
+			{
+				PuzzleBoyLevelData *dat=theApp->GetDocument()->GetLevel(theApp->m_nCurrentLevel);
+				if(dat){
+					printf("--- Solver Test ---\n");
+
+					clsTiming t;
+					t.Start();
+					PuzzleBoyLevel *lev=new PuzzleBoyLevel(*dat);
+					lev->StartGame();
+					u8string s;
+					int ret=lev->SolveIt(s,NULL,NULL);
+					t.Stop();
+
+					printf("SolveIt() returns %d, Time=%0.2fms\n",ret,t.GetMs());
+					if(ret==1) printf("The solution is %s\n",s.c_str());
+
+					delete lev;
+				}
+				return 0;
+			}
+			break;
+		case 5:
+			//ad-hoc random level TEST
+			{
+				int ret=RandomMapScreen().DoModal();
+				if(ret>0){
+					PuzzleBoyLevelData *level=NULL;
+					if(RandomMapScreen::DoRandom(ret,level)){
+						level->m_sLevelName=toUTF16(_("Random Level"));
+						theApp->m_pDocument->CreateNew();
+						delete theApp->m_pDocument->m_objLevels[0];
+						theApp->m_pDocument->m_objLevels[0]=level;
+						return 1;
+					}
+				}
+			}
+			break;
+		case 6:
+			//batch TEST
+			{
+				int ret=RandomMapScreen().DoModal();
+				if(ret>0){
+					theApp->m_pDocument->CreateNew();
+					delete theApp->m_pDocument->m_objLevels[0];
+					theApp->m_pDocument->m_objLevels.clear();
+
+					for(int i=0;i<10;i++){
+						PuzzleBoyLevelData *level=NULL;
+						if(RandomMapScreen::DoRandom(ret,level)){
+							level->m_sLevelName=toUTF16(str(MyFormat(_("Random Level %d"))<<(i+1)));
+							theApp->m_pDocument->m_objLevels.push_back(level);
+						}
+					}
+
+					return 1;
+				}
+			}
+			break;
+		case 7:
+			//save temp file
+			if(theApp->m_pDocument){
+				time_t t=time(NULL);
+				tm *timeinfo=localtime(&t);
+				char s[128];
+				strftime(s,sizeof(s),"/levels/tmp-%Y%m%d%H%M%S.lev",timeinfo);
+				theApp->SaveFile(externalStoragePath+s);
+			}
+			return 0;
+			break;
+		}
+
+		return -1;
+	}
+
+	virtual int DoModal(){
+		//show
+		m_fnt=adhoc_fnt;
+		m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
+		CreateTitleBarText(_("Main Menu"));
+		return SimpleListScreen::DoModal();
+	}
+};
+
 static bool OnKeyDown(int nChar,int nFlags){
-	//ad-hoc experiment
-	if(nChar==SDLK_MENU || nChar==SDLK_APPLICATION){
+	//ad-hoc menu experiment
+	if(nChar==SDLK_MENU || nChar==SDLK_APPLICATION
+#ifndef ANDROID
+		|| nChar==SDLK_ESCAPE
+#endif
+		)
+	{
 		m_nDraggingState=0;
-		if(ChooseLevelScreen().DoModal()) theApp->StartGame();
+		if(MainMenuScreen().DoModal()){
+			theApp->StartGame();
+		}
 		return false;
 	}
 
@@ -584,16 +1035,6 @@ static bool OnKeyDown(int nChar,int nFlags){
 		return true;
 	}
 
-	//ad-hoc random level TEST
-	if(nChar==SDLK_r && (nFlags & KMOD_SHIFT)!=0){
-		printf("--- Random Level Test ---\n");
-
-		RandomTest();
-		theApp->StartGame();
-
-		return true;
-	}
-
 	if(theApp->OnKeyDown(nChar,nFlags)) return true;
 	return false;
 }
@@ -615,8 +1056,11 @@ static void CheckDragging(float x,float y){
 	}
 }
 
-int main(int argc,char** argv){
+int SDL_main(int argc,char** argv){
 	srand((unsigned int)time(NULL));
+	//ad-hoc: drop some non-random number
+	rand();
+
 	initPaths();
 
 	theApp=new PuzzleBoyApp;
@@ -832,8 +1276,6 @@ int main(int argc,char** argv){
 
 			txt.AddString(str(fmt),0.0f,0.0f,(float)screenWidth,(float)screenHeight,
 				32.0f,DrawTextFlags::Multiline | DrawTextFlags::Bottom);
-			txt.AddString(adhoc_debug,0.0f,0.0f,(float)screenWidth,(float)screenHeight,
-				32.0f,DrawTextFlags::Multiline);
 			txt.Draw(SDL_MakeColor(255,255,255,255));
 			adhoc_fnt->EndDraw();
 		}
@@ -990,8 +1432,15 @@ int main(int argc,char** argv){
 				if(m_bKeyDownProcessed) m_bKeyDownProcessed=false;
 				else{
 					switch(event.key.keysym.sym){
+#ifdef ANDROID
 					case SDLK_ESCAPE:
-						m_bRun=false;
+						{ //just press Esc
+#else
+					case SDLK_F4:
+						if(event.key.keysym.mod & KMOD_ALT){ //Alt+F4
+#endif
+							m_bRun=false;
+						}
 						break;
 					}
 				}
