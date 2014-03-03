@@ -72,6 +72,23 @@ bool PuzzleBoyApp::LoadFile(const u8string& fileName){
 	return true;
 }
 
+bool PuzzleBoyApp::SaveFile(const u8string& fileName){
+	if(m_pDocument==NULL) return false;
+
+	u8file *f=u8fopen(fileName.c_str(),"wb");
+	if(f==NULL) return false;
+
+	MFCSerializer ar;
+	ar.SetFile(f,true,4096);
+
+	bool ret=m_pDocument->MFCSerialize(ar);
+	ar.FileFlush();
+
+	u8fclose(f);
+
+	return ret;
+}
+
 void PuzzleBoyApp::Draw(){
 	m_bShowYesNoScreenKeyboard=false;
 

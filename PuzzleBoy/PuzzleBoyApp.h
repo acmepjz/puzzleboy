@@ -21,6 +21,7 @@ public:
 	void Draw();
 
 	bool LoadFile(const u8string& fileName);
+	bool SaveFile(const u8string& fileName);
 
 	bool StartGame();
 	void FinishGame();
