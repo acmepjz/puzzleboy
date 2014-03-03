@@ -2,8 +2,23 @@
 
 #include "PuzzleBoyLevel.h"
 
+const int TestSolver_MaxBlockCount=64;
+
+struct TestSolverExtendedData{
+	LevelSolverState state;
+	int blockUsed;
+	int pushes;
+
+	//1=reachable, other=unreachable (blocked)
+	unsigned char reachable[256];
+	//0=unreachable (blocked), 1=reachable, 1 bit per direction
+	unsigned char blockStateReachable[TestSolver_MaxBlockCount];
+
+	int deadlockBlockCount;
+};
+
 //test solver for level with rotate blocks only
-int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string& rec,void* userData,LevelSolverCallback callback);
+int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string& rec,void* userData,LevelSolverCallback callback,TestSolverExtendedData *ed=NULL);
 
 enum SolverType{
 	TEST_SOLVER,
