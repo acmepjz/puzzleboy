@@ -251,6 +251,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TestRandomLevel.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\TestSolver.cpp"
 				>
 			</File>
@@ -346,6 +350,10 @@
 			</File>
 			<File
 				RelativePath=".\SimpleListScreen.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TestRandomLevel.h"
 				>
 			</File>
 			<File
