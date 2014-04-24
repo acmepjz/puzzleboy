@@ -3,6 +3,7 @@
 #include "PuzzleBoyLevelUndo.h"
 #include "PuzzleBoyApp.h"
 #include "VertexList.h"
+#include "PuzzleBoyLevelView.h"
 #include "main.h"
 
 #include <math.h>
@@ -108,6 +109,7 @@ PuzzleBoyLevel::PuzzleBoyLevel()
 , m_objCurrentUndo(NULL)
 , m_nMoves(0)
 , m_Graphics(NULL)
+, m_view(NULL)
 {
 }
 
@@ -118,6 +120,7 @@ PuzzleBoyLevel::PuzzleBoyLevel(const PuzzleBoyLevelData& obj)
 , m_objCurrentUndo(NULL)
 , m_nMoves(0)
 , m_Graphics(NULL)
+, m_view(NULL)
 {
 }
 
@@ -944,8 +947,8 @@ bool PuzzleBoyLevel::SwitchPlayer(int x,int y,bool bSaveUndo)
 			m_nPlayerY=y;
 			m_nSwitchAnimationTime=GetAnimationTime();
 
-			//FIXME: ad-hoc one
-			GameScreenEnsureVisible(x,y);
+			//ensure visible
+			if(m_view) m_view->m_scrollView.EnsureVisible(x,y,1,1);
 
 			return true;
 		}
@@ -980,8 +983,8 @@ bool PuzzleBoyLevel::SwitchPlayer(int x,int y,bool bSaveUndo)
 			m_nPlayerY=y;
 			m_nSwitchAnimationTime=GetAnimationTime();
 
-			//FIXME: ad-hoc one
-			GameScreenEnsureVisible(x,y);
+			//ensure visible
+			if(m_view) m_view->m_scrollView.EnsureVisible(x,y,1,1);
 
 			return true;
 		}
@@ -1164,6 +1167,9 @@ bool PuzzleBoyLevel::MovePlayer(int dx,int dy,bool bSaveUndo){
 	}
 
 	if(ret) UpdateMoveableData();
+
+	//ensure visible (??)
+	if(m_view) m_view->m_scrollView.EnsureVisible(m_nPlayerX,m_nPlayerY,1,1);
 
 	return ret;
 }

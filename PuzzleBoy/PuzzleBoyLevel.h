@@ -16,10 +16,12 @@ typedef int (*LevelSolverCallback)(void* userData,const LevelSolverState& progre
 
 class VertexList;
 struct PuzzleBoyLevelGraphics;
+class PuzzleBoyLevelView;
 
 class PuzzleBoyLevel: public PuzzleBoyLevelData
 {
 public:
+	//options of UpdateGraphics
 	static const int UpdateEmptyTile=1<<EMPTY_TILE;
 public:
 	PuzzleBoyLevel();
@@ -111,6 +113,7 @@ private:
 
 public:
 	PuzzleBoyLevelGraphics *m_Graphics;
+	PuzzleBoyLevelView *m_view; //weak reference!!! don't delete it!!!
 };
 
 #define PUSH_BLOCK_COLOR 1.0f,1.0f,0.0f,1.0f

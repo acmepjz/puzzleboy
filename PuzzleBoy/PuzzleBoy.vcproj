@@ -239,6 +239,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PuzzleBoyLevelView.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\RecordManager.cpp"
 				>
 			</File>
@@ -248,6 +252,10 @@
 			</File>
 			<File
 				RelativePath=".\SimpleListScreen.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SimpleScrollView.cpp"
 				>
 			</File>
 			<File
@@ -341,6 +349,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PuzzleBoyLevelView.h"
+				>
+			</File>
+			<File
 				RelativePath=".\RecordManager.h"
 				>
 			</File>
@@ -350,6 +362,10 @@
 			</File>
 			<File
 				RelativePath=".\SimpleListScreen.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SimpleScrollView.h"
 				>
 			</File>
 			<File
