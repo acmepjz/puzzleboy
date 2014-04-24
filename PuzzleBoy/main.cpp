@@ -3,6 +3,7 @@
 #include "PuzzleBoyApp.h"
 #include "PuzzleBoyLevelFile.h"
 #include "PuzzleBoyLevel.h"
+#include "PuzzleBoyLevelView.h"
 #include "VertexList.h"
 #include "SimpleBitmapFont.h"
 #include "SimpleListScreen.h"
@@ -55,16 +56,8 @@ int m_nDraggingState=0;
 
 //FIXME: ad-hoc
 GLuint adhoc_screenkb_tex=0;
-//x,y: coord of top-left corner, zoom: size per pixel
-float adhoc_zoom=1.0f/48.0f;
-float adhoc_x=0.0f;
-float adhoc_y=0.0f;
-float adhoc2_zoom=1.0f/48.0f;
-float adhoc2_x=0.0f;
-float adhoc2_y=0.0f;
-SimpleBitmapFont *adhoc_fnt=NULL;
 
-u8string adhoc_debug;
+SimpleBitmapFont *adhoc_fnt=NULL;
 
 static void OnMouseWheel(int which,int x,int y,int dx,int dy,int nFlags);
 
@@ -78,11 +71,8 @@ void SetProjectionMatrix(int idx){
 
 	switch(idx){
 	case 1:
-		glOrtho(0.0f,float(screenWidth),float(screenHeight),0.0f,-1.0f,1.0f);
-		break;
 	default:
-		glOrtho(adhoc2_x,adhoc2_x+float(screenWidth)*adhoc2_zoom,
-			adhoc2_y+float(screenHeight)*adhoc2_zoom,adhoc2_y,-1.0f,1.0f);
+		glOrtho(0.0f,float(screenWidth),float(screenHeight),0.0f,-1.0f,1.0f);
 		break;
 	}
 
@@ -130,11 +120,6 @@ void ClearScreen(){
 	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//glEnableClientState(GL_COLOR_ARRAY);*/
-}
-
-void TranslateCoordinate(int x,int y,int& out_x,int& out_y){
-	out_x=(int)floor(float(x)*adhoc2_zoom+adhoc2_x);
-	out_y=(int)floor(float(y)*adhoc2_zoom+adhoc2_y);
 }
 
 void AddScreenKeyboard(float x,float y,float w,float h,int index,std::vector<float>& v,std::vector<unsigned short>& idx){
@@ -282,47 +267,6 @@ public:
 	}
 };
 
-void GameScreenFit(int x,int y,int w,int h){
-	//FIXME: ad-hoc workspace size
-#ifdef _DEBUG
-	SDL_Rect r={16,8,screenWidth-16,screenHeight-136};
-#else
-	SDL_Rect r={0,0,screenWidth,screenHeight-128};
-#endif
-
-	if(w*r.h>h*r.w){ // w/h>r.w/r.h
-		adhoc_zoom=float(w)/float(r.w);
-		adhoc_x=float(x)-float(r.x)*adhoc_zoom;
-		adhoc_y=float(y)+float(h)*0.5f-(float(r.y)+float(r.h)*0.5f)*adhoc_zoom;
-	}else{
-		adhoc_zoom=float(h)/float(r.h);
-		adhoc_x=float(x)+float(w)*0.5f-(float(r.x)+float(r.w)*0.5f)*adhoc_zoom;
-		adhoc_y=float(y)-float(r.y)*adhoc_zoom;
-	}
-}
-
-static void OnMultiGesture(float fx,float fy,float dx,float dy,float zoom);
-
-void GameScreenEnsureVisible(int x,int y){
-	//FIXME: ad-hoc workspace size
-#ifdef _DEBUG
-	SDL_Rect r={16,8,screenWidth-16,screenHeight-136};
-#else
-	SDL_Rect r={0,0,screenWidth,screenHeight-128};
-#endif
-
-	if(float(r.x)*adhoc2_zoom+adhoc2_x>float(x)+0.5f
-		|| float(r.y)*adhoc2_zoom+adhoc2_y>float(y)+0.5f
-		|| float(r.x+r.w)*adhoc2_zoom+adhoc2_x<float(x)+0.5f
-		|| float(r.y+r.h)*adhoc2_zoom+adhoc2_y<float(y)+0.5f)
-	{
-		adhoc_x=float(x)+0.5f-(float(r.x)+float(r.w)*0.5f)*adhoc_zoom;
-		adhoc_y=float(y)+0.5f-(float(r.y)+float(r.h)*0.5f)*adhoc_zoom;
-
-		OnMultiGesture(0.0f,0.0f,0.0f,0.0f,1.0f);
-	}
-}
-
 void OnVideoResize(int width, int height){
 	m_nResizeTime++;
 
@@ -386,62 +330,9 @@ static void OnMouseMove(int which,int state,int x,int y,int nFlags){
 //dx,dy: relative motion in normalized coordinate
 //zoom: relative zoom factor
 static void OnMultiGesture(float fx,float fy,float dx,float dy,float zoom){
-	//test only
-
-	//move
-	float f=float(screenHeight)*adhoc_zoom;
-	adhoc_x-=dx*f;
-	adhoc_y-=dy*f;
-
-	//zoom
-	float new_zoom=adhoc_zoom/zoom;
-
-	//ad-hoc range check
-	//FIXME: ad-hoc workspace size
-#ifdef _DEBUG
-	SDL_Rect r={16,8,screenWidth-16,screenHeight-136};
-#else
-	SDL_Rect r={0,0,screenWidth,screenHeight-128};
-#endif
-
-	f=1.0f/float(r.w>r.h?r.w:r.h);
-	if(new_zoom<f) new_zoom=f;
-
-	int w=1,h=1;
-	if(theApp->m_objPlayingLevel){
-		if(theApp->m_objPlayingLevel->m_nWidth>0) w=theApp->m_objPlayingLevel->m_nWidth;
-		if(theApp->m_objPlayingLevel->m_nHeight>0) h=theApp->m_objPlayingLevel->m_nHeight;
-	}
-
-	if(w*r.h>h*r.w){ // w/h>r.w/r.h
-		f=float(w)/float(r.w);
-	}else{
-		f=float(h)/float(r.h);
-	}
-	if(new_zoom>f) new_zoom=f;
-
-	//apply zoom
-	f=float(screenHeight)*(adhoc_zoom-new_zoom);
-	adhoc_x+=fx*f;
-	adhoc_y+=fy*f;
-	adhoc_zoom=new_zoom;
-
-	//move view if necessary
-	if(float(r.w)*adhoc_zoom>float(w)){
-		adhoc_x=float(w)*0.5f-(float(r.x)+float(r.w)*0.5f)*adhoc_zoom;
-	}else{
-		f=-float(r.x)*adhoc_zoom;
-		if(adhoc_x<f) adhoc_x=f;
-		f+=float(w)-float(r.w)*adhoc_zoom;
-		if(adhoc_x>f) adhoc_x=f;
-	}
-	if(float(r.h)*adhoc_zoom>float(h)){
-		adhoc_y=float(h)*0.5f-(float(r.y)+float(r.h)*0.5f)*adhoc_zoom;
-	}else{
-		f=-float(r.y)*adhoc_zoom;
-		if(adhoc_y<f) adhoc_y=f;
-		f+=float(h)-float(r.h)*adhoc_zoom;
-		if(adhoc_y>f) adhoc_y=f;
+	//TODO: OnMultiGesture
+	if(theApp->m_view.size()>=1){
+		theApp->m_view[0]->m_scrollView.OnMultiGesture(fx,fy,dx,dy,zoom);
 	}
 }
 
@@ -536,12 +427,8 @@ public:
 		m_txtList->NewStringIndex();
 		m_txtList->AddString("Save Temp Level File",0,float((m_nListCount++)*32),0,0,32,0);
 
-		//debug output
 		m_txtList->NewStringIndex();
-		m_nListCount++;
-
-		m_txtList->NewStringIndex();
-		m_txtList->AddString(u8string("Debug output:\n")+adhoc_debug,0,float((m_nListCount++)*32),0,0,16,DrawTextFlags::Multiline);
+		m_txtList->AddString("Start Multiplayer",0,float((m_nListCount++)*32),0,0,32,0);
 	}
 
 	virtual int OnClick(int index){
@@ -565,7 +452,7 @@ public:
 		case 4:
 			//ad-hoc solver test
 			{
-				PuzzleBoyLevelData *dat=theApp->GetDocument()->GetLevel(theApp->m_nCurrentLevel);
+				PuzzleBoyLevelData *dat=theApp->m_pDocument->GetLevel(theApp->m_nCurrentLevel);
 				if(dat){
 					printf("--- Solver Test ---\n");
 
@@ -633,6 +520,10 @@ public:
 			}
 			return 0;
 			break;
+		case 8:
+			//start multiplayer!!! TEST!!
+			return 2;
+			break;
 		}
 
 		return -1;
@@ -656,8 +547,10 @@ static bool OnKeyDown(int nChar,int nFlags){
 		)
 	{
 		m_nDraggingState=0;
-		if(MainMenuScreen().DoModal()){
-			theApp->StartGame();
+		int ret=MainMenuScreen().DoModal();
+		if(ret>=1){
+			if(ret>=2) ret=2;
+			theApp->StartGame(ret);
 		}
 		return false;
 	}
@@ -693,8 +586,6 @@ int SDL_main(int argc,char** argv){
 	theApp=new PuzzleBoyApp;
 
 	theApp->m_objGetText.LoadFileWithAutoLocale("data/locale/*.mo");
-
-	adhoc_debug="DEBUG!!1";
 
 	theApp->m_nAnimationSpeed=1;
 	theApp->m_bShowGrid=true;
@@ -831,20 +722,15 @@ int SDL_main(int argc,char** argv){
 	initGL();
 
 	//init level and graphics
-	theApp->StartGame();
+	theApp->StartGame(1);
 
 	while(m_bRun){
-		//fake animation
-		adhoc2_zoom=(adhoc_zoom+adhoc2_zoom)*0.5f;
-		adhoc2_x=(adhoc_x+adhoc2_x)*0.5f;
-		adhoc2_y=(adhoc_y+adhoc2_y)*0.5f;
 		//game logic
 		theApp->OnTimer();
 
 		//clear and draw
 		ClearScreen();
 
-		SetProjectionMatrix();
 		theApp->Draw();
 
 		SetProjectionMatrix(1);
@@ -888,14 +774,25 @@ int SDL_main(int argc,char** argv){
 
 		//TEST
 		{
-			MyFormat fmt("Pack: %s\nLevel %d: %s\nMoves: %d");
-			fmt<<toUTF8(theApp->m_pDocument->m_sLevelPackName)
-				<<(theApp->m_nCurrentLevel+1)<<toUTF8(theApp->m_objPlayingLevel->m_sLevelName)
-				<<theApp->m_objPlayingLevel->m_nMoves;
+			MyFormat fmt("Pack: %s");
+			fmt<<toUTF8(theApp->m_pDocument->m_sLevelPackName);
 
-			if(theApp->m_nCurrentBestStep>0){
-				fmt(" - Best: %d (%s)")<<theApp->m_nCurrentBestStep
-					<<theApp->m_sCurrentBestStepOwner;
+			int m=theApp->m_view.size();
+
+			if(m==1){
+				PuzzleBoyLevelView *view=theApp->m_view[0];
+
+				fmt("\nLevel %d: %s\nMoves: %d")<<(view->m_nCurrentLevel+1)<<toUTF8(view->m_objPlayingLevel->m_sLevelName)
+					<<view->m_objPlayingLevel->m_nMoves;
+
+				if(view->m_nCurrentBestStep>0){
+					fmt(" - Best: %d (%s)")<<view->m_nCurrentBestStep
+						<<view->m_sCurrentBestStepOwner;
+				}
+			}else if(m>=2){
+				fmt("\nLevel: %d vs %d\nMoves: %d vs %d")<<(theApp->m_view[0]->m_nCurrentLevel+1)
+					<<(theApp->m_view[1]->m_nCurrentLevel+1)
+					<<(theApp->m_view[0]->m_objPlayingLevel->m_nMoves)<<(theApp->m_view[1]->m_objPlayingLevel->m_nMoves);
 			}
 
 			adhoc_fnt->BeginDraw();

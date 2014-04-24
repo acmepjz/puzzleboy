@@ -15,8 +15,6 @@ void SetProjectionMatrix(int idx=0);
 void ClearScreen();
 void OnVideoResize(int width, int height);
 
-void TranslateCoordinate(int x,int y,int& out_x,int& out_y);
-
 void AddScreenKeyboard(float x,float y,float w,float h,int index,std::vector<float>& v,std::vector<unsigned short>& idx);
 void DrawScreenKeyboard(const std::vector<float>& v,const std::vector<unsigned short>& idx);
 
@@ -42,8 +40,5 @@ extern float screenAspectRatio;
 extern bool m_bRun;
 extern bool m_bTouchscreen;
 extern bool m_bShowYesNoScreenKeyboard;
-
-void GameScreenFit(int x,int y,int w,int h);
-void GameScreenEnsureVisible(int x,int y);
 
 void WaitForNextFrame();
