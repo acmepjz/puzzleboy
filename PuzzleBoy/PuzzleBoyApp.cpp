@@ -103,11 +103,13 @@ void PuzzleBoyApp::Draw(){
 	if(m==1){
 		m_view[0]->m_scrollView.SetProjectionMatrix();
 		m_view[0]->Draw();
+		m_view[0]->m_scrollView.DrawScrollBar();
 	}else{
 		for(int i=0;i<m;i++){
 			m_view[i]->m_scrollView.EnableScissorRect();
 			m_view[i]->m_scrollView.SetProjectionMatrix();
 			m_view[i]->Draw();
+			m_view[i]->m_scrollView.DrawScrollBar();
 		}
 		SimpleScrollView::DisableScissorRect();
 	}
@@ -136,7 +138,7 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount){
 		view->m_scrollView.m_nAutoResizeOffset[0]=0;
 		view->m_scrollView.m_nAutoResizeOffset[1]=0;
 		view->m_scrollView.m_nAutoResizeOffset[2]=-4;
-		view->m_scrollView.m_nAutoResizeOffset[3]=0;
+		view->m_scrollView.m_nAutoResizeOffset[3]=-128;
 		view->m_scrollView.OnTimer();
 
 		view->m_pDocument=m_pDocument;
@@ -159,7 +161,7 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount){
 		view->m_scrollView.m_nAutoResizeOffset[0]=4;
 		view->m_scrollView.m_nAutoResizeOffset[1]=0;
 		view->m_scrollView.m_nAutoResizeOffset[2]=0;
-		view->m_scrollView.m_nAutoResizeOffset[3]=0;
+		view->m_scrollView.m_nAutoResizeOffset[3]=-128;
 		view->m_scrollView.OnTimer();
 
 		view->m_pDocument=m_pDocument;

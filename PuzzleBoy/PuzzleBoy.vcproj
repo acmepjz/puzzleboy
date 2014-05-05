@@ -183,10 +183,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\clsTiming.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\FileSystem.cpp"
 				>
 			</File>
@@ -255,6 +251,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SimpleProgressScreen.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SimpleScrollView.cpp"
 				>
 			</File>
@@ -286,10 +286,6 @@
 			</File>
 			<File
 				RelativePath=".\blake2.h"
-				>
-			</File>
-			<File
-				RelativePath=".\clsTiming.h"
 				>
 			</File>
 			<File
@@ -362,6 +358,10 @@
 			</File>
 			<File
 				RelativePath=".\SimpleListScreen.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SimpleProgressScreen.h"
 				>
 			</File>
 			<File

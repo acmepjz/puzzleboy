@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel){
+int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,void *userData,RandomLevelCallback callback){
 	struct{
 		inline int operator()(int st,int blockUsed){
 			return st+blockUsed*16;
@@ -34,6 +34,8 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel){
 #endif
 	const int IterationCount=20;
 	RandomTestData levels[PoolSize*2]={};
+
+	outputLevel=NULL;
 
 	//init pool
 	for(int i=0;i<PoolSize;i++){
@@ -63,10 +65,16 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel){
 	unsigned char tmp2[8][8];
 #endif
 
-	for(int r=0;r<IterationCount;r++){
-		printf("[RandomTest] Generating...%d/%d\r",r,IterationCount);
+	bool bAbort=false;
 
+	for(int r=0;r<IterationCount;r++){
 		for(int levelIndex=0;levelIndex<PoolSize;levelIndex++){
+			//TODO: abort
+			if(callback && callback(userData,(r*PoolSize+levelIndex)/float(IterationCount*PoolSize))){
+				bAbort=true;
+				break;
+			}
+
 			PuzzleBoyLevelData &level=*(new PuzzleBoyLevelData(*(levels[levelIndex].level)));
 			int bestStep=levels[levelIndex].bestStep;
 			int bestScore=levels[levelIndex].bestScore;
@@ -321,31 +329,32 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel){
 			levels[levelIndex+PoolSize].bestScore=bestScore;
 		}
 
+		if(bAbort) break;
+
 		//sort levels
 		qsort(levels,PoolSize*2,sizeof(RandomTestData),RandomTestData::Compare);
 	}
 
-	//output some message
-	printf("[RandomTest] Done. Step=%d            \n",levels[0].bestStep);
-
 	//get return value
-	outputLevel=new PuzzleBoyLevelData;
-	outputLevel->Create(width+1,height);
-	for(int i=0,m=levels[0].level->m_objBlocks.size();i<m;i++){
-		outputLevel->m_objBlocks.push_back(new PushableBlock(*(levels[0].level->m_objBlocks[i])));
-	}
-	for(int j=0;j<height;j++){
-		for(int i=0;i<width;i++){
-			unsigned char c=(*levels[0].level)(i,j);
-			if(i==width-1){
-				if(c==EXIT_TILE){
-					c=0;
-					(*outputLevel)(width,j)=EXIT_TILE;
-				}else{
-					(*outputLevel)(width,j)=WALL_TILE;
+	if(!bAbort){
+		outputLevel=new PuzzleBoyLevelData;
+		outputLevel->Create(width+1,height);
+		for(int i=0,m=levels[0].level->m_objBlocks.size();i<m;i++){
+			outputLevel->m_objBlocks.push_back(new PushableBlock(*(levels[0].level->m_objBlocks[i])));
+		}
+		for(int j=0;j<height;j++){
+			for(int i=0;i<width;i++){
+				unsigned char c=(*levels[0].level)(i,j);
+				if(i==width-1){
+					if(c==EXIT_TILE){
+						c=0;
+						(*outputLevel)(width,j)=EXIT_TILE;
+					}else{
+						(*outputLevel)(width,j)=WALL_TILE;
+					}
 				}
+				(*outputLevel)(i,j)=c;
 			}
-			(*outputLevel)(i,j)=c;
 		}
 	}
 
@@ -355,5 +364,6 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel){
 	}
 
 	//over
+	if(bAbort) return 0;
 	return levels[0].bestStep+1;
 }
