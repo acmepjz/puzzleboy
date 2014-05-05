@@ -23,6 +23,8 @@ public:
 	void EnsureVisible(int x,int y,int w=0,int h=0);
 
 	void ConstraintView(bool zoom);
+
+	void DrawScrollBar();
 public:
 	//virtual area
 	SDL_Rect m_virtual;
@@ -41,5 +43,6 @@ private:
 	float m_zoom2,m_x2,m_y2;
 
 	int m_nMyResizeTime;
+	int m_nScrollBarIdleTime;
 };
 

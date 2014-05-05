@@ -10,6 +10,7 @@ SimpleScrollView::SimpleScrollView()
 ,m_zoom(1.0f/48.0f),m_x(0.0f),m_y(0.0f)
 ,m_zoom2(1.0f/48.0f),m_x2(0.0f),m_y2(0.0f)
 ,m_nMyResizeTime(-1)
+,m_nScrollBarIdleTime(0)
 {
 	m_virtual.x=0;
 	m_virtual.y=0;
@@ -53,6 +54,13 @@ void SimpleScrollView::OnTimer(){
 	m_zoom2=(m_zoom+m_zoom2)*0.5f;
 	m_x2=(m_x+m_x2)*0.5f;
 	m_y2=(m_y+m_y2)*0.5f;
+
+	//scroll bar animation (experimental)
+	if(fabs(m_zoom-m_zoom2)<1E-3f && fabs(m_x-m_x2)<1E-3f && fabs(m_y-m_y2)<1E-3f){
+		if(m_nScrollBarIdleTime<32) m_nScrollBarIdleTime++;
+	}else{
+		if(m_nScrollBarIdleTime>0) m_nScrollBarIdleTime-=4;
+	}
 }
 
 void SimpleScrollView::OnMultiGesture(float fx,float fy,float dx,float dy,float zoom){
@@ -198,5 +206,46 @@ void SimpleScrollView::EnsureVisible(int x,int y,int w,int h){
 		m_y=float(y)+float(h)*0.5f-(float(m_screen.y)+float(m_screen.h)*0.5f)*m_zoom;
 
 		ConstraintView(true);
+	}
+}
+
+void SimpleScrollView::DrawScrollBar(){
+	//draw scrollbar (experimental)
+	if(m_nScrollBarIdleTime<32 && m_virtual.w>0 && m_virtual.h>0 && m_screen.w>0 && m_screen.h>0){
+		::SetProjectionMatrix(1);
+
+		float x=float(m_screen.w)/float(m_virtual.w);
+		float x2=float(m_screen.w)*x*m_zoom2;
+		x*=(m_x2+float(m_screen.x)*m_zoom2-float(m_virtual.x));
+		x+=float(m_screen.x);
+		x2+=x;
+
+		float y=float(m_screen.h)/float(m_virtual.h);
+		float y2=float(m_screen.h)*y*m_zoom2;
+		y*=(m_y2+float(m_screen.y)*m_zoom2-float(m_virtual.y));
+		y+=float(m_screen.y);
+		y2+=y;
+
+		float v[16]={
+			float(m_screen.x+m_screen.w-8),y,
+			float(m_screen.x+m_screen.w),y,
+			float(m_screen.x+m_screen.w-8),y2,
+			float(m_screen.x+m_screen.w),y2,
+			x,float(m_screen.y+m_screen.h-8),
+			x2,float(m_screen.y+m_screen.h-8),
+			x,float(m_screen.y+m_screen.h),
+			x2,float(m_screen.y+m_screen.h),
+		};
+
+		const unsigned short i[]={0,1,3,0,3,2,4,5,7,4,7,6};
+
+		float transparency=float(32-m_nScrollBarIdleTime)/16.0f;
+		if(transparency>1.0f) transparency=1.0f;
+
+		glColor4f(0.5f,0.5f,0.5f,transparency);
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(2,GL_FLOAT,0,v);
+		glDrawElements(GL_TRIANGLES,12,GL_UNSIGNED_SHORT,i);
+		glDisableClientState(GL_VERTEX_ARRAY);
 	}
 }

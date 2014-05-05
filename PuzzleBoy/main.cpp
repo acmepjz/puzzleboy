@@ -7,8 +7,8 @@
 #include "VertexList.h"
 #include "SimpleBitmapFont.h"
 #include "SimpleListScreen.h"
+#include "SimpleProgressScreen.h"
 #include "MyFormat.h"
-#include "clsTiming.h"
 #include "TestSolver.h"
 #include "TestRandomLevel.h"
 
@@ -28,7 +28,7 @@ SDL_GLContext glContext=NULL;
 int screenWidth=0;
 int screenHeight=0;
 int m_nResizeTime=0; ///< value increased when screen resized
-float screenAspectRatio=1.0f;
+float screenAspectRatio=1.0f; ///< width/height
 
 SDL_Event event;
 
@@ -330,10 +330,19 @@ static void OnMouseMove(int which,int state,int x,int y,int nFlags){
 //dx,dy: relative motion in normalized coordinate
 //zoom: relative zoom factor
 static void OnMultiGesture(float fx,float fy,float dx,float dy,float zoom){
-	//TODO: OnMultiGesture
-	if(theApp->m_view.size()>=1){
-		theApp->m_view[0]->m_scrollView.OnMultiGesture(fx,fy,dx,dy,zoom);
+	//FIXME: ad-hoc
+	int m=theApp->m_view.size();
+
+	if(m<=0){
+		return;
+	}else if(m==1){
+		m=0;
+	}else if(m>=2){
+		if(fx<screenAspectRatio*0.5f) m=0;
+		else m=1;
 	}
+
+	theApp->m_view[m]->m_scrollView.OnMultiGesture(fx,fy,dx,dy,zoom);
 }
 
 static void OnMouseWheel(int which,int x,int y,int dx,int dy,int nFlags){
@@ -377,22 +386,37 @@ public:
 		return SimpleListScreen::DoModal();
 	}
 
-	static int DoRandom(int index,PuzzleBoyLevelData*& outputLevel){
+	static int DoRandom(int index,PuzzleBoyLevelData*& outputLevel,void *userData=NULL,RandomLevelCallback callback=NULL){
 		const int MaxRandomTypes=3;
 
 		index--;
 		if(index<0 || index>=MaxRandomTypes) index=int((float)MaxRandomTypes*(float)rand()/(1.0f+(float)RAND_MAX));;
 
 		switch(index){
-		case 0: return RandomTest(6,6,outputLevel);
-		case 1: return RandomTest(8,6,outputLevel);
-		case 2: return RandomTest(8,8,outputLevel);
+		case 0: return RandomTest(6,6,outputLevel,userData,callback);
+		case 1: return RandomTest(8,6,outputLevel,userData,callback);
+		case 2: return RandomTest(8,8,outputLevel,userData,callback);
 		}
 
 		//shouldn't goes here
 		return 0;
 	}
 };
+
+struct RandomLevelBatchProgress{
+	int nCurrent;
+	int nCount;
+	SimpleProgressScreen progressScreen;
+};
+
+int TestRandomLevelCallback(void* userData,float progress){
+	RandomLevelBatchProgress *t=(RandomLevelBatchProgress*)userData;
+
+	t->progressScreen.progress=(float(t->nCurrent)+progress)/float(t->nCount);
+	if(!t->progressScreen.DrawAndDoEvents()) return 1;
+
+	return 0;
+}
 
 class MainMenuScreen:public SimpleListScreen{
 public:
@@ -456,15 +480,16 @@ public:
 				if(dat){
 					printf("--- Solver Test ---\n");
 
-					clsTiming t;
-					t.Start();
+					Uint64 f=SDL_GetPerformanceFrequency(),t=SDL_GetPerformanceCounter();
+
 					PuzzleBoyLevel *lev=new PuzzleBoyLevel(*dat);
 					lev->StartGame();
 					u8string s;
 					int ret=lev->SolveIt(s,NULL,NULL);
-					t.Stop();
 
-					printf("SolveIt() returns %d, Time=%0.2fms\n",ret,t.GetMs());
+					t=SDL_GetPerformanceCounter()-t;
+
+					printf("SolveIt() returns %d, Time=%0.2fms\n",ret,double(t)/double(f)*1000.0);
 					if(ret==1) printf("The solution is %s\n",s.c_str());
 
 					delete lev;
@@ -478,7 +503,13 @@ public:
 				int ret=RandomMapScreen().DoModal();
 				if(ret>0){
 					PuzzleBoyLevelData *level=NULL;
-					if(RandomMapScreen::DoRandom(ret,level)){
+
+					RandomLevelBatchProgress prog;
+					prog.nCurrent=0;
+					prog.nCount=1;
+					prog.progressScreen.Create();
+
+					if(RandomMapScreen::DoRandom(ret,level,&prog,TestRandomLevelCallback)){
 						level->m_sLevelName=toUTF16(_("Random Level"));
 						theApp->m_pDocument->CreateNew();
 						delete theApp->m_pDocument->m_objLevels[0];
@@ -494,14 +525,23 @@ public:
 				int ret=RandomMapScreen().DoModal();
 				if(ret>0){
 					theApp->m_pDocument->CreateNew();
-					delete theApp->m_pDocument->m_objLevels[0];
-					theApp->m_pDocument->m_objLevels.clear();
 
-					for(int i=0;i<10;i++){
+					RandomLevelBatchProgress prog;
+					prog.nCount=10;
+					prog.progressScreen.Create();
+
+					for(int i=0;i<prog.nCount;i++){
 						PuzzleBoyLevelData *level=NULL;
-						if(RandomMapScreen::DoRandom(ret,level)){
+						prog.nCurrent=i;
+						if(RandomMapScreen::DoRandom(ret,level,&prog,TestRandomLevelCallback)){
+							if(i==0){
+								delete theApp->m_pDocument->m_objLevels[0];
+								theApp->m_pDocument->m_objLevels.clear();
+							}
 							level->m_sLevelName=toUTF16(str(MyFormat(_("Random Level %d"))<<(i+1)));
 							theApp->m_pDocument->m_objLevels.push_back(level);
+						}else{
+							break;
 						}
 					}
 
