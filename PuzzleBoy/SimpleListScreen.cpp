@@ -14,8 +14,7 @@ extern SDL_Window *mainWindow;
 extern bool m_bKeyDownProcessed;
 
 SimpleListScreen::SimpleListScreen()
-:m_fnt(NULL)
-,m_txtTitle(NULL)
+:m_txtTitle(NULL)
 ,m_txtList(NULL)
 ,m_nListCount(0)
 ,m_nReturnValue(0)
@@ -45,9 +44,10 @@ int SimpleListScreen::OnTitleBarButtonClick(int index){
 
 void SimpleListScreen::CreateTitleBarText(const u8string& title){
 	if(m_txtTitle) m_txtTitle->clear();
-	else m_txtTitle=new SimpleBitmapText;
+	else m_txtTitle=new SimpleText;
 
-	m_txtTitle->AddString(title,float(m_LeftButtons.size()*64+16),0,0,64,48,DrawTextFlags::VCenter);
+	m_txtTitle->AddString(titleFont?titleFont:mainFont,title,float(m_LeftButtons.size()*64+16),0,0,64,
+		titleFont?1.0f:1.5f,DrawTextFlags::VCenter);
 }
 
 void SimpleListScreen::CreateTitleBarButtons(){
@@ -169,12 +169,12 @@ int SimpleListScreen::DoModal(){
 		}
 
 		//draw list box
-		if(m_fnt && m_txtList){
-			m_fnt->BeginDraw();
+		if(m_txtList){
+			mainFont->BeginDraw();
 			glTranslatef(0.0f,float(64-y02),0.0f);
 			m_txtList->Draw(SDL_MakeColor(255,255,255,255),y02/32,screenHeight/32);
 			glLoadIdentity();
-			m_fnt->EndDraw();
+			mainFont->EndDraw();
 		}
 
 		//draw scrollbar (experimental)
@@ -204,10 +204,12 @@ int SimpleListScreen::DoModal(){
 		DrawScreenKeyboard(m_v,m_idx);
 
 		//draw title text
-		if(m_fnt && m_txtTitle){
-			m_fnt->BeginDraw();
+		if(m_txtTitle){
+			SimpleBaseFont *fnt=titleFont?titleFont:mainFont;
+
+			fnt->BeginDraw();
 			m_txtTitle->Draw(SDL_MakeColor(255,255,255,255));
-			m_fnt->EndDraw();
+			fnt->EndDraw();
 		}
 
 		SDL_GL_SwapWindow(mainWindow);

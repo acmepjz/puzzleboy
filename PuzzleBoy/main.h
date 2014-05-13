@@ -37,8 +37,19 @@ extern int screenHeight;
 extern int m_nResizeTime;
 extern float screenAspectRatio;
 
+struct SDL_Window;
+
+extern SDL_Window *mainWindow;
+
 extern bool m_bRun;
 extern bool m_bTouchscreen;
 extern bool m_bShowYesNoScreenKeyboard;
+
+class SimpleFontFile;
+class SimpleBaseFont;
+
+extern SimpleFontFile *mainFontFile;
+extern SimpleBaseFont *mainFont;
+extern SimpleBaseFont *titleFont;
 
 void WaitForNextFrame();

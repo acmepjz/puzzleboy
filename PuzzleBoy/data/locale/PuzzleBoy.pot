@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PuzzleBoy 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-08-27 20:57+0800\n"
+"POT-Creation-Date: 2014-05-13 00:40+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,20 +16,120 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: main.cpp:234
+#: ConfigScreen.cpp:20 ConfigScreen.cpp:104
+msgid "Disabled"
+msgstr ""
+
+#: ConfigScreen.cpp:28 ConfigScreen.cpp:103
+#, c-format
+msgid "Use system language (%s)"
+msgstr ""
+
+#: ConfigScreen.cpp:61
+msgid "Language"
+msgstr ""
+
+#: ConfigScreen.cpp:76
+msgid "No"
+msgstr ""
+
+#: ConfigScreen.cpp:77
+msgid "Yes"
+msgstr ""
+
+#: ConfigScreen.cpp:81
+#, c-format
+msgid "Animation Speed: %dx"
+msgstr ""
+
+#: ConfigScreen.cpp:86
+msgid "Show Grid: "
+msgstr ""
+
+#: ConfigScreen.cpp:91
+msgid "Show Lines: "
+msgstr ""
+
+#: ConfigScreen.cpp:96
+#, c-format
+msgid "International Font: %s (reqiures restart)"
+msgstr ""
+
+#: ConfigScreen.cpp:107
+msgid "Language: "
+msgstr ""
+
+#: ConfigScreen.cpp:116
+#, c-format
+msgid "Automatic (%d)"
+msgstr ""
+
+#: ConfigScreen.cpp:119
+msgid "Thread Count: "
+msgstr ""
+
+#: ConfigScreen.cpp:125
+msgid "Name of Player 1: "
+msgstr ""
+
+#: ConfigScreen.cpp:128
+msgid "Name of Player 2: "
+msgstr ""
+
+#: ConfigScreen.cpp:185 main.cpp:375
+msgid "Config"
+msgstr ""
+
+#: main.cpp:211
 msgid "User level: "
 msgstr ""
 
-#: main.cpp:241
+#: main.cpp:217 main.cpp:372
 msgid "Choose Level File"
 msgstr ""
 
-#: main.cpp:293
+#: main.cpp:268 main.cpp:369
 msgid "Choose Level"
 msgstr ""
 
-#: main.cpp:519
+#: main.cpp:378
+msgid "Exit Game"
+msgstr ""
+
+#: main.cpp:498
+msgid "Main Menu"
+msgstr ""
+
+#: main.cpp:612
 msgid "Puzzle Boy"
+msgstr ""
+
+#: main.cpp:744
+#, c-format
+msgid "Pack: %s"
+msgstr ""
+
+#: main.cpp:752
+#, c-format
+msgid "Level %d: %s"
+msgstr ""
+
+#: main.cpp:752
+#, c-format
+msgid "Moves: %d"
+msgstr ""
+
+#: main.cpp:757
+#, c-format
+msgid "Best: %d (%s)"
+msgstr ""
+
+#: PuzzleBoyApp.cpp:169
+msgid "Player"
+msgstr ""
+
+#: PuzzleBoyApp.cpp:170
+msgid "Player2"
 msgstr ""
 
 #: PuzzleBoyLevelData.cpp:299
@@ -38,4 +138,33 @@ msgstr ""
 
 #: PuzzleBoyLevelFile.cpp:29 PuzzleBoyLevelFile.cpp:61
 msgid "Unnamed level pack"
+msgstr ""
+
+#: RandomMapScreen.cpp:19
+msgid "Rotate block only 6x6"
+msgstr ""
+
+#: RandomMapScreen.cpp:22
+msgid "Rotate block only 8x6"
+msgstr ""
+
+#: RandomMapScreen.cpp:25
+msgid "Rotate block only 8x8"
+msgstr ""
+
+#: RandomMapScreen.cpp:28
+msgid "Random"
+msgstr ""
+
+#: RandomMapScreen.cpp:38
+msgid "Random Map"
+msgstr ""
+
+#: RandomMapScreen.cpp:113
+#, c-format
+msgid "Random Level %d"
+msgstr ""
+
+#: RandomMapScreen.cpp:115 RandomMapScreen.cpp:139
+msgid "Random Level"
 msgstr ""

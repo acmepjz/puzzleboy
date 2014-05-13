@@ -4,12 +4,43 @@
 #include "FileSystem.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <SDL_endian.h>
 
 #ifdef WIN32
 #include <windows.h>
 #endif
+
+bool GNUGetText::GetSystemLocale(char* buf,int size){
+	char *s=getenv("LANG");
+	if(s){
+		strncpy(buf,s,size);
+		return true;
+	}
+
+	s=getenv("LANGUAGE");
+	if(s){
+		strncpy(buf,s,size);
+		return true;
+	}
+
+#ifdef WIN32
+	int i=GetLocaleInfoA(LOCALE_USER_DEFAULT,LOCALE_SISO639LANGNAME,buf,size);
+	if(i>0 && i<size){
+		int j=GetLocaleInfoA(LOCALE_USER_DEFAULT,LOCALE_SISO3166CTRYNAME,buf+i,size-i);
+		if(j>0) buf[i-1]='_';
+
+		return true;
+	}
+#endif
+
+	//shouldn't goes here
+	printf("[GNUGetText] Error: GetSystemLocale() failed!\n");
+
+	buf[0]=0;
+	return false;
+}
 
 bool GNUGetText::LoadFileWithAutoLocale(const u8string& sFileName){
 	size_t nReplaceIndex;
@@ -18,25 +49,7 @@ bool GNUGetText::LoadFileWithAutoLocale(const u8string& sFileName){
 	}
 
 	char buf[256];
-
-	char *s=getenv("LANG");
-	if(s==NULL) buf[0]=0;
-	else strncpy(buf,s,sizeof(buf));
-
-	if(buf[0]==0){
-		s=getenv("LANGUAGE");
-		if(s) strncpy(buf,s,sizeof(buf));
-	}
-
-#ifdef WIN32
-	if(buf[0]==0){
-		int i=GetLocaleInfoA(LOCALE_USER_DEFAULT,LOCALE_SISO639LANGNAME,buf,sizeof(buf));
-		if(i>0 && i<sizeof(buf)){
-			int j=GetLocaleInfoA(LOCALE_USER_DEFAULT,LOCALE_SISO3166CTRYNAME,buf+i,sizeof(buf)-i);
-			if(j>0) buf[i-1]='_';
-		}
-	}
-#endif
+	GetSystemLocale(buf,sizeof(buf));
 
 	int lps=0;
 
@@ -97,6 +110,7 @@ bool GNUGetText::LoadFile(const u8string& sFileName){
 
 	if(header[0]==0x950412DE && header[1]==0){
 		m_objString.clear();
+		m_sCurrentLocale.clear();
 
 		if(header[2]>0 && header[3]>0 && header[4]>0){
 			std::vector<int> OriginalString,TranslatedString;
@@ -133,12 +147,24 @@ bool GNUGetText::LoadFile(const u8string& sFileName){
 			}
 		}
 
+		//update current locale
+		m_sCurrentLocale=sFileName;
+		u8string::size_type lps=m_sCurrentLocale.find_last_of("\\/");
+		if(lps!=u8string::npos) m_sCurrentLocale=m_sCurrentLocale.substr(lps+1);
+		lps=m_sCurrentLocale.find_last_of('.');
+		if(lps!=u8string::npos) m_sCurrentLocale=m_sCurrentLocale.substr(0,lps);
+
 		ret=true;
 	}
 
 	u8fclose(f);
 
 	return ret;
+}
+
+void GNUGetText::Close(){
+	m_objString.clear();
+	m_sCurrentLocale.clear();
 }
 
 u8string GNUGetText::GetText(const u8string& s) const{

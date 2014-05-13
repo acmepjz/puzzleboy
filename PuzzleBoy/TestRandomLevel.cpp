@@ -1,12 +1,12 @@
 #include "TestRandomLevel.h"
 #include "TestSolver.h"
 #include "PuzzleBoyLevelData.h"
+#include "MT19937.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
-int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,void *userData,RandomLevelCallback callback){
+int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rnd,void *userData,RandomLevelCallback callback){
 	struct{
 		inline int operator()(int st,int blockUsed){
 			return st+blockUsed*16;
@@ -46,9 +46,9 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,void *userD
 		memset(&(level.m_bMapData[0]),0,level.m_bMapData.size());
 
 		//random start and end (ad-hoc) point
-		int y1=int((float)height*(float)rand()/(1.0f+(float)RAND_MAX));
+		int y1=int((float)height*(float)rnd->Rnd()/4294967296.0f);
 		level(0,y1)=PLAYER_TILE;
-		int y2=int((float)height*(float)rand()/(1.0f+(float)RAND_MAX));
+		int y2=int((float)height*(float)rnd->Rnd()/4294967296.0f);
 		level(width-1,y2)=EXIT_TILE;
 
 		y1-=y2;
@@ -111,17 +111,17 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,void *userD
 
 			//some random tries
 			for(int i=0;i<10;i++){
-				int x=int((float)width*(float)rand()/(1.0f+(float)RAND_MAX));
-				int y=int((float)height*(float)rand()/(1.0f+(float)RAND_MAX));
+				int x=int((float)width*(float)rnd->Rnd()/4294967296.0f);
+				int y=int((float)height*(float)rnd->Rnd()/4294967296.0f);
 				unsigned char d[4]={};
 
 				if((x==0 || x==width-1) && (y==0 || y==height-1)) continue;
 				if(level(x,y) || tmp[y][x]) continue;
 
-				if(y>0) d[0]=unsigned char(2.0f*(float)rand()/(1.0f+(float)RAND_MAX));
-				if(x>0) d[1]=unsigned char(2.0f*(float)rand()/(1.0f+(float)RAND_MAX));
-				if(y<height-1) d[2]=unsigned char(2.0f*(float)rand()/(1.0f+(float)RAND_MAX));
-				if(x<width-1) d[3]=unsigned char(2.0f*(float)rand()/(1.0f+(float)RAND_MAX));
+				if(y>0) d[0]=unsigned char(2.0f*(float)rnd->Rnd()/4294967296.0f);
+				if(x>0) d[1]=unsigned char(2.0f*(float)rnd->Rnd()/4294967296.0f);
+				if(y<height-1) d[2]=unsigned char(2.0f*(float)rnd->Rnd()/4294967296.0f);
+				if(x<width-1) d[3]=unsigned char(2.0f*(float)rnd->Rnd()/4294967296.0f);
 
 				if(d[0] && (level(x,y-1) || tmp[y-1][x])) d[0]=0;
 				if(d[1] && (level(x-1,y) || tmp[y][x-1])) d[1]=0;
@@ -132,7 +132,7 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,void *userD
 
 #ifdef USE_TMP2
 				//probability test. doesn't work well
-				if(unsigned char(255.0f*(float)rand()/(1.0f+(float)RAND_MAX))<tmp2[y][x]) continue;
+				if(unsigned char(255.0f*(float)rnd->Rnd()/4294967296.0f)<tmp2[y][x]) continue;
 #endif
 
 				//OK, we find a position to place rotate block
@@ -197,16 +197,16 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,void *userD
 			if(bestCount==oldCount){
 				//random remove something
 				if(oldCount>0){
-					int i=int((float)oldCount*(float)rand()/(1.0f+(float)RAND_MAX));
+					int i=int((float)oldCount*(float)rnd->Rnd()/4294967296.0f);
 					delete level.m_objBlocks[i];
 					level.m_objBlocks.erase(level.m_objBlocks.begin()+i);
 				}
 
 				//remove some wall
-				int m=1+int(3.0f*(float)rand()/(1.0f+(float)RAND_MAX));
+				int m=1+int(3.0f*(float)rnd->Rnd()/4294967296.0f);
 				for(int i=0,j=0;i<64 && j<m;i++){
-					int x=int((float)width*(float)rand()/(1.0f+(float)RAND_MAX));
-					int y=int((float)height*(float)rand()/(1.0f+(float)RAND_MAX));
+					int x=int((float)width*(float)rnd->Rnd()/4294967296.0f);
+					int y=int((float)height*(float)rnd->Rnd()/4294967296.0f);
 					if(level(x,y)==WALL_TILE){
 						level(x,y)=0;
 						m++;
@@ -214,10 +214,10 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,void *userD
 				}
 
 				/*//then add something
-				int m=1+int(3.0f*(float)rand()/(1.0f+(float)RAND_MAX));
+				int m=1+int(3.0f*(float)rnd->Rnd()/4294967296.0f);
 				for(int i=0,j=0;i<64 && j<m;i++){
-					int x=int((float)width*(float)rand()/(1.0f+(float)RAND_MAX));
-					int y=int((float)height*(float)rand()/(1.0f+(float)RAND_MAX));
+					int x=int((float)width*(float)rnd->Rnd()/4294967296.0f);
+					int y=int((float)height*(float)rnd->Rnd()/4294967296.0f);
 
 					if(level(x,y) || tmp[y][x]) continue;
 
@@ -276,7 +276,7 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,void *userD
 				//remove deadlock blocks
 				for(int i=level.m_objBlocks.size()-1;i>=0;i--){
 					if((ed.blockStateReachable[i] & (ed.blockStateReachable[i]-1))==0
-						/*&& rand()<(RAND_MAX/2)*/)
+						/*&& rnd->Rnd()<2147483648.0f*/)
 					{
 						PushableBlock *block=level.m_objBlocks[i];
 						int x=block->m_x,y=block->m_y;
