@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PuzzleBoy 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-08-16 23:58+0800\n"
-"PO-Revision-Date: 2013-08-17 00:11+0800\n"
+"POT-Creation-Date: 2014-05-13 00:40+0800\n"
+"PO-Revision-Date: 2014-05-13 00:42+0800\n"
 "Last-Translator: acme_pjz <acme_pjz@hotmail.com>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -17,16 +17,163 @@ msgstr ""
 "X-Poedit-Language: Chinese\n"
 "X-Poedit-Country: CHINA\n"
 
-#: main.cpp:126
+#: ConfigScreen.cpp:20
+#: ConfigScreen.cpp:104
+msgid "Disabled"
+msgstr "禁用"
+
+#: ConfigScreen.cpp:28
+#: ConfigScreen.cpp:103
+#, c-format
+msgid "Use system language (%s)"
+msgstr "使用系统语言 (%s)"
+
+#: ConfigScreen.cpp:61
+msgid "Language"
+msgstr "语言"
+
+#: ConfigScreen.cpp:76
+msgid "No"
+msgstr "否"
+
+#: ConfigScreen.cpp:77
+msgid "Yes"
+msgstr "是"
+
+#: ConfigScreen.cpp:81
+#, c-format
+msgid "Animation Speed: %dx"
+msgstr "动画速度: %d 倍"
+
+#: ConfigScreen.cpp:86
+msgid "Show Grid: "
+msgstr "显示网格: "
+
+#: ConfigScreen.cpp:91
+msgid "Show Lines: "
+msgstr "显示线条: "
+
+#: ConfigScreen.cpp:96
+#, c-format
+msgid "International Font: %s (reqiures restart)"
+msgstr "国际化字体: %s (需要重新启动)"
+
+#: ConfigScreen.cpp:107
+msgid "Language: "
+msgstr "语言: "
+
+#: ConfigScreen.cpp:116
+#, c-format
+msgid "Automatic (%d)"
+msgstr "自动 (%d)"
+
+#: ConfigScreen.cpp:119
+msgid "Thread Count: "
+msgstr "线程数: "
+
+#: ConfigScreen.cpp:125
+msgid "Name of Player 1: "
+msgstr "玩家 1 名字: "
+
+#: ConfigScreen.cpp:128
+msgid "Name of Player 2: "
+msgstr "玩家 2 名字: "
+
+#: ConfigScreen.cpp:185
+#: main.cpp:375
+msgid "Config"
+msgstr "设置"
+
+#: main.cpp:211
+msgid "User level: "
+msgstr "用户关卡: "
+
+#: main.cpp:217
+#: main.cpp:372
+msgid "Choose Level File"
+msgstr "选择关卡文件"
+
+#: main.cpp:268
+#: main.cpp:369
+msgid "Choose Level"
+msgstr "选择关卡"
+
+#: main.cpp:378
+msgid "Exit Game"
+msgstr "退出游戏"
+
+#: main.cpp:498
+msgid "Main Menu"
+msgstr "主菜单"
+
+#: main.cpp:612
 msgid "Puzzle Boy"
-msgstr ""
+msgstr "Puzzle Boy"
+
+#: main.cpp:744
+#, c-format
+msgid "Pack: %s"
+msgstr "关卡包: %s"
+
+#: main.cpp:752
+#, c-format
+msgid "Level %d: %s"
+msgstr "第 %d 关: %s"
+
+#: main.cpp:752
+#, c-format
+msgid "Moves: %d"
+msgstr "步数: %d"
+
+#: main.cpp:757
+#, c-format
+msgid "Best: %d (%s)"
+msgstr "最佳纪录: %d (%s)"
+
+#: PuzzleBoyApp.cpp:169
+msgid "Player"
+msgstr "玩家"
+
+#: PuzzleBoyApp.cpp:170
+msgid "Player2"
+msgstr "玩家2"
 
 #: PuzzleBoyLevelData.cpp:299
 msgid "Unnamed level"
 msgstr "未命名关卡"
 
-#: PuzzleBoyLevelFile.cpp:28
-#: PuzzleBoyLevelFile.cpp:60
+#: PuzzleBoyLevelFile.cpp:29
+#: PuzzleBoyLevelFile.cpp:61
 msgid "Unnamed level pack"
 msgstr "未命名关卡包"
+
+#: RandomMapScreen.cpp:19
+msgid "Rotate block only 6x6"
+msgstr "只有旋转砖块 6x6"
+
+#: RandomMapScreen.cpp:22
+msgid "Rotate block only 8x6"
+msgstr "只有旋转砖块 8x6"
+
+#: RandomMapScreen.cpp:25
+msgid "Rotate block only 8x8"
+msgstr "只有旋转砖块 8x8"
+
+#: RandomMapScreen.cpp:28
+msgid "Random"
+msgstr "随机"
+
+#: RandomMapScreen.cpp:38
+msgid "Random Map"
+msgstr "随机地图"
+
+#: RandomMapScreen.cpp:113
+#, c-format
+msgid "Random Level %d"
+msgstr "随机关卡 %d"
+
+#: RandomMapScreen.cpp:115
+#: RandomMapScreen.cpp:139
+msgid "Random Level"
+msgstr "随机关卡"
 

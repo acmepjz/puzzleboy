@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;F:\Projects\SDL2-2.0.0\include&quot;"
+				AdditionalIncludeDirectories="&quot;F:\Projects\SDL2-2.0.0\include&quot;;&quot;F:\Projects\freetype-2.5.3\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,10 +61,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL2.lib SDL2main.lib opengl32.lib glu32.lib SDL2_image.lib SDL2_ttf.lib"
+				AdditionalDependencies="SDL2.lib SDL2main.lib opengl32.lib glu32.lib freetype.lib"
 				OutputFile="$(SolutionDir)\$(ProjectName)_d.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;F:\Projects\SDL-1.2.14\lib&quot;"
+				AdditionalLibraryDirectories="&quot;F:\Projects\SDL-1.2.14\lib&quot;;&quot;F:\Projects\freetype-2.5.3\vs2008\Release&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -118,7 +118,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;F:\Projects\SDL2-2.0.0\include&quot;"
+				AdditionalIncludeDirectories="&quot;F:\Projects\SDL2-2.0.0\include&quot;;&quot;F:\Projects\freetype-2.5.3\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -137,10 +137,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL2.lib SDL2main.lib opengl32.lib glu32.lib SDL2_image.lib SDL2_ttf.lib"
+				AdditionalDependencies="SDL2.lib SDL2main.lib opengl32.lib glu32.lib freetype.lib"
 				OutputFile="$(SolutionDir)\$(ProjectName).exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;F:\Projects\SDL-1.2.14\lib&quot;"
+				AdditionalLibraryDirectories="&quot;F:\Projects\SDL-1.2.14\lib&quot;;&quot;F:\Projects\freetype-2.5.3\vs2008\Release&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -183,6 +183,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ConfigScreen.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\FileSystem.cpp"
 				>
 			</File>
@@ -200,6 +204,10 @@
 			</File>
 			<File
 				RelativePath=".\MFCSerializer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MT19937.cpp"
 				>
 			</File>
 			<File
@@ -239,11 +247,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\RandomMapScreen.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\RecordManager.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\SimpleBitmapFont.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SimpleFont.cpp"
 				>
 			</File>
 			<File
@@ -256,6 +272,10 @@
 			</File>
 			<File
 				RelativePath=".\SimpleScrollView.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SimpleText.cpp"
 				>
 			</File>
 			<File
@@ -289,6 +309,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ConfigScreen.h"
+				>
+			</File>
+			<File
 				RelativePath=".\FileSystem.h"
 				>
 			</File>
@@ -310,6 +334,10 @@
 			</File>
 			<File
 				RelativePath=".\MFCSerializer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MT19937.h"
 				>
 			</File>
 			<File
@@ -349,11 +377,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\RandomMapScreen.h"
+				>
+			</File>
+			<File
 				RelativePath=".\RecordManager.h"
 				>
 			</File>
 			<File
 				RelativePath=".\SimpleBitmapFont.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SimpleFont.h"
 				>
 			</File>
 			<File
@@ -366,6 +402,10 @@
 			</File>
 			<File
 				RelativePath=".\SimpleScrollView.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SimpleText.h"
 				>
 			</File>
 			<File

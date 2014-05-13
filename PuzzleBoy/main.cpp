@@ -7,10 +7,12 @@
 #include "VertexList.h"
 #include "SimpleBitmapFont.h"
 #include "SimpleListScreen.h"
-#include "SimpleProgressScreen.h"
+#include "ConfigScreen.h"
 #include "MyFormat.h"
 #include "TestSolver.h"
 #include "TestRandomLevel.h"
+#include "RandomMapScreen.h"
+#include "SimpleFont.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -22,7 +24,6 @@
 #include "include_sdl.h"
 #include "include_gl.h"
 
-PuzzleBoyApp *theApp=NULL;
 SDL_Window *mainWindow=NULL;
 SDL_GLContext glContext=NULL;
 int screenWidth=0;
@@ -57,12 +58,16 @@ int m_nDraggingState=0;
 //FIXME: ad-hoc
 GLuint adhoc_screenkb_tex=0;
 
-SimpleBitmapFont *adhoc_fnt=NULL;
+SimpleFontFile *mainFontFile=NULL;
+SimpleBaseFont *mainFont=NULL;
+SimpleBaseFont *titleFont=NULL;
+
+//================
 
 static void OnMouseWheel(int which,int x,int y,int dx,int dy,int nFlags);
 
 void WaitForNextFrame(){
-	SDL_Delay(30);
+	SDL_Delay(25);
 }
 
 void SetProjectionMatrix(int idx){
@@ -170,11 +175,11 @@ public:
 		m_nListCount=m_files.size();
 
 		if(m_txtList) m_txtList->clear();
-		else m_txtList=new SimpleBitmapText;
+		else m_txtList=new SimpleText;
 
 		for(int i=0;i<m_nListCount;i++){
 			m_txtList->NewStringIndex();
-			m_txtList->AddString(m_fileDisplayName[i],0,float(i*32),0,0,32,0);
+			m_txtList->AddString(mainFont,m_fileDisplayName[i],0,float(i*32),0,32,1,DrawTextFlags::VCenter);
 		}
 	}
 
@@ -208,7 +213,6 @@ public:
 		}
 
 		//show
-		m_fnt=adhoc_fnt;
 		m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
 		CreateTitleBarText(_("Choose Level File"));
 		return SimpleListScreen::DoModal();
@@ -224,17 +228,17 @@ public:
 		m_nListCount=theApp->m_pDocument->m_objLevels.size();
 
 		if(m_txtList) m_txtList->clear();
-		else m_txtList=new SimpleBitmapText;
+		else m_txtList=new SimpleText;
 
 		for(int i=0;i<m_nListCount;i++){
 			char s[32];
 			m_txtList->NewStringIndex();
 			sprintf(s,"%d",i+1);
-			m_txtList->AddString(s,0,float(i*32),0,0,32,0);
-			m_txtList->AddString(toUTF8(theApp->m_pDocument->m_objLevels[i]->m_sLevelName),96,float(i*32),0,0,32,0);
+			m_txtList->AddString(mainFont,s,0,float(i*32),0,32,1,DrawTextFlags::VCenter);
+			m_txtList->AddString(mainFont,toUTF8(theApp->m_pDocument->m_objLevels[i]->m_sLevelName),96,float(i*32),0,32,1,DrawTextFlags::VCenter);
 			sprintf(s,"%dx%d",theApp->m_pDocument->m_objLevels[i]->m_nWidth,
 				theApp->m_pDocument->m_objLevels[i]->m_nHeight);
-			m_txtList->AddString(s,float(screenWidth-128),float(i*32),0,0,32,0);
+			m_txtList->AddString(mainFont,s,float(screenWidth-128),float(i*32),0,32,1,DrawTextFlags::VCenter);
 		}
 	}
 
@@ -258,7 +262,6 @@ public:
 	}
 
 	virtual int DoModal(){
-		m_fnt=adhoc_fnt;
 		m_bDirtyOnResize=true;
 		m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
 		m_RightButtons.push_back(SCREEN_KEYBOARD_OPEN);
@@ -352,107 +355,46 @@ static void OnMouseWheel(int which,int x,int y,int dx,int dy,int nFlags){
 	}
 }
 
-//ad-hoc random level TEST
-class RandomMapScreen:public SimpleListScreen{
-public:
-	virtual void OnDirty(){
-		if(m_txtList) m_txtList->clear();
-		else m_txtList=new SimpleBitmapText;
-
-		m_nListCount=0;
-
-		m_txtList->NewStringIndex();
-		m_txtList->AddString(_("Rotate block only 6x6"),0,float((m_nListCount++)*32),0,0,32,0);
-
-		m_txtList->NewStringIndex();
-		m_txtList->AddString(_("Rotate block only 8x6"),0,float((m_nListCount++)*32),0,0,32,0);
-
-		m_txtList->NewStringIndex();
-		m_txtList->AddString(_("Rotate block only 8x8"),0,float((m_nListCount++)*32),0,0,32,0);
-
-		m_txtList->NewStringIndex();
-		m_txtList->AddString(_("Random"),0,float((m_nListCount++)*32),0,0,32,0);
-	}
-
-	virtual int OnClick(int index){
-		return index+1;
-	}
-
-	virtual int DoModal(){
-		//show
-		m_fnt=adhoc_fnt;
-		m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
-		CreateTitleBarText(_("Random Map"));
-		return SimpleListScreen::DoModal();
-	}
-
-	static int DoRandom(int index,PuzzleBoyLevelData*& outputLevel,void *userData=NULL,RandomLevelCallback callback=NULL){
-		const int MaxRandomTypes=3;
-
-		index--;
-		if(index<0 || index>=MaxRandomTypes) index=int((float)MaxRandomTypes*(float)rand()/(1.0f+(float)RAND_MAX));;
-
-		switch(index){
-		case 0: return RandomTest(6,6,outputLevel,userData,callback);
-		case 1: return RandomTest(8,6,outputLevel,userData,callback);
-		case 2: return RandomTest(8,8,outputLevel,userData,callback);
-		}
-
-		//shouldn't goes here
-		return 0;
-	}
-};
-
-struct RandomLevelBatchProgress{
-	int nCurrent;
-	int nCount;
-	SimpleProgressScreen progressScreen;
-};
-
-int TestRandomLevelCallback(void* userData,float progress){
-	RandomLevelBatchProgress *t=(RandomLevelBatchProgress*)userData;
-
-	t->progressScreen.progress=(float(t->nCurrent)+progress)/float(t->nCount);
-	if(!t->progressScreen.DrawAndDoEvents()) return 1;
-
-	return 0;
-}
-
 class MainMenuScreen:public SimpleListScreen{
 public:
+	static const int TestFeatureStart=5;
+public:
 	virtual void OnDirty(){
 		if(m_txtList) m_txtList->clear();
-		else m_txtList=new SimpleBitmapText;
+		else m_txtList=new SimpleText;
 
 		m_nListCount=0;
 
 		m_txtList->NewStringIndex();
-		m_txtList->AddString(_("Choose Level"),0,float((m_nListCount++)*32),0,0,32,0);
+		m_txtList->AddString(mainFont,_("Choose Level"),0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
 
 		m_txtList->NewStringIndex();
-		m_txtList->AddString(_("Choose Level File"),0,float((m_nListCount++)*32),0,0,32,0);
+		m_txtList->AddString(mainFont,_("Choose Level File"),0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
 
 		m_txtList->NewStringIndex();
-		m_txtList->AddString(_("Exit Game"),0,float((m_nListCount++)*32),0,0,32,0);
+		m_txtList->AddString(mainFont,_("Config"),0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
+
+		m_txtList->NewStringIndex();
+		m_txtList->AddString(mainFont,_("Exit Game"),0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
 
 		//test feature
 		m_txtList->NewStringIndex();
 		m_nListCount++;
 
 		m_txtList->NewStringIndex();
-		m_txtList->AddString("Test Solver",0,float((m_nListCount++)*32),0,0,32,0);
+		m_txtList->AddString(mainFont,"Test Solver",0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
 
 		m_txtList->NewStringIndex();
-		m_txtList->AddString("Random Map",0,float((m_nListCount++)*32),0,0,32,0);
+		m_txtList->AddString(mainFont,"Random Map",0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
 
 		m_txtList->NewStringIndex();
-		m_txtList->AddString("Random Map x10",0,float((m_nListCount++)*32),0,0,32,0);
+		m_txtList->AddString(mainFont,"Random Map x10",0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
 
 		m_txtList->NewStringIndex();
-		m_txtList->AddString("Save Temp Level File",0,float((m_nListCount++)*32),0,0,32,0);
+		m_txtList->AddString(mainFont,"Save Temp Level File",0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
 
 		m_txtList->NewStringIndex();
-		m_txtList->AddString("Start Multiplayer",0,float((m_nListCount++)*32),0,0,32,0);
+		m_txtList->AddString(mainFont,"Start Multiplayer",0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
 	}
 
 	virtual int OnClick(int index){
@@ -469,11 +411,16 @@ public:
 			}
 			break;
 		case 2:
+			//config
+			ConfigScreen().DoModal();
+			return 0;
+			break;
+		case 3:
 			//exit game
 			m_bRun=false;
 			return 0;
 			break;
-		case 4:
+		case TestFeatureStart:
 			//ad-hoc solver test
 			{
 				PuzzleBoyLevelData *dat=theApp->m_pDocument->GetLevel(theApp->m_nCurrentLevel);
@@ -497,59 +444,35 @@ public:
 				return 0;
 			}
 			break;
-		case 5:
+		case TestFeatureStart+1:
 			//ad-hoc random level TEST
 			{
-				int ret=RandomMapScreen().DoModal();
-				if(ret>0){
-					PuzzleBoyLevelData *level=NULL;
-
-					RandomLevelBatchProgress prog;
-					prog.nCurrent=0;
-					prog.nCount=1;
-					prog.progressScreen.Create();
-
-					if(RandomMapScreen::DoRandom(ret,level,&prog,TestRandomLevelCallback)){
-						level->m_sLevelName=toUTF16(_("Random Level"));
-						theApp->m_pDocument->CreateNew();
-						delete theApp->m_pDocument->m_objLevels[0];
-						theApp->m_pDocument->m_objLevels[0]=level;
+				int type=RandomMapScreen().DoModal();
+				if(type>0){
+					PuzzleBoyLevelFile *doc=RandomMapScreen::DoRandomLevels(type,1);
+					if(doc){
+						delete theApp->m_pDocument;
+						theApp->m_pDocument=doc;
 						return 1;
 					}
 				}
 			}
 			break;
-		case 6:
+		case TestFeatureStart+2:
 			//batch TEST
 			{
-				int ret=RandomMapScreen().DoModal();
-				if(ret>0){
-					theApp->m_pDocument->CreateNew();
-
-					RandomLevelBatchProgress prog;
-					prog.nCount=10;
-					prog.progressScreen.Create();
-
-					for(int i=0;i<prog.nCount;i++){
-						PuzzleBoyLevelData *level=NULL;
-						prog.nCurrent=i;
-						if(RandomMapScreen::DoRandom(ret,level,&prog,TestRandomLevelCallback)){
-							if(i==0){
-								delete theApp->m_pDocument->m_objLevels[0];
-								theApp->m_pDocument->m_objLevels.clear();
-							}
-							level->m_sLevelName=toUTF16(str(MyFormat(_("Random Level %d"))<<(i+1)));
-							theApp->m_pDocument->m_objLevels.push_back(level);
-						}else{
-							break;
-						}
+				int type=RandomMapScreen().DoModal();
+				if(type>0){
+					PuzzleBoyLevelFile *doc=RandomMapScreen::DoRandomLevels(type,10);
+					if(doc){
+						delete theApp->m_pDocument;
+						theApp->m_pDocument=doc;
+						return 1;
 					}
-
-					return 1;
 				}
 			}
 			break;
-		case 7:
+		case TestFeatureStart+3:
 			//save temp file
 			if(theApp->m_pDocument){
 				time_t t=time(NULL);
@@ -560,7 +483,7 @@ public:
 			}
 			return 0;
 			break;
-		case 8:
+		case TestFeatureStart+4:
 			//start multiplayer!!! TEST!!
 			return 2;
 			break;
@@ -571,7 +494,6 @@ public:
 
 	virtual int DoModal(){
 		//show
-		m_fnt=adhoc_fnt;
 		m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
 		CreateTitleBarText(_("Main Menu"));
 		return SimpleListScreen::DoModal();
@@ -617,54 +539,44 @@ static void CheckDragging(float x,float y){
 }
 
 int SDL_main(int argc,char** argv){
-	srand((unsigned int)time(NULL));
-	//ad-hoc: drop some non-random number
-	rand();
-
+	//init file system
 	initPaths();
+
+	//init SDL
+	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK)==-1) abort();
+
+	//init freetype
+	if(!FreeType_Init()) abort();
 
 	theApp=new PuzzleBoyApp;
 
-	theApp->m_objGetText.LoadFileWithAutoLocale("data/locale/*.mo");
-
-	theApp->m_nAnimationSpeed=1;
-	theApp->m_bShowGrid=true;
-	theApp->m_bShowLines=true;
-
-	//FIXME: ad-hoc!!!1!!1!! player name
+	//init random number
 	{
-		u8string s;
-		u8file *f=u8fopen((externalStoragePath+"/adhoc_playername.txt").c_str(),"rb");
-		bool b=false;
-		if(f){
-			if(u8fgets2(s,f)){
-				u8string::size_type lps=s.find_first_of("\r\n");
-				if(lps!=u8string::npos) s=s.substr(0,lps);
-				b=(!s.empty());
-			}
-			u8fclose(f);
-		}
-		if(b){
-			theApp->m_sPlayerName=toUTF16(s);
-		}else{
-			f=u8fopen((externalStoragePath+"/adhoc_playername.txt").c_str(),"wb");
-			if(f){
-				u8fwrite("acme_pjz",8,1,f);
-				u8fclose(f);
-			}
-			theApp->m_sPlayerName=toUTF16("acme_pjz");
-		}
+		unsigned int seed[4];
+		unsigned long long t=time(NULL);
+		seed[0]=(unsigned int)t;
+		seed[1]=(unsigned int)(t>>32);
+
+		t=SDL_GetPerformanceCounter();
+		seed[2]=(unsigned int)t;
+		seed[3]=(unsigned int)(t>>32);
+
+		theApp->m_objMainRnd.Init(seed,sizeof(seed)/sizeof(unsigned int));
 	}
+
+	//load config
+	theApp->LoadConfig(externalStoragePath+"/PuzzleBoy.cfg");
+
+	//load locale
+	theApp->LoadLocale();
 
 	//load record file
 	theApp->m_objRecordMgr.LoadFile((externalStoragePath+"/PuzzleBoyRecord.dat").c_str());
 
 	//TEST: load default level file
 	if(!theApp->LoadFile("data/levels/PuzzleBoy.lev")){
-		printf("[main] Failed to load default level file\n");
+		printf("[main] Error: Failed to load default level file\n");
 	}
-
-	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK)==-1) abort();
 
 #ifdef ANDROID
 	//experimental orientation aware
@@ -749,12 +661,27 @@ int SDL_main(int argc,char** argv){
 		SDL_FreeSurface(tmp);
 	}
 
-	//ad-hoc font
-	SimpleBitmapText txt;
-	{
+	//try to load FreeType font
+	if(theApp->m_bInternationalFont){
+		mainFontFile=new SimpleFontFile;
+		if(mainFontFile->LoadFile("data/font/DroidSansFallback.ttf")){
+			mainFont=new SimpleFont(*mainFontFile,20);
+			titleFont=new SimpleFont(*mainFontFile,32);
+
+			//test preload glyph
+			mainFont->AddGlyph(0,true);
+			titleFont->AddGlyph(0,true);
+		}else{
+			printf("[main] Error: Can't load font file, fallback to bitmap font\n");
+			delete mainFontFile;
+			mainFontFile=NULL;
+		}
+	}
+
+	//ad-hoc bitmap font
+	if(mainFont==NULL){
 		SDL_Surface *tmp=SDL_LoadBMP("data/gfx/adhoc2.bmp");
-		adhoc_fnt=new SimpleBitmapFont();
-		adhoc_fnt->Create(tmp);
+		mainFont=new SimpleBitmapFont(tmp);
 		SDL_FreeSurface(tmp);
 	}
 
@@ -814,7 +741,7 @@ int SDL_main(int argc,char** argv){
 
 		//TEST
 		{
-			MyFormat fmt("Pack: %s");
+			MyFormat fmt(_("Pack: %s"));
 			fmt<<toUTF8(theApp->m_pDocument->m_sLevelPackName);
 
 			int m=theApp->m_view.size();
@@ -822,11 +749,12 @@ int SDL_main(int argc,char** argv){
 			if(m==1){
 				PuzzleBoyLevelView *view=theApp->m_view[0];
 
-				fmt("\nLevel %d: %s\nMoves: %d")<<(view->m_nCurrentLevel+1)<<toUTF8(view->m_objPlayingLevel->m_sLevelName)
+				fmt("\n")(_("Level %d: %s"))("\n")(_("Moves: %d"))<<(view->m_nCurrentLevel+1)
+					<<toUTF8(view->m_objPlayingLevel->m_sLevelName)
 					<<view->m_objPlayingLevel->m_nMoves;
 
 				if(view->m_nCurrentBestStep>0){
-					fmt(" - Best: %d (%s)")<<view->m_nCurrentBestStep
+					fmt(" - ")(_("Best: %d (%s)"))<<view->m_nCurrentBestStep
 						<<view->m_sCurrentBestStepOwner;
 				}
 			}else if(m>=2){
@@ -835,13 +763,8 @@ int SDL_main(int argc,char** argv){
 					<<(theApp->m_view[0]->m_objPlayingLevel->m_nMoves)<<(theApp->m_view[1]->m_objPlayingLevel->m_nMoves);
 			}
 
-			adhoc_fnt->BeginDraw();
-			txt.clear();
-
-			txt.AddString(str(fmt),0.0f,0.0f,(float)screenWidth,(float)screenHeight,
-				32.0f,DrawTextFlags::Multiline | DrawTextFlags::Bottom);
-			txt.Draw(SDL_MakeColor(255,255,255,255));
-			adhoc_fnt->EndDraw();
+			mainFont->DrawString(str(fmt),0.0f,0.0f,(float)screenWidth,(float)screenHeight,
+				1.0f,DrawTextFlags::Multiline | DrawTextFlags::Bottom,SDL_MakeColor(255,255,255,255));
 		}
 
 		SDL_GL_SwapWindow(mainWindow);
@@ -1025,13 +948,18 @@ int SDL_main(int argc,char** argv){
 
 	glDeleteTextures(1,&adhoc_screenkb_tex);
 
-	adhoc_fnt->Destroy();
-	delete adhoc_fnt;
-	adhoc_fnt=NULL;
+	delete mainFont;
+	mainFont=NULL;
+	delete titleFont;
+	titleFont=NULL;
+	delete mainFontFile;
+	mainFontFile=NULL;
 
 	SDL_GL_DeleteContext(glContext);
 	SDL_DestroyWindow(mainWindow);
 	SDL_Quit();
+
+	FreeType_Quit();
 
 	delete theApp;
 	theApp=NULL;

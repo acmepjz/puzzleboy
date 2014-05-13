@@ -4,6 +4,7 @@
 #include "RecordManager.h"
 #include "PuzzleBoyLevelData.h"
 #include "UTF8-16.h"
+#include "MT19937.h"
 
 class PuzzleBoyLevel;
 class PuzzleBoyLevelFile;
@@ -20,6 +21,11 @@ public:
 	bool LoadFile(const u8string& fileName);
 	bool SaveFile(const u8string& fileName);
 
+	void LoadConfig(const u8string& fileName);
+	void SaveConfig(const u8string& fileName);
+
+	bool LoadLocale();
+
 	void DestroyGame();
 	bool StartGame(int nPlayerCount);
 
@@ -31,15 +37,20 @@ public:
 	void OnMouseEvent(int nFlags, int xMouse, int yMouse, int nType);
 public:
 	GNUGetText m_objGetText;
+	MT19937 m_objMainRnd;
 
 	RecordManager m_objRecordMgr;
+
+	//variables load from config file
 	int m_nAnimationSpeed;
 	bool m_bShowGrid;
 	bool m_bShowLines;
-	u16string m_sPlayerName;
+	u16string m_sPlayerName[2];
 
-	//file name
-	u8string m_sFileName;
+	bool m_bInternationalFont;
+	u8string m_sLocale; ///< empty means automatic, "?" means disabled
+
+	int m_nThreadCount; ///< 0-8, 0 means automatic
 
 	//level file object
 	PuzzleBoyLevelFile* m_pDocument;

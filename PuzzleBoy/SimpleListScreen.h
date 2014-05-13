@@ -3,8 +3,7 @@
 #include "UTF8-16.h"
 #include <vector>
 
-class SimpleBitmapFont;
-class SimpleBitmapText;
+class SimpleText;
 
 class SimpleListScreen{
 public:
@@ -20,9 +19,8 @@ public:
 
 	virtual int DoModal();
 public:
-	SimpleBitmapFont *m_fnt;
-	SimpleBitmapText *m_txtTitle;
-	SimpleBitmapText *m_txtList;
+	SimpleText *m_txtTitle;
+	SimpleText *m_txtList;
 	int m_nListCount;
 	int m_nReturnValue;
 
