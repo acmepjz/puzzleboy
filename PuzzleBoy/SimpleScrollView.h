@@ -8,7 +8,9 @@ public:
 
 	void OnTimer();
 
+	//0=down 1=right 2=up 3=left
 	void SetProjectionMatrix();
+
 	void EnableScissorRect();
 	static void DisableScissorRect();
 
@@ -36,6 +38,11 @@ public:
 	int m_nAutoResizeOffset[4];
 	//minimal zoom factor (maximal zoom in)
 	float m_fMinZoomPerScreen;
+
+	//0=down 1=right 2=up 3=left
+	int m_nOrientation;
+
+	int m_nScissorOffset[4];
 private:
 	//target pos, x,y: coord of top-left corner (in absolute screen coord!), zoom: size per pixel
 	float m_zoom,m_x,m_y;

@@ -211,6 +211,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MultiTouchManager.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\MyFormat.cpp"
 				>
 			</File>
@@ -264,6 +268,10 @@
 			</File>
 			<File
 				RelativePath=".\SimpleListScreen.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SimpleMiscScreen.cpp"
 				>
 			</File>
 			<File
@@ -341,6 +349,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MultiTouchManager.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MyFormat.h"
 				>
 			</File>
@@ -394,6 +406,10 @@
 			</File>
 			<File
 				RelativePath=".\SimpleListScreen.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SimpleMiscScreen.h"
 				>
 			</File>
 			<File

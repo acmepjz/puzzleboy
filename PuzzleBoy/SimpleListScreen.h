@@ -30,6 +30,7 @@ public:
 	std::vector<int> m_LeftButtons;
 	std::vector<int> m_RightButtons;
 protected:
+	//for title bar buttons
 	std::vector<float> m_v;
 	std::vector<unsigned short> m_idx;
 

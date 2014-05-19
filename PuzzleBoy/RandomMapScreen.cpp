@@ -1,7 +1,7 @@
 #include "RandomMapScreen.h"
 #include "PuzzleBoyApp.h"
 #include "PuzzleBoyLevelFile.h"
-#include "SimpleBitmapFont.h"
+#include "SimpleText.h"
 #include "SimpleProgressScreen.h"
 #include "MT19937.h"
 #include "MyFormat.h"

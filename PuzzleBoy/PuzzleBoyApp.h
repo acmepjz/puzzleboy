@@ -3,6 +3,7 @@
 #include "GNUGetText.h"
 #include "RecordManager.h"
 #include "PuzzleBoyLevelData.h"
+#include "MultiTouchManager.h"
 #include "UTF8-16.h"
 #include "MT19937.h"
 
@@ -10,6 +11,7 @@ class PuzzleBoyLevel;
 class PuzzleBoyLevelFile;
 class PuzzleBoyLevelView;
 class PushableBlock;
+class MultiTouchManager;
 
 class PuzzleBoyApp{
 public:
@@ -32,9 +34,6 @@ public:
 	void OnTimer();
 	bool OnKeyDown(int nChar,int nFlags);
 	void OnKeyUp(int nChar,int nFlags);
-
-	//nType: SDL_MOUSEBUTTONDOWN or SDL_MOUSEBUTTONUP or SDL_MOUSEMOTION
-	void OnMouseEvent(int nFlags, int xMouse, int yMouse, int nType);
 public:
 	GNUGetText m_objGetText;
 	MT19937 m_objMainRnd;
@@ -52,6 +51,13 @@ public:
 
 	int m_nThreadCount; ///< 0-8, 0 means automatic
 
+	//0=normal
+	//1=horizontal up-down
+	//2=vertical up-down
+	int m_nOrientation;
+
+	int m_nKey[24];
+
 	//level file object
 	PuzzleBoyLevelFile* m_pDocument;
 
@@ -60,6 +66,12 @@ public:
 
 	//level view (e.g  multiplayer)
 	std::vector<PuzzleBoyLevelView*> m_view;
+
+	//touch manager
+	MultiTouchManager touchMgr;
+
+	//resize time
+	int m_nMyResizeTime;
 };
 
 extern PuzzleBoyApp *theApp;

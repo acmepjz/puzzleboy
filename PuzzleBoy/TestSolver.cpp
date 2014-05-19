@@ -250,7 +250,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string& rec,void* userData,
 		for(int i=0;i<blockCount;i++){
 			unsigned char c=0;
 			if(blocks[i].mask){
-				c=1<<(unsigned char(initState>>blocks[i].shift) & blocks[i].mask);
+				c=1<<((unsigned char)(initState>>blocks[i].shift) & blocks[i].mask);
 			}
 			blockStateReachable[i]=c;
 		}
@@ -535,7 +535,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string& rec,void* userData,
 								if(st>>(playerXSize+playerYSize)){
 									ed->pushes++;
 									for(int i=0;i<blockCount;i++){
-										if((unsigned char(st>>blocks[i].shift)) & blocks[i].mask){
+										if(((unsigned char)(st>>blocks[i].shift)) & blocks[i].mask){
 											blockUsed[i]=1;
 											break;
 										}

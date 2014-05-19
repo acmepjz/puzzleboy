@@ -1,5 +1,5 @@
 #include "SimpleListScreen.h"
-#include "SimpleBitmapFont.h"
+#include "SimpleText.h"
 #include "main.h"
 
 #include <string.h>
@@ -169,7 +169,7 @@ int SimpleListScreen::DoModal(){
 		}
 
 		//draw list box
-		if(m_txtList){
+		if(m_txtList && !m_txtList->empty()){
 			mainFont->BeginDraw();
 			glTranslatef(0.0f,float(64-y02),0.0f);
 			m_txtList->Draw(SDL_MakeColor(255,255,255,255),y02/32,screenHeight/32);
@@ -204,7 +204,7 @@ int SimpleListScreen::DoModal(){
 		DrawScreenKeyboard(m_v,m_idx);
 
 		//draw title text
-		if(m_txtTitle){
+		if(m_txtTitle && !m_txtTitle->empty()){
 			SimpleBaseFont *fnt=titleFont?titleFont:mainFont;
 
 			fnt->BeginDraw();

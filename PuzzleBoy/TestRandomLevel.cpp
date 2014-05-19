@@ -4,6 +4,7 @@
 #include "MT19937.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rnd,void *userData,RandomLevelCallback callback){
@@ -118,10 +119,10 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rn
 				if((x==0 || x==width-1) && (y==0 || y==height-1)) continue;
 				if(level(x,y) || tmp[y][x]) continue;
 
-				if(y>0) d[0]=unsigned char(2.0f*(float)rnd->Rnd()/4294967296.0f);
-				if(x>0) d[1]=unsigned char(2.0f*(float)rnd->Rnd()/4294967296.0f);
-				if(y<height-1) d[2]=unsigned char(2.0f*(float)rnd->Rnd()/4294967296.0f);
-				if(x<width-1) d[3]=unsigned char(2.0f*(float)rnd->Rnd()/4294967296.0f);
+				if(y>0) d[0]=(unsigned char)(2.0f*(float)rnd->Rnd()/4294967296.0f);
+				if(x>0) d[1]=(unsigned char)(2.0f*(float)rnd->Rnd()/4294967296.0f);
+				if(y<height-1) d[2]=(unsigned char)(2.0f*(float)rnd->Rnd()/4294967296.0f);
+				if(x<width-1) d[3]=(unsigned char)(2.0f*(float)rnd->Rnd()/4294967296.0f);
 
 				if(d[0] && (level(x,y-1) || tmp[y-1][x])) d[0]=0;
 				if(d[1] && (level(x-1,y) || tmp[y][x-1])) d[1]=0;
