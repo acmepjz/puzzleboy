@@ -13,19 +13,22 @@
 #include "include_gl.h"
 
 //ad-hoc!!
+extern GLuint adhoc_screenkb_tex;
+
 static const int m_nDefaultKey[8]={
 	SDLK_UP,
 	SDLK_DOWN,
 	SDLK_LEFT,
 	SDLK_RIGHT,
-	SDLK_u,
-	SDLK_r,
-	SDLK_SPACE,
-	0,
+	SDLK_u, //undo
+	SDLK_r, //redo
+	SDLK_SPACE, //switch
+	0, //restart (Ctrl+R is always available)
 };
 
 PuzzleBoyLevelView::PuzzleBoyLevelView()
-:m_pDocument(NULL)
+:m_bShowYesNoScreenKeyboard(false)
+,m_pDocument(NULL)
 ,m_nCurrentLevel(0)
 ,m_bEditMode(false)
 ,m_bPlayFromRecord(false)
@@ -34,7 +37,7 @@ PuzzleBoyLevelView::PuzzleBoyLevelView()
 ,m_objBackupBlock(NULL)
 ,m_objPlayingLevel(NULL)
 ,m_nRecordIndex(-1)
-,m_nKey(NULL)
+,m_nKey(m_nDefaultKey)
 {
 }
 
@@ -119,8 +122,62 @@ void PuzzleBoyLevelView::Draw(){
 					objBlock->m_lines->Draw();
 				}
 
+				//reset world matrix!
 				glLoadIdentity();
 			}
+		}
+
+		//draw scroll bar
+		m_scrollView.DrawScrollBar();
+
+		//FIXME: ad-hoc: draw screen keypad
+		SetProjectionMatrix(1);
+		{
+			int x1=m_scrollView.m_screen.x+m_scrollView.m_screen.w;
+			int y1=m_scrollView.m_screen.y+m_scrollView.m_screen.h;
+
+			float v[]={
+				float(x1-256),float(y1),0.0f,0.0f,
+				float(x1),float(y1),1.0f,0.0f,
+				float(x1),float(y1+128),1.0f,0.5f,
+				float(x1-256),float(y1+128),0.0f,0.5f,
+
+				float(x1-448),float(y1+64),0.0f,0.5f,
+				float(x1-320),float(y1+64),0.5f,0.5f,
+				float(x1-320),float(y1+128),0.5f,0.75f,
+				float(x1-448),float(y1+128),0.0f,0.75f,
+			};
+
+			switch(m_scrollView.m_nOrientation){
+			case 2:
+				for(int i=0;i<8;i++){
+					v[i*4]=float(m_scrollView.m_screen.x*2+m_scrollView.m_screen.w)-v[i*4];
+					v[i*4+1]=float(m_scrollView.m_screen.y*2+m_scrollView.m_screen.h)-v[i*4+1];
+				}
+				break;
+			}
+
+			const unsigned short i[]={
+				0,1,2,0,2,3,
+				4,5,6,4,6,7,
+			};
+
+			glDisable(GL_LIGHTING);
+			glEnable(GL_TEXTURE_2D);
+			glBindTexture(GL_TEXTURE_2D, adhoc_screenkb_tex);
+
+			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+			glVertexPointer(2,GL_FLOAT,4*sizeof(float),v);
+			glTexCoordPointer(2,GL_FLOAT,4*sizeof(float),v+2);
+
+			glDrawElements(GL_TRIANGLES,m_bShowYesNoScreenKeyboard?12:6,GL_UNSIGNED_SHORT,i);
+
+			glDisableClientState(GL_VERTEX_ARRAY);
+			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+			glBindTexture(GL_TEXTURE_2D, 0);
+			glDisable(GL_TEXTURE_2D);
 		}
 	}
 }
@@ -291,14 +348,12 @@ void PuzzleBoyLevelView::OnTimer(){
 				m_bPlayFromRecord=false;
 				//get continuous key event
 				if(theApp->m_nAnimationSpeed<=2){
-					if(m_nKey==NULL) m_nKey=m_nDefaultKey;
-
 					const Uint8 *b=SDL_GetKeyboardState(NULL);
 
 					//only arrow keys and undo/redo, still buggy
 					for(int i=0;i<6;i++){
-						if(b[SDL_GetScancodeFromKey(m_nKey[i])]){
-							OnKeyDown(m_nKey[i],0);
+						if(m_nKey[i] && b[SDL_GetScancodeFromKey(m_nKey[i])]){
+							InternalKeyDown(i);
 							break;
 						}
 					}
@@ -427,40 +482,65 @@ bool PuzzleBoyLevelView::OnKeyDown(int nChar,int nFlags){
 			return false;
 		}
 
+		int keyIndex=-1;
+
+		if(nChar==SDLK_RETURN) keyIndex=64;
+		else if(nChar==SDLK_ESCAPE) keyIndex=65;
+		else{
+			for(int i=0;i<8;i++){
+				if(m_nKey[i] && nChar==m_nKey[i]){
+					keyIndex=i;
+					break;
+				}
+			}
+		}
+
+		return InternalKeyDown(keyIndex);
+	}
+
+	return false;
+}
+
+bool PuzzleBoyLevelView::InternalKeyDown(int keyIndex){
+	if(!m_bEditMode && m_objPlayingLevel){
+		if(keyIndex==7){
+			StartGame();
+			return true;
+		}
+
 		if(m_sRecord.empty()){
 			if(!m_objPlayingLevel->IsAnimating() && !m_objPlayingLevel->IsWin()){
 				bool b=false;
 
-				if(m_nKey==NULL) m_nKey=m_nDefaultKey;
-
-				if(nChar==m_nKey[0]){
+				switch(keyIndex){
+				case 0: //up
 					m_nEditingBlockIndex=-1;
 					b=m_objPlayingLevel->MovePlayer(0,-1,true);
-				}else if(nChar==m_nKey[1]){
+					break;
+				case 1: //down
 					m_nEditingBlockIndex=-1;
 					b=m_objPlayingLevel->MovePlayer(0,1,true);
-				}else if(nChar==m_nKey[2]){
+					break;
+				case 2: //left
 					m_nEditingBlockIndex=-1;
 					b=m_objPlayingLevel->MovePlayer(-1,0,true);
-				}else if(nChar==m_nKey[3]){
+					break;
+				case 3: //right
 					m_nEditingBlockIndex=-1;
 					b=m_objPlayingLevel->MovePlayer(1,0,true);
-				}else if(nChar==m_nKey[6]){
-					b=m_objPlayingLevel->SwitchPlayer(-1,-1,true);
-				}else if(nChar==m_nKey[4]){
+					break;
+				case 4: //undo
 					Undo();
 					return true;
-				}else if(nChar==m_nKey[5]){
+					break;
+				case 5: //redo
 					Redo();
 					return true;
-				}else if(nChar==SDLK_ESCAPE){
-					if(m_nEditingBlockIndex>=0){
-						//cancel moving blocks
-						m_nEditingBlockIndex=-1;
-						return true;
-					}
-					return false;
-				}else if(nChar==SDLK_RETURN){
+					break;
+				case 6: //switch
+					b=m_objPlayingLevel->SwitchPlayer(-1,-1,true);
+					break;
+				case 64: //move a moveable block to new position
 					if(m_nEditingBlockIndex>=0 && m_nEditingBlockIndex<(int)m_objPlayingLevel->m_objBlocks.size()){
 						//move a moveable block to new position
 						u8string s;
@@ -501,17 +581,28 @@ bool PuzzleBoyLevelView::OnKeyDown(int nChar,int nFlags){
 						return true;
 					}
 					return false;
-				}else{
+
+					break;
+				case 65: //cancel moving blocks
+					if(m_nEditingBlockIndex>=0){
+						//cancel moving blocks
+						m_nEditingBlockIndex=-1;
+						return true;
+					}
+					return false;
+					break;
+				default:
 					return false;
 				}
+
 				if(!b){
 					//TODO: MessageBeep(0);
 				}
 				return true;
 			}
 		}else{
-			switch(nChar){
-			case SDLK_ESCAPE:
+			switch(keyIndex){
+			case 65:
 				//skip demo
 				m_bPlayFromRecord=false;
 				m_sRecord.clear();
@@ -532,9 +623,13 @@ void PuzzleBoyLevelView::OnKeyUp(int nChar,int nFlags){
 	//TODO: key up
 }
 
-void PuzzleBoyLevelView::OnMouseEvent(int nFlags, int xMouse, int yMouse, int nType){
+void PuzzleBoyLevelView::OnMultiGesture(float fx,float fy,float dx,float dy,float zoom){
+	m_scrollView.OnMultiGesture(fx,fy,dx,dy,zoom);
+}
+
+void PuzzleBoyLevelView::OnMouseEvent(int which,int state,int xMouse,int yMouse,int nFlags,int nType){
 	//process mouse move event
-	if(nType==SDL_MOUSEMOTION && (nFlags&(SDL_BUTTON_LMASK|SDL_BUTTON_RMASK))==0){
+	if(nType==SDL_MOUSEMOTION && (state&(SDL_BUTTON_LMASK|SDL_BUTTON_RMASK))==0){
 		if(!m_bEditMode && m_objPlayingLevel
 			&& m_nEditingBlockIndex>=0 && m_nEditingBlockIndex<(int)m_objPlayingLevel->m_objBlocks.size())
 		{
@@ -555,13 +650,70 @@ void PuzzleBoyLevelView::OnMouseEvent(int nFlags, int xMouse, int yMouse, int nT
 	}
 
 	if(!m_bEditMode){
+		//process ad-hoc screen keyboard event
+		if(nType==SDL_MOUSEBUTTONDOWN && state==SDL_BUTTON_LMASK){
+			bool b=false;
+			int idx=0;
+			int tmp;
+
+			switch(m_scrollView.m_nOrientation){
+			case 2:
+				tmp=m_scrollView.m_screen.y-128;
+				if(yMouse>=tmp){
+					int i=1+((yMouse-tmp)>>6);
+					idx=i<<8;
+				}
+				tmp=m_scrollView.m_screen.x;
+				if(xMouse>=tmp){
+					int i=1+((xMouse-tmp)>>6);
+					idx|=i;
+				}
+				break;
+			default:
+				tmp=m_scrollView.m_screen.y+m_scrollView.m_screen.h+128;
+				if(yMouse<tmp){
+					int i=1+((tmp-yMouse-1)>>6);
+					idx=i<<8;
+				}
+				tmp=m_scrollView.m_screen.x+m_scrollView.m_screen.w;
+				if(xMouse<tmp){
+					int i=1+((tmp-xMouse-1)>>6);
+					idx|=i;
+				}
+				break;
+			}
+
+			switch(idx){
+			case 0x204: InternalKeyDown(4); b=true; break;
+			case 0x203: InternalKeyDown(0); b=true; break;
+			case 0x202: InternalKeyDown(5); b=true; break;
+			case 0x201: InternalKeyDown(7); b=true; break;
+			case 0x104: InternalKeyDown(2); b=true; break;
+			case 0x103: InternalKeyDown(1); b=true; break;
+			case 0x102: InternalKeyDown(3); b=true; break;
+			case 0x101: InternalKeyDown(6); b=true; break;
+			}
+
+			if(m_bShowYesNoScreenKeyboard){
+				switch(idx){
+				case 0x107: InternalKeyDown(64); b=true; break;
+				case 0x106: InternalKeyDown(65); b=true; break;
+				}
+			}
+
+			if(b){
+				theApp->touchMgr.DisableTemporarily(this);
+				return;
+			}
+		}
+
 		//process in-game mouse events
 		//FIXME: mouse up??
-		if(nType==SDL_MOUSEBUTTONUP && (nFlags&(SDL_BUTTON_LMASK|SDL_BUTTON_RMASK))!=0
+		if(nType==SDL_MOUSEBUTTONUP && (state&(SDL_BUTTON_LMASK|SDL_BUTTON_RMASK))!=0
 			&& m_objPlayingLevel
 			)
 		{
-			if(nFlags&SDL_BUTTON_RMASK){
+			if(state&SDL_BUTTON_RMASK){
 				if(m_nEditingBlockIndex>=0){
 					//cancel moving blocks
 					m_nEditingBlockIndex=-1;
@@ -592,10 +744,14 @@ void PuzzleBoyLevelView::OnMouseEvent(int nFlags, int xMouse, int yMouse, int nT
 						//do nothing in SDL version
 					}else if(m_nEditingBlockIndex>=0 && m_nEditingBlockIndex<(int)m_objPlayingLevel->m_objBlocks.size()){
 						//workaround on Android and other devices without mouse move event
-						OnMouseEvent(0,xMouse,yMouse,SDL_MOUSEMOTION);
+						OnMouseEvent(0,0,xMouse,yMouse,0,SDL_MOUSEMOTION);
 
 						//move a moveable block to new position
-						if(!m_bTouchscreen || m_objPlayingLevel->m_objBlocks[m_nEditingBlockIndex]->m_nType==ROTATE_BLOCK) OnKeyDown(SDLK_RETURN,0);
+						if(!m_bTouchscreen
+							|| m_objPlayingLevel->m_objBlocks[m_nEditingBlockIndex]->m_nType==ROTATE_BLOCK)
+						{
+							InternalKeyDown(64);
+						}
 					}else{
 						int x0=m_objPlayingLevel->GetCurrentPlayerX();
 						int y0=m_objPlayingLevel->GetCurrentPlayerY();
@@ -623,13 +779,13 @@ void PuzzleBoyLevelView::OnMouseEvent(int nFlags, int xMouse, int yMouse, int nT
 							m_nEditingBlockDX=x;
 							m_nEditingBlockDY=y;
 						}else if(x==x0 && y==y0-1){ //check if the clicked position is adjacent to the player
-							OnKeyDown(SDLK_UP,0);
+							InternalKeyDown(0);
 						}else if(x==x0 && y==y0+1){
-							OnKeyDown(SDLK_DOWN,0);
+							InternalKeyDown(1);
 						}else if(x==x0-1 && y==y0){
-							OnKeyDown(SDLK_LEFT,0);
+							InternalKeyDown(2);
 						}else if(x==x0+1 && y==y0){
-							OnKeyDown(SDLK_RIGHT,0);
+							InternalKeyDown(3);
 						}else{
 							u8string s;
 
@@ -678,7 +834,7 @@ void PuzzleBoyLevelView::OnMouseEvent(int nFlags, int xMouse, int yMouse, int nT
 
 			if(x==objBlock->m_x){
 				if(y==objBlock->m_y){
-					if(nFlags&SDL_BUTTON_LMASK){
+					if(state&SDL_BUTTON_LMASK){
 						MessageBeep(0);
 					}else{
 						//delete this block
@@ -704,7 +860,7 @@ void PuzzleBoyLevelView::OnMouseEvent(int nFlags, int xMouse, int yMouse, int nT
 			}
 
 			if(idx>=0){
-				if(nFlags&SDL_BUTTON_RMASK) value--;
+				if(state&SDL_BUTTON_RMASK) value--;
 				if((*objBlock)[idx]!=value){
 					(*objBlock)[idx]=value;
 					Invalidate();
@@ -712,10 +868,10 @@ void PuzzleBoyLevelView::OnMouseEvent(int nFlags, int xMouse, int yMouse, int nT
 				}
 			}
 		}else{
-			if((nFlags&SDL_BUTTON_LMASK)!=0 && lev->HitTestForPlacingBlocks(x,y,m_nEditingBlockIndex)!=-1){
+			if((state&SDL_BUTTON_LMASK)!=0 && lev->HitTestForPlacingBlocks(x,y,m_nEditingBlockIndex)!=-1){
 				MessageBeep(0);
 			}else{
-				int n=(nFlags&SDL_BUTTON_LMASK)?1:0;
+				int n=(state&SDL_BUTTON_LMASK)?1:0;
 				if((*objBlock)(x,y)!=n){
 					(*objBlock)(x,y)=n;
 					Invalidate();
@@ -730,7 +886,7 @@ void PuzzleBoyLevelView::OnMouseEvent(int nFlags, int xMouse, int yMouse, int nT
 	case -1:
 		//TODO: other selection tool
 		{
-			if(nFlags&SDL_BUTTON_LMASK){
+			if(state&SDL_BUTTON_LMASK){
 				int idx=lev->HitTestForPlacingBlocks(x,y,m_nEditingBlockIndex);
 				if(idx>=0){
 					EnterBlockEdit(idx,true);
@@ -748,7 +904,7 @@ void PuzzleBoyLevelView::OnMouseEvent(int nFlags, int xMouse, int yMouse, int nT
 			int idx=m_nCurrentTool;
 			int idx0=(*lev)(x,y);
 
-			if(nFlags&SDL_BUTTON_RMASK) idx=0;
+			if(state&SDL_BUTTON_RMASK) idx=0;
 			else if(idx==TARGET_TILE && (idx0==PLAYER_TILE || idx0==PLAYER_AND_TARGET_TILE)) idx=PLAYER_AND_TARGET_TILE;
 			else if(idx==PLAYER_TILE && (idx0==TARGET_TILE || idx0==PLAYER_AND_TARGET_TILE)) idx=PLAYER_AND_TARGET_TILE;
 
@@ -763,7 +919,7 @@ void PuzzleBoyLevelView::OnMouseEvent(int nFlags, int xMouse, int yMouse, int nT
 	case 101:
 	case 102:
 		{
-			if(nFlags&SDL_BUTTON_LMASK){
+			if(state&SDL_BUTTON_LMASK){
 				int idx=lev->HitTestForPlacingBlocks(x,y,m_nEditingBlockIndex);
 				if(idx==-1){
 					PushableBlock *objBlock=new PushableBlock;

@@ -67,8 +67,11 @@ namespace DrawTextFlags{
 	const int WordWrap=32;
 }
 
+class SimpleInputScreen;
+
 //experimental
 class SimpleText{
+	friend class SimpleInputScreen;
 public:
 	SimpleText();
 
@@ -87,9 +90,15 @@ private:
 	std::vector<float> v;
 	std::vector<unsigned short> idx;
 	std::vector<int> stringIdx;
-	float xx,yy,ww;
+public:
+	float xx,yy,ww; //internal use only
+private:
 	int nCount,nRowStartIndex;
 
+public:
+	//internal advanced function
 	void AddChar(SimpleBaseFont *font,int c,float x,float w,float scale,int flags);
+
+	//internal advanced function
 	void AdjustVerticalPosition(SimpleBaseFont *font,int start,float y,float h,float scale,int flags);
 };

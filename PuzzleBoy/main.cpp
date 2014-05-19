@@ -38,20 +38,12 @@ bool m_bKeyDownProcessed=false;
 
 //================touchscreen and multi-touch event
 
-float m_fMultitouchOldX,m_fMultitouchOldY;
-float m_fMultitouchOldDistSquared=-1.0f;
-
 //test
 #ifdef ANDROID
 bool m_bTouchscreen=true;
 #else
 bool m_bTouchscreen=false;
 #endif
-
-bool m_bShowYesNoScreenKeyboard=false;
-
-//0=not dragging or failed,1=mouse down,2=dragging,3=multi-touch is running or failed
-int m_nDraggingState=0;
 
 //================
 
@@ -63,8 +55,6 @@ SimpleBaseFont *mainFont=NULL;
 SimpleBaseFont *titleFont=NULL;
 
 //================
-
-static void OnMouseWheel(int which,int x,int y,int dx,int dy,int nFlags);
 
 void WaitForNextFrame(){
 	SDL_Delay(25);
@@ -280,6 +270,7 @@ void OnVideoResize(int width, int height){
 	glViewport(0,0,screenWidth,screenHeight);
 }
 
+/*
 static void OnMouseDown(int which,int button,int x,int y,int nFlags){
 	//FIXME: ad-hoc screen keyboard
 	bool b=false;
@@ -318,42 +309,7 @@ static void OnMouseDown(int which,int button,int x,int y,int nFlags){
 	}else{
 		theApp->OnMouseEvent(SDL_BUTTON(button),x,y,SDL_MOUSEBUTTONDOWN);
 	}
-}
-
-static void OnMouseUp(int which,int button,int x,int y,int nFlags){
-	theApp->OnMouseEvent(SDL_BUTTON(button),x,y,SDL_MOUSEBUTTONUP);
-}
-
-//FIXME: ad-hoc disable mouse move event on screen keyboard
-static void OnMouseMove(int which,int state,int x,int y,int nFlags){
-	if(!m_bTouchscreen) theApp->OnMouseEvent(state,x,y,SDL_MOUSEMOTION);
-}
-
-//fx,fy: position of new center in normalized coordinate: (w,h)-->(screenAspectRatio,1.0f)
-//dx,dy: relative motion in normalized coordinate
-//zoom: relative zoom factor
-static void OnMultiGesture(float fx,float fy,float dx,float dy,float zoom){
-	//FIXME: ad-hoc
-	int m=theApp->m_view.size();
-
-	if(m<=0){
-		return;
-	}else if(m==1){
-		m=0;
-	}else if(m>=2){
-		if(fx<screenAspectRatio*0.5f) m=0;
-		else m=1;
-	}
-
-	theApp->m_view[m]->m_scrollView.OnMultiGesture(fx,fy,dx,dy,zoom);
-}
-
-static void OnMouseWheel(int which,int x,int y,int dx,int dy,int nFlags){
-	//test
-	if(dy){
-		OnMultiGesture(float(x)/float(screenHeight),float(y)/float(screenHeight),0.0f,0.0f,dy>0?1.1f:1.0f/1.1f);
-	}
-}
+}*/
 
 class MainMenuScreen:public SimpleListScreen{
 public:
@@ -385,7 +341,7 @@ public:
 		m_txtList->AddString(mainFont,"Test Solver",0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
 
 		m_txtList->NewStringIndex();
-		m_txtList->AddString(mainFont,"Random Map",0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
+		m_txtList->AddString(mainFont,_("Random Map"),0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
 
 		m_txtList->NewStringIndex();
 		m_txtList->AddString(mainFont,"Random Map x10",0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
@@ -394,7 +350,7 @@ public:
 		m_txtList->AddString(mainFont,"Save Temp Level File",0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
 
 		m_txtList->NewStringIndex();
-		m_txtList->AddString(mainFont,"Start Multiplayer",0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
+		m_txtList->AddString(mainFont,_("Start Multiplayer"),0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
 	}
 
 	virtual int OnClick(int index){
@@ -413,7 +369,6 @@ public:
 		case 2:
 			//config
 			ConfigScreen().DoModal();
-			return 0;
 			break;
 		case 3:
 			//exit game
@@ -508,7 +463,7 @@ static bool OnKeyDown(int nChar,int nFlags){
 #endif
 		)
 	{
-		m_nDraggingState=0;
+		theApp->touchMgr.ResetDraggingState();
 		int ret=MainMenuScreen().DoModal();
 		if(ret>=1){
 			if(ret>=2) ret=2;
@@ -525,20 +480,7 @@ static void OnKeyUp(int nChar,int nFlags){
 	theApp->OnKeyUp(nChar,nFlags);
 }
 
-//experimental dragging support
-//x,y: position of new center in normalized coordinate: (w,h)-->(screenAspectRatio,1.0f)
-static void CheckDragging(float x,float y){
-	float dx=x-m_fMultitouchOldX;
-	float dy=y-m_fMultitouchOldY;
-	if(m_nDraggingState==2 || dx*dx+dy*dy>0.003f){
-		m_nDraggingState=2;
-		m_fMultitouchOldX=x;
-		m_fMultitouchOldY=y;
-		OnMultiGesture(x,y,dx,dy,1.0f);
-	}
-}
-
-int SDL_main(int argc,char** argv){
+int main(int argc,char** argv){
 	//init file system
 	initPaths();
 
@@ -664,7 +606,12 @@ int SDL_main(int argc,char** argv){
 	//try to load FreeType font
 	if(theApp->m_bInternationalFont){
 		mainFontFile=new SimpleFontFile;
-		if(mainFontFile->LoadFile("data/font/DroidSansFallback.ttf")){
+		if(mainFontFile->LoadFile("data/font/DroidSansFallback.ttf")
+#ifdef ANDROID
+			|| mainFontFile->LoadFile("/system/fonts/DroidSansFallback.ttf")
+#endif
+			)
+		{
 			mainFont=new SimpleFont(*mainFontFile,20);
 			titleFont=new SimpleFont(*mainFontFile,32);
 
@@ -702,43 +649,6 @@ int SDL_main(int argc,char** argv){
 
 		SetProjectionMatrix(1);
 
-		//FIXME: ad-hoc: draw screen keypad
-		{
-			float v[]={
-				float(screenWidth-256),float(screenHeight-128),0.0f,0.0f,
-				float(screenWidth),float(screenHeight-128),1.0f,0.0f,
-				float(screenWidth),float(screenHeight),1.0f,0.5f,
-				float(screenWidth-256),float(screenHeight),0.0f,0.5f,
-
-				float(screenWidth-448),float(screenHeight-64),0.0f,0.5f,
-				float(screenWidth-320),float(screenHeight-64),0.5f,0.5f,
-				float(screenWidth-320),float(screenHeight),0.5f,0.75f,
-				float(screenWidth-448),float(screenHeight),0.0f,0.75f,
-			};
-
-			const unsigned short i[]={
-				0,1,2,0,2,3,
-				4,5,6,4,6,7,
-			};
-
-			glDisable(GL_LIGHTING);
-			glEnable(GL_TEXTURE_2D);
-			glBindTexture(GL_TEXTURE_2D, adhoc_screenkb_tex);
-
-			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-			glEnableClientState(GL_VERTEX_ARRAY);
-			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-			glVertexPointer(2,GL_FLOAT,4*sizeof(float),v);
-			glTexCoordPointer(2,GL_FLOAT,4*sizeof(float),v+2);
-
-			glDrawElements(GL_TRIANGLES,m_bShowYesNoScreenKeyboard?12:6,GL_UNSIGNED_SHORT,i);
-
-			glDisableClientState(GL_VERTEX_ARRAY);
-			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-			glBindTexture(GL_TEXTURE_2D, 0);
-			glDisable(GL_TEXTURE_2D);
-		}
-
 		//TEST
 		{
 			MyFormat fmt(_("Pack: %s"));
@@ -770,133 +680,11 @@ int SDL_main(int argc,char** argv){
 		SDL_GL_SwapWindow(mainWindow);
 
 		while(SDL_PollEvent(&event)){
+			if(theApp->touchMgr.OnEvent()) continue;
+
 			switch(event.type){
 			case SDL_QUIT:
 				m_bRun=false;
-				break;
-			case SDL_MOUSEMOTION:
-				m_bTouchscreen=(event.motion.which==SDL_TOUCH_MOUSEID);
-
-				//experimental dragging support
-				if(!m_bTouchscreen && event.motion.state && (m_nDraggingState==1 || m_nDraggingState==2)){
-					CheckDragging(float(event.motion.x)/float(screenHeight),
-						float(event.motion.y)/float(screenHeight));
-				}
-
-				if(m_nDraggingState<2) OnMouseMove(
-					event.motion.which,
-					event.motion.state,
-					event.motion.x,
-					event.motion.y,
-					SDL_GetModState());
-				break;
-			case SDL_MOUSEBUTTONDOWN:
-				m_bTouchscreen=(event.button.which==SDL_TOUCH_MOUSEID);
-
-				//experimental dragging support
-				if(m_nDraggingState==0){
-					m_nDraggingState=1;
-					m_fMultitouchOldX=float(event.button.x)/float(screenHeight);
-					m_fMultitouchOldY=float(event.button.y)/float(screenHeight);
-				}
-
-				if(m_nDraggingState<2) OnMouseDown(
-					event.button.which,
-					event.button.button,
-					event.button.x,
-					event.button.y,
-					SDL_GetModState());
-				break;
-			case SDL_MOUSEBUTTONUP:
-				m_bTouchscreen=(event.button.which==SDL_TOUCH_MOUSEID);
-
-				if(m_nDraggingState<2) OnMouseUp(
-					event.button.which,
-					event.button.button,
-					event.button.x,
-					event.button.y,
-					SDL_GetModState());
-
-				//experimental dragging support
-				if(!m_bTouchscreen && m_nDraggingState && SDL_GetMouseState(NULL,NULL)==0) m_nDraggingState=0;
-
-				break;
-			case SDL_MOUSEWHEEL:
-				{
-					int x,y;
-					SDL_GetMouseState(&x,&y);
-					OnMouseWheel(event.wheel.which,
-						x,y,
-						event.wheel.x,
-						event.wheel.y,
-						SDL_GetModState());
-				}
-				break;
-			case SDL_FINGERDOWN:
-				m_bTouchscreen=true;
-				{
-					int m=SDL_GetNumTouchFingers(event.tfinger.touchId);
-					SDL_Finger *f0=NULL,*f1=NULL;
-					if(m==2){
-						f0=SDL_GetTouchFinger(event.tfinger.touchId,0);
-						f1=SDL_GetTouchFinger(event.tfinger.touchId,1);
-					}
-					if(f0 && f1){
-						m_fMultitouchOldX=(f0->x+f1->x)*screenAspectRatio*0.5f;
-						m_fMultitouchOldY=(f0->y+f1->y)*0.5f;
-						float dx=(f0->x-f1->x)*screenAspectRatio;
-						float dy=f0->y-f1->y;
-						m_fMultitouchOldDistSquared=dx*dx+dy*dy;
-					}else{
-						m_fMultitouchOldDistSquared=-1.0f;
-					}
-					if(m>=2) m_nDraggingState=3;
-				}
-				break;
-			case SDL_FINGERMOTION:
-				m_bTouchscreen=true;
-				{
-					int m=SDL_GetNumTouchFingers(event.tfinger.touchId);
-					SDL_Finger *f0=NULL,*f1=NULL;
-					if(m==2 && m_fMultitouchOldDistSquared>0.0f){
-						f0=SDL_GetTouchFinger(event.tfinger.touchId,0);
-						f1=SDL_GetTouchFinger(event.tfinger.touchId,1);
-					}
-					if(f0 && f1){
-						float x=(f0->x+f1->x)*screenAspectRatio*0.5f;
-						float y=(f0->y+f1->y)*0.5f;
-
-						float dx=(f0->x-f1->x)*screenAspectRatio;
-						float dy=f0->y-f1->y;
-						dx=dx*dx+dy*dy;
-						if(dx<1E-30f) dx=1E-30f;
-
-						float zoom=sqrt(dx/m_fMultitouchOldDistSquared);
-						if(zoom<0.1f) zoom=0.1f;
-						else if(zoom>10.0f) zoom=10.0f;
-						m_fMultitouchOldDistSquared=dx;
-
-						dx=x-m_fMultitouchOldX;
-						dy=y-m_fMultitouchOldY;
-						m_fMultitouchOldX=x;
-						m_fMultitouchOldY=y;
-
-						OnMultiGesture(x,y,dx,dy,zoom);
-					}else{
-						m_fMultitouchOldDistSquared=-1.0f;
-					}
-
-					//experimental dragging support
-					if(m>=2) m_nDraggingState=3;
-					if(m==1 && (m_nDraggingState==1 || m_nDraggingState==2)){
-						CheckDragging(event.tfinger.x*screenAspectRatio,event.tfinger.y);
-					}
-				}
-				break;
-			case SDL_FINGERUP:
-				m_bTouchscreen=true;
-				m_fMultitouchOldDistSquared=-1.0f;
-				if(SDL_GetNumTouchFingers(event.tfinger.touchId)<=0) m_nDraggingState=0;
 				break;
 			case SDL_WINDOWEVENT:
 				switch(event.window.event){

@@ -43,7 +43,6 @@ extern SDL_Window *mainWindow;
 
 extern bool m_bRun;
 extern bool m_bTouchscreen;
-extern bool m_bShowYesNoScreenKeyboard;
 
 class SimpleFontFile;
 class SimpleBaseFont;

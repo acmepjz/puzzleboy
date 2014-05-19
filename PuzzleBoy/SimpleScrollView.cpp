@@ -7,6 +7,7 @@
 
 SimpleScrollView::SimpleScrollView()
 :m_bAutoResize(false),m_fMinZoomPerScreen(1.0f)
+,m_nOrientation(0)
 ,m_zoom(1.0f/48.0f),m_x(0.0f),m_y(0.0f)
 ,m_zoom2(1.0f/48.0f),m_x2(0.0f),m_y2(0.0f)
 ,m_nMyResizeTime(-1)
@@ -21,6 +22,21 @@ SimpleScrollView::SimpleScrollView()
 	m_screen.y=0;
 	m_screen.w=0;
 	m_screen.h=0;
+
+	m_fAutoResizeScale[0]=0;
+	m_fAutoResizeScale[1]=0;
+	m_fAutoResizeScale[2]=0;
+	m_fAutoResizeScale[3]=0;
+
+	m_nAutoResizeOffset[0]=0;
+	m_nAutoResizeOffset[1]=0;
+	m_nAutoResizeOffset[2]=0;
+	m_nAutoResizeOffset[3]=0;
+
+	m_nScissorOffset[0]=0;
+	m_nScissorOffset[1]=0;
+	m_nScissorOffset[2]=0;
+	m_nScissorOffset[3]=0;
 }
 
 void SimpleScrollView::OnTimer(){
@@ -64,7 +80,17 @@ void SimpleScrollView::OnTimer(){
 }
 
 void SimpleScrollView::OnMultiGesture(float fx,float fy,float dx,float dy,float zoom){
-	//test only
+	//translate coordinate if orientation is set
+	switch(m_nOrientation){
+	case 2:
+		fx=float(m_screen.x*2+m_screen.w)/float(screenHeight)-fx;
+		fy=float(m_screen.y*2+m_screen.h)/float(screenHeight)-fy;
+		dx=-dx;
+		dy=-dy;
+		break;
+	default:
+		break;
+	}
 
 	//move
 	float f=float(screenHeight)*m_zoom;
@@ -147,15 +173,32 @@ void SimpleScrollView::ConstraintView(bool zoom){
 void SimpleScrollView::SetProjectionMatrix(){
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(m_x2,m_x2+float(screenWidth)*m_zoom2,
-		m_y2+float(screenHeight)*m_zoom2,m_y2,-1.0f,1.0f);
+
+	//ad-hoc test
+	switch(m_nOrientation){
+	case 2:
+		{
+			float x3=float(m_screen.x*2+m_screen.w)*m_zoom2+m_x2;
+			float y3=float(m_screen.y*2+m_screen.h)*m_zoom2+m_y2;
+			glOrtho(x3,x3-float(screenWidth)*m_zoom2,
+				y3-float(screenHeight)*m_zoom2,y3,-1.0f,1.0f);
+		}
+		break;
+	default:
+		glOrtho(m_x2,m_x2+float(screenWidth)*m_zoom2,
+			m_y2+float(screenHeight)*m_zoom2,m_y2,-1.0f,1.0f);
+		break;
+	}
 	glMatrixMode(GL_MODELVIEW);
 }
 
 void SimpleScrollView::EnableScissorRect(){
 	glEnable(GL_SCISSOR_TEST);
 	if(m_screen.w>0 && m_screen.h>0){
-		glScissor(m_screen.x,screenHeight-m_screen.y-m_screen.h,m_screen.w,m_screen.h);
+		glScissor(m_screen.x+m_nScissorOffset[0],
+			screenHeight-m_screen.y-m_screen.h-m_nScissorOffset[3],
+			m_screen.w-m_nScissorOffset[0]+m_nScissorOffset[2],
+			m_screen.h-m_nScissorOffset[1]+m_nScissorOffset[3]);
 	}else{
 		glScissor(0,0,0,0);
 	}
@@ -166,8 +209,16 @@ void SimpleScrollView::DisableScissorRect(){
 }
 
 void SimpleScrollView::TranslateCoordinate(int x,int y,int& out_x,int& out_y){
-	out_x=(int)floor(float(x)*m_zoom2+m_x2);
-	out_y=(int)floor(float(y)*m_zoom2+m_y2);
+	switch(m_nOrientation){
+	case 2:
+		out_x=(int)floor(float(m_screen.x*2+m_screen.w-x)*m_zoom2+m_x2);
+		out_y=(int)floor(float(m_screen.y*2+m_screen.h-y)*m_zoom2+m_y2);
+		break;
+	default:
+		out_x=(int)floor(float(x)*m_zoom2+m_x2);
+		out_y=(int)floor(float(y)*m_zoom2+m_y2);
+		break;
+	}
 }
 
 void SimpleScrollView::CenterView(int x,int y,int w,int h){
@@ -212,7 +263,12 @@ void SimpleScrollView::EnsureVisible(int x,int y,int w,int h){
 void SimpleScrollView::DrawScrollBar(){
 	//draw scrollbar (experimental)
 	if(m_nScrollBarIdleTime<32 && m_virtual.w>0 && m_virtual.h>0 && m_screen.w>0 && m_screen.h>0){
-		::SetProjectionMatrix(1);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+
+		glOrtho(0.0f,float(screenWidth),float(screenHeight),0.0f,-1.0f,1.0f);
+
+		glMatrixMode(GL_MODELVIEW);
 
 		float x=float(m_screen.w)/float(m_virtual.w);
 		float x2=float(m_screen.w)*x*m_zoom2;
@@ -236,6 +292,15 @@ void SimpleScrollView::DrawScrollBar(){
 			x,float(m_screen.y+m_screen.h),
 			x2,float(m_screen.y+m_screen.h),
 		};
+
+		switch(m_nOrientation){
+		case 2:
+			for(int i=0;i<8;i++){
+				v[i*2]=float(m_screen.x*2+m_screen.w)-v[i*2];
+				v[i*2+1]=float(m_screen.y*2+m_screen.h)-v[i*2+1];
+			}
+			break;
+		}
 
 		const unsigned short i[]={0,1,3,0,3,2,4,5,7,4,7,6};
 

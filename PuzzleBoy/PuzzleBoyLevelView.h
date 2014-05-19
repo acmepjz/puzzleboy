@@ -2,6 +2,7 @@
 
 #include "SimpleScrollView.h"
 #include "PuzzleBoyLevelData.h"
+#include "MultiTouchManager.h"
 #include "UTF8-16.h"
 
 class PuzzleBoyLevel;
@@ -9,7 +10,7 @@ class PuzzleBoyLevelFile;
 class PushableBlock;
 struct RecordItem;
 
-class PuzzleBoyLevelView{
+class PuzzleBoyLevelView:public virtual MultiTouchView{
 public:
 	PuzzleBoyLevelView();
 	~PuzzleBoyLevelView();
@@ -26,10 +27,14 @@ public:
 	bool OnKeyDown(int nChar,int nFlags);
 	void OnKeyUp(int nChar,int nFlags);
 
+	virtual void OnMultiGesture(float fx,float fy,float dx,float dy,float zoom);
+
 	//nType: SDL_MOUSEBUTTONDOWN or SDL_MOUSEBUTTONUP or SDL_MOUSEMOTION
-	void OnMouseEvent(int nFlags, int xMouse, int yMouse, int nType);
+	virtual void OnMouseEvent(int which,int state,int xMouse,int yMouse,int nFlags,int nType);
 public:
 	SimpleScrollView m_scrollView;
+
+	bool m_bShowYesNoScreenKeyboard;
 
 	u16string m_sPlayerName;
 
@@ -42,6 +47,12 @@ public:
 	u8string m_sCurrentBestStepOwner;
 private:
 	std::vector<RecordItem> m_tCurrentBestRecord;
+
+	//internal function, only used in game mode
+	//0-7: up,down,left,right,undo,redo,switch,restart
+	//64: apply new position
+	//65: discard new position or skip demo
+	bool InternalKeyDown(int keyIndex);
 
 public:
 	int m_nCurrentLevel;

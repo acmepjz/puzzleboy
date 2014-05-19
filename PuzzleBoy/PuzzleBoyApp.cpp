@@ -18,26 +18,6 @@
 
 PuzzleBoyApp *theApp=NULL;
 
-//ad-hoc!!
-static const int m_nDefaultMultiplayerKey[16]={
-	SDLK_UP,
-	SDLK_DOWN,
-	SDLK_LEFT,
-	SDLK_RIGHT,
-	SDLK_k,
-	SDLK_l,
-	SDLK_j,
-	0,
-	SDLK_w,
-	SDLK_s,
-	SDLK_a,
-	SDLK_d,
-	SDLK_g,
-	SDLK_h,
-	SDLK_f,
-	0,
-};
-
 extern SDL_Event event;
 
 PuzzleBoyApp::PuzzleBoyApp()
@@ -47,6 +27,7 @@ PuzzleBoyApp::PuzzleBoyApp()
 ,m_bInternationalFont(true)
 ,m_pDocument(NULL)
 ,m_nCurrentLevel(0)
+,m_nMyResizeTime(-1)
 {
 }
 
@@ -102,18 +83,18 @@ bool PuzzleBoyApp::SaveFile(const u8string& fileName){
 	return ret;
 }
 
-static u8string GetConfig(const std::map<u8string,u8string>& cfg,const u8string& name,const u8string& default){
+static u8string GetConfig(const std::map<u8string,u8string>& cfg,const u8string& name,const u8string& defaultValue){
 	std::map<u8string,u8string>::const_iterator it=cfg.find(name);
-	if(it==cfg.end()) return default;
+	if(it==cfg.end()) return defaultValue;
 	else return it->second;
 }
 
-static int GetConfig(const std::map<u8string,u8string>& cfg,const u8string& name,int default){
+static int GetConfig(const std::map<u8string,u8string>& cfg,const u8string& name,int defaultValue){
 	std::map<u8string,u8string>::const_iterator it=cfg.find(name);
-	if(it==cfg.end()) return default;
+	if(it==cfg.end()) return defaultValue;
 	else{
 		int i;
-		if(sscanf(it->second.c_str(),"%d",&i)!=1) return default;
+		if(sscanf(it->second.c_str(),"%d",&i)!=1) return defaultValue;
 		else return i;
 	}
 }
@@ -159,8 +140,7 @@ void PuzzleBoyApp::LoadConfig(const u8string& fileName){
 	}
 
 	m_nAnimationSpeed=GetConfig(cfg,"AnimationSpeed",0);
-	if(m_nAnimationSpeed<0) m_nAnimationSpeed=0;
-	else if(m_nAnimationSpeed>3) m_nAnimationSpeed=3;
+	if(m_nAnimationSpeed<0 || m_nAnimationSpeed>3) m_nAnimationSpeed=0;
 
 	m_bShowGrid=GetConfig(cfg,"ShowGrid",0)!=0;
 	m_bShowLines=GetConfig(cfg,"ShowLines",1)!=0;
@@ -169,12 +149,47 @@ void PuzzleBoyApp::LoadConfig(const u8string& fileName){
 	m_sPlayerName[0]=toUTF16(GetConfig(cfg,"PlayerName",_("Player")));
 	m_sPlayerName[1]=toUTF16(GetConfig(cfg,"PlayerName2",_("Player2")));
 
+	const int defaultKey[24]={
+		SDLK_UP,
+		SDLK_DOWN,
+		SDLK_LEFT,
+		SDLK_RIGHT,
+		SDLK_u, //undo
+		SDLK_r, //redo
+		SDLK_SPACE, //switch
+		0, //restart
+		SDLK_UP,
+		SDLK_DOWN,
+		SDLK_LEFT,
+		SDLK_RIGHT,
+		SDLK_k,
+		SDLK_l,
+		SDLK_j,
+		0,
+		SDLK_w,
+		SDLK_s,
+		SDLK_a,
+		SDLK_d,
+		SDLK_g,
+		SDLK_h,
+		SDLK_f,
+		0,
+	};
+
+	for(int i=0;i<24;i++){
+		char s[8];
+		sprintf(s,"Key%d",i+1);
+		m_nKey[i]=GetConfig(cfg,s,defaultKey[i]);
+	}
+
 	m_sLocale=GetConfig(cfg,"Locale","");
 	if(m_sLocale.find_first_of('?')!=u8string::npos) m_sLocale="?";
 
 	m_nThreadCount=GetConfig(cfg,"ThreadCount",0);
-	if(m_nThreadCount<0) m_nThreadCount=0;
-	else if(m_nThreadCount>8) m_nThreadCount=8;
+	if(m_nThreadCount<0 || m_nThreadCount>8) m_nThreadCount=0;
+
+	m_nOrientation=GetConfig(cfg,"Orientation",0);
+	if(m_nOrientation<0 || m_nOrientation>2) m_nOrientation=0;
 }
 
 void PuzzleBoyApp::SaveConfig(const u8string& fileName){
@@ -188,9 +203,16 @@ void PuzzleBoyApp::SaveConfig(const u8string& fileName){
 	cfg["PlayerName"]=toUTF8(m_sPlayerName[0]);
 	cfg["PlayerName2"]=toUTF8(m_sPlayerName[1]);
 
+	for(int i=0;i<24;i++){
+		char s[8];
+		sprintf(s,"Key%d",i+1);
+		PutConfig(cfg,s,m_nKey[i]);
+	}
+
 	cfg["Locale"]=m_sLocale;
 
 	PutConfig(cfg,"ThreadCount",m_nThreadCount);
+	PutConfig(cfg,"Orientation",m_nOrientation);
 
 	u8file *f=u8fopen(fileName.c_str(),"wb");
 	if(f){
@@ -228,20 +250,12 @@ bool PuzzleBoyApp::LoadLocale(){
 void PuzzleBoyApp::Draw(){
 	if(m_view.empty()) return;
 
-	int m=m_view.size();
-	if(m==1){
-		m_view[0]->m_scrollView.SetProjectionMatrix();
-		m_view[0]->Draw();
-		m_view[0]->m_scrollView.DrawScrollBar();
-	}else{
-		for(int i=0;i<m;i++){
-			m_view[i]->m_scrollView.EnableScissorRect();
-			m_view[i]->m_scrollView.SetProjectionMatrix();
-			m_view[i]->Draw();
-			m_view[i]->m_scrollView.DrawScrollBar();
-		}
-		SimpleScrollView::DisableScissorRect();
+	for(int i=0,m=m_view.size();i<m;i++){
+		m_view[i]->m_scrollView.EnableScissorRect();
+		m_view[i]->m_scrollView.SetProjectionMatrix();
+		m_view[i]->Draw();
 	}
+	SimpleScrollView::DisableScissorRect();
 }
 
 void PuzzleBoyApp::DestroyGame(){
@@ -254,21 +268,44 @@ void PuzzleBoyApp::DestroyGame(){
 bool PuzzleBoyApp::StartGame(int nPlayerCount){
 	DestroyGame();
 
+	m_nMyResizeTime=-1;
+	touchMgr.clear();
+
 	if(nPlayerCount==2){
 		//multiplayer
 		PuzzleBoyLevelView *view=new PuzzleBoyLevelView();
 
 		view->m_sPlayerName=m_sPlayerName[0];
-		view->m_nKey=m_nDefaultMultiplayerKey;
+		view->m_nKey=m_nKey+8;
 		view->m_scrollView.m_bAutoResize=true;
-		view->m_scrollView.m_fAutoResizeScale[0]=0.0f;
-		view->m_scrollView.m_fAutoResizeScale[1]=0.0f;
-		view->m_scrollView.m_fAutoResizeScale[2]=0.5f;
-		view->m_scrollView.m_fAutoResizeScale[3]=1.0f;
-		view->m_scrollView.m_nAutoResizeOffset[0]=0;
-		view->m_scrollView.m_nAutoResizeOffset[1]=0;
-		view->m_scrollView.m_nAutoResizeOffset[2]=-4;
-		view->m_scrollView.m_nAutoResizeOffset[3]=-128;
+		switch(m_nOrientation){
+		case 0:
+			//normal
+			view->m_scrollView.m_fAutoResizeScale[2]=0.5f;
+			view->m_scrollView.m_fAutoResizeScale[3]=1.0f;
+			view->m_scrollView.m_nAutoResizeOffset[2]=-4;
+			view->m_scrollView.m_nAutoResizeOffset[3]=-128;
+			view->m_scrollView.m_nScissorOffset[3]=128;
+			break;
+		case 1:
+			//horizontal up-down
+			view->m_scrollView.m_fAutoResizeScale[2]=0.5f;
+			view->m_scrollView.m_fAutoResizeScale[3]=1.0f;
+			view->m_scrollView.m_nAutoResizeOffset[2]=-4;
+			view->m_scrollView.m_nAutoResizeOffset[1]=128;
+			view->m_scrollView.m_nScissorOffset[1]=-128;
+			view->m_scrollView.m_nOrientation=2;
+			break;
+		case 2:
+			//vertical up-down
+			view->m_scrollView.m_fAutoResizeScale[2]=1.0f;
+			view->m_scrollView.m_fAutoResizeScale[3]=0.5f;
+			view->m_scrollView.m_nAutoResizeOffset[1]=128;
+			view->m_scrollView.m_nAutoResizeOffset[3]=-4;
+			view->m_scrollView.m_nScissorOffset[1]=-128;
+			view->m_scrollView.m_nOrientation=2;
+			break;
+		}
 		view->m_scrollView.OnTimer();
 
 		view->m_pDocument=m_pDocument;
@@ -279,20 +316,31 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount){
 		}
 		m_view.push_back(view);
 
+		touchMgr.AddView(0,0,0,0,MultiTouchViewFlags::AcceptDragging | MultiTouchViewFlags::AcceptZoom,view);
+
 		//player 2
 		view=new PuzzleBoyLevelView();
 
 		view->m_sPlayerName=m_sPlayerName[1];
-		view->m_nKey=m_nDefaultMultiplayerKey+8;
+		view->m_nKey=m_nKey+16;
 		view->m_scrollView.m_bAutoResize=true;
-		view->m_scrollView.m_fAutoResizeScale[0]=0.5f;
-		view->m_scrollView.m_fAutoResizeScale[1]=0.0f;
 		view->m_scrollView.m_fAutoResizeScale[2]=1.0f;
 		view->m_scrollView.m_fAutoResizeScale[3]=1.0f;
-		view->m_scrollView.m_nAutoResizeOffset[0]=4;
-		view->m_scrollView.m_nAutoResizeOffset[1]=0;
-		view->m_scrollView.m_nAutoResizeOffset[2]=0;
 		view->m_scrollView.m_nAutoResizeOffset[3]=-128;
+		view->m_scrollView.m_nScissorOffset[3]=128;
+		switch(m_nOrientation){
+		case 0:
+		case 1:
+			//normal and horizontal up-down
+			view->m_scrollView.m_fAutoResizeScale[0]=0.5f;
+			view->m_scrollView.m_nAutoResizeOffset[0]=4;
+			break;
+		case 2:
+			//vertical up-down
+			view->m_scrollView.m_fAutoResizeScale[1]=0.5f;
+			view->m_scrollView.m_nAutoResizeOffset[1]=4;
+			break;
+		}
 		view->m_scrollView.OnTimer();
 
 		view->m_pDocument=m_pDocument;
@@ -300,20 +348,19 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount){
 		view->StartGame();
 
 		m_view.push_back(view);
+
+		touchMgr.AddView(0,0,0,0,MultiTouchViewFlags::AcceptDragging | MultiTouchViewFlags::AcceptZoom,view);
 	}else{
 		//single player
 		PuzzleBoyLevelView *view=new PuzzleBoyLevelView();
 
 		view->m_sPlayerName=m_sPlayerName[0];
+		view->m_nKey=m_nKey;
 		view->m_scrollView.m_bAutoResize=true;
-		view->m_scrollView.m_fAutoResizeScale[0]=0.0f;
-		view->m_scrollView.m_fAutoResizeScale[1]=0.0f;
 		view->m_scrollView.m_fAutoResizeScale[2]=1.0f;
 		view->m_scrollView.m_fAutoResizeScale[3]=1.0f;
-		view->m_scrollView.m_nAutoResizeOffset[0]=0;
-		view->m_scrollView.m_nAutoResizeOffset[1]=0;
-		view->m_scrollView.m_nAutoResizeOffset[2]=0;
 		view->m_scrollView.m_nAutoResizeOffset[3]=-128;
+		view->m_scrollView.m_nScissorOffset[3]=128;
 		view->m_scrollView.OnTimer();
 
 		view->m_pDocument=m_pDocument;
@@ -323,12 +370,55 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount){
 			return false;
 		}
 		m_view.push_back(view);
+
+		touchMgr.AddView(0,0,0,0,MultiTouchViewFlags::AcceptDragging | MultiTouchViewFlags::AcceptZoom,view);
 	}
 
 	return true;
 }
 
 void PuzzleBoyApp::OnTimer(){
+	if(m_nMyResizeTime!=m_nResizeTime){
+		m_nMyResizeTime=m_nResizeTime;
+
+		for(unsigned int i=0;i<m_view.size();i++){
+			MultiTouchViewStruct *view=touchMgr.FindView(m_view[i]);
+
+			if(view){
+				if(m_view.size()==1){
+					view->left=0.0f;
+					view->top=0.0f;
+					view->right=screenAspectRatio;
+					view->bottom=1.0f;
+				}else if(i==0){
+					if(m_nOrientation==2){
+						view->left=0.0f;
+						view->top=0.0f;
+						view->right=screenAspectRatio;
+						view->bottom=0.5f;
+					}else{
+						view->left=0.0f;
+						view->top=0.0f;
+						view->right=screenAspectRatio*0.5f;
+						view->bottom=1.0f;
+					}
+				}else{
+					if(m_nOrientation==2){
+						view->left=0.0f;
+						view->top=0.5f;
+						view->right=screenAspectRatio;
+						view->bottom=1.0f;
+					}else{
+						view->left=screenAspectRatio*0.5f;
+						view->top=0.0f;
+						view->right=screenAspectRatio;
+						view->bottom=1.0f;
+					}
+				}
+			}
+		}
+	}
+
 	for(unsigned int i=0;i<m_view.size();i++){
 		m_view[i]->OnTimer();
 	}
@@ -346,8 +436,4 @@ void PuzzleBoyApp::OnKeyUp(int nChar,int nFlags){
 	for(unsigned int i=0;i<m_view.size();i++){
 		m_view[i]->OnKeyUp(nChar,nFlags);
 	}
-}
-
-void PuzzleBoyApp::OnMouseEvent(int nFlags, int xMouse, int yMouse, int nType){
-	//TODO: OnMouseEvent
 }

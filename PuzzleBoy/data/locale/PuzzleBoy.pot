@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PuzzleBoy 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-05-13 00:40+0800\n"
+"POT-Creation-Date: 2014-05-19 22:23+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,119 +16,198 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ConfigScreen.cpp:20 ConfigScreen.cpp:104
+#: ConfigScreen.cpp:21 ConfigScreen.cpp:120
 msgid "Disabled"
 msgstr ""
 
-#: ConfigScreen.cpp:28 ConfigScreen.cpp:103
+#: ConfigScreen.cpp:29 ConfigScreen.cpp:119
 #, c-format
 msgid "Use system language (%s)"
 msgstr ""
 
-#: ConfigScreen.cpp:61
+#: ConfigScreen.cpp:62
 msgid "Language"
 msgstr ""
 
-#: ConfigScreen.cpp:76
+#: ConfigScreen.cpp:92
 msgid "No"
 msgstr ""
 
-#: ConfigScreen.cpp:77
+#: ConfigScreen.cpp:93
 msgid "Yes"
 msgstr ""
 
-#: ConfigScreen.cpp:81
+#: ConfigScreen.cpp:97
 #, c-format
 msgid "Animation Speed: %dx"
 msgstr ""
 
-#: ConfigScreen.cpp:86
+#: ConfigScreen.cpp:102
 msgid "Show Grid: "
 msgstr ""
 
-#: ConfigScreen.cpp:91
+#: ConfigScreen.cpp:107
 msgid "Show Lines: "
 msgstr ""
 
-#: ConfigScreen.cpp:96
+#: ConfigScreen.cpp:112
 #, c-format
 msgid "International Font: %s (reqiures restart)"
 msgstr ""
 
-#: ConfigScreen.cpp:107
+#: ConfigScreen.cpp:123
 msgid "Language: "
 msgstr ""
 
-#: ConfigScreen.cpp:116
+#: ConfigScreen.cpp:132
 #, c-format
 msgid "Automatic (%d)"
 msgstr ""
 
-#: ConfigScreen.cpp:119
+#: ConfigScreen.cpp:135
 msgid "Thread Count: "
 msgstr ""
 
-#: ConfigScreen.cpp:125
-msgid "Name of Player 1: "
+#: ConfigScreen.cpp:142
+msgid "Normal"
 msgstr ""
 
-#: ConfigScreen.cpp:128
-msgid "Name of Player 2: "
+#: ConfigScreen.cpp:143
+msgid "Horizontal Up-Down"
 msgstr ""
 
-#: ConfigScreen.cpp:185 main.cpp:375
+#: ConfigScreen.cpp:144
+msgid "Vertical Up-Down"
+msgstr ""
+
+#: ConfigScreen.cpp:147
+msgid "Multiplayer Orientation: "
+msgstr ""
+
+#: ConfigScreen.cpp:158
+#, c-format
+msgid "Name of Player %d: "
+msgstr ""
+
+#: ConfigScreen.cpp:165
+msgid "Single Player Keys:"
+msgstr ""
+
+#: ConfigScreen.cpp:166
+msgid "Multiplayer Keys (Player 1):"
+msgstr ""
+
+#: ConfigScreen.cpp:167
+msgid "Multiplayer Keys (Player 2):"
+msgstr ""
+
+#: ConfigScreen.cpp:168 SimpleMiscScreen.cpp:509
+msgid "(None)"
+msgstr ""
+
+#: ConfigScreen.cpp:169
+msgid "Up: "
+msgstr ""
+
+#: ConfigScreen.cpp:170
+msgid "Down: "
+msgstr ""
+
+#: ConfigScreen.cpp:171
+msgid "Left: "
+msgstr ""
+
+#: ConfigScreen.cpp:172
+msgid "Right: "
+msgstr ""
+
+#: ConfigScreen.cpp:173
+msgid "Undo: "
+msgstr ""
+
+#: ConfigScreen.cpp:174
+msgid "Redo: "
+msgstr ""
+
+#: ConfigScreen.cpp:175
+msgid "Switch: "
+msgstr ""
+
+#: ConfigScreen.cpp:176
+msgid "Restart: "
+msgstr ""
+
+#: ConfigScreen.cpp:259
+#, c-format
+msgid "Name of Player %d"
+msgstr ""
+
+#: ConfigScreen.cpp:260
+#, c-format
+msgid "Please input the new name of player %d"
+msgstr ""
+
+#: ConfigScreen.cpp:294 main.cpp:331
 msgid "Config"
 msgstr ""
 
-#: main.cpp:211
+#: main.cpp:201
 msgid "User level: "
 msgstr ""
 
-#: main.cpp:217 main.cpp:372
+#: main.cpp:207 main.cpp:328
 msgid "Choose Level File"
 msgstr ""
 
-#: main.cpp:268 main.cpp:369
+#: main.cpp:258 main.cpp:325
 msgid "Choose Level"
 msgstr ""
 
-#: main.cpp:378
+#: main.cpp:334
 msgid "Exit Game"
 msgstr ""
 
-#: main.cpp:498
+#: main.cpp:344 RandomMapScreen.cpp:38
+msgid "Random Map"
+msgstr ""
+
+#: main.cpp:353
+msgid "Start Multiplayer"
+msgstr ""
+
+#: main.cpp:453
 msgid "Main Menu"
 msgstr ""
 
-#: main.cpp:612
+#: main.cpp:554
 msgid "Puzzle Boy"
 msgstr ""
 
-#: main.cpp:744
+#: main.cpp:654
 #, c-format
 msgid "Pack: %s"
 msgstr ""
 
-#: main.cpp:752
+#: main.cpp:662
 #, c-format
 msgid "Level %d: %s"
 msgstr ""
 
-#: main.cpp:752
+#: main.cpp:662
 #, c-format
 msgid "Moves: %d"
 msgstr ""
 
-#: main.cpp:757
+#: main.cpp:667
 #, c-format
 msgid "Best: %d (%s)"
 msgstr ""
 
-#: PuzzleBoyApp.cpp:169
+#: PuzzleBoyApp.cpp:149
 msgid "Player"
 msgstr ""
 
-#: PuzzleBoyApp.cpp:170
+#: PuzzleBoyApp.cpp:150
 msgid "Player2"
 msgstr ""
 
@@ -156,10 +235,6 @@ msgstr ""
 msgid "Random"
 msgstr ""
 
-#: RandomMapScreen.cpp:38
-msgid "Random Map"
-msgstr ""
-
 #: RandomMapScreen.cpp:113
 #, c-format
 msgid "Random Level %d"
@@ -167,4 +242,12 @@ msgstr ""
 
 #: RandomMapScreen.cpp:115 RandomMapScreen.cpp:139
 msgid "Random Level"
+msgstr ""
+
+#: SimpleMiscScreen.cpp:408
+msgid "Config Key"
+msgstr ""
+
+#: SimpleMiscScreen.cpp:410
+msgid "Press any key..."
 msgstr ""
