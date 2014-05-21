@@ -2,7 +2,6 @@
 #include "FileSystem.h"
 #include "PuzzleBoyApp.h"
 #include "PuzzleBoyLevelFile.h"
-#include "PuzzleBoyLevel.h"
 #include "PuzzleBoyLevelView.h"
 #include "VertexList.h"
 #include "SimpleBitmapFont.h"
@@ -13,6 +12,7 @@
 #include "TestRandomLevel.h"
 #include "RandomMapScreen.h"
 #include "SimpleFont.h"
+#include "ChooseLevelScreen.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -159,107 +159,6 @@ void DrawScreenKeyboard(const std::vector<float>& v,const std::vector<unsigned s
 	glDisable(GL_TEXTURE_2D);
 }
 
-class ChooseLevelFileScreen:public SimpleListScreen{
-public:
-	virtual void OnDirty(){
-		m_nListCount=m_files.size();
-
-		if(m_txtList) m_txtList->clear();
-		else m_txtList=new SimpleText;
-
-		for(int i=0;i<m_nListCount;i++){
-			m_txtList->NewStringIndex();
-			m_txtList->AddString(mainFont,m_fileDisplayName[i],0,float(i*32),0,32,1,DrawTextFlags::VCenter);
-		}
-	}
-
-	virtual int OnClick(int index){
-		if(!theApp->LoadFile(m_files[index])){
-			printf("[ChooseLevelFileScreen] Failed to load file %s\n",m_files[index].c_str());
-			return -1;
-		}
-		return 1;
-	}
-
-	virtual int DoModal(){
-		//enum internal files
-		{
-			u8string fn="data/levels/";
-			std::vector<u8string> fs=enumAllFiles(fn,"lev");
-			for(size_t i=0;i<fs.size();i++){
-				m_files.push_back(fn+fs[i]);
-				m_fileDisplayName.push_back(fs[i]);
-			}
-		}
-
-		//enum external files
-		{
-			u8string fn=externalStoragePath+"/levels/";
-			std::vector<u8string> fs=enumAllFiles(fn,"lev");
-			for(size_t i=0;i<fs.size();i++){
-				m_files.push_back(fn+fs[i]);
-				m_fileDisplayName.push_back(_("User level: ")+fs[i]);
-			}
-		}
-
-		//show
-		m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
-		CreateTitleBarText(_("Choose Level File"));
-		return SimpleListScreen::DoModal();
-	}
-private:
-	std::vector<u8string> m_files;
-	std::vector<u8string> m_fileDisplayName;
-};
-
-class ChooseLevelScreen:public SimpleListScreen{
-public:
-	virtual void OnDirty(){
-		m_nListCount=theApp->m_pDocument->m_objLevels.size();
-
-		if(m_txtList) m_txtList->clear();
-		else m_txtList=new SimpleText;
-
-		for(int i=0;i<m_nListCount;i++){
-			char s[32];
-			m_txtList->NewStringIndex();
-			sprintf(s,"%d",i+1);
-			m_txtList->AddString(mainFont,s,0,float(i*32),0,32,1,DrawTextFlags::VCenter);
-			m_txtList->AddString(mainFont,toUTF8(theApp->m_pDocument->m_objLevels[i]->m_sLevelName),96,float(i*32),0,32,1,DrawTextFlags::VCenter);
-			sprintf(s,"%dx%d",theApp->m_pDocument->m_objLevels[i]->m_nWidth,
-				theApp->m_pDocument->m_objLevels[i]->m_nHeight);
-			m_txtList->AddString(mainFont,s,float(screenWidth-128),float(i*32),0,32,1,DrawTextFlags::VCenter);
-		}
-	}
-
-	virtual int OnClick(int index){
-		theApp->m_nCurrentLevel=index;
-		return 1;
-	}
-
-	virtual int OnTitleBarButtonClick(int index){
-		switch(index){
-		case SCREEN_KEYBOARD_OPEN:
-			if(ChooseLevelFileScreen().DoModal()){
-				m_nReturnValue=1;
-				m_bDirty=true;
-			}
-			return -1;
-			break;
-		}
-
-		return m_nReturnValue;
-	}
-
-	virtual int DoModal(){
-		m_bDirtyOnResize=true;
-		m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
-		m_RightButtons.push_back(SCREEN_KEYBOARD_OPEN);
-		CreateTitleBarText(_("Choose Level"));
-		return SimpleListScreen::DoModal();
-	}
-};
-
 void OnVideoResize(int width, int height){
 	m_nResizeTime++;
 
@@ -269,47 +168,6 @@ void OnVideoResize(int width, int height){
 
 	glViewport(0,0,screenWidth,screenHeight);
 }
-
-/*
-static void OnMouseDown(int which,int button,int x,int y,int nFlags){
-	//FIXME: ad-hoc screen keyboard
-	bool b=false;
-	int idx=0;
-
-	if(y<screenHeight){
-		int i=1+((screenHeight-y-1)>>6);
-		idx=i<<8;
-	}
-
-	if(x<screenWidth){
-		int i=1+((screenWidth-x-1)>>6);
-		idx|=i;
-	}
-
-	switch(idx){
-	case 0x204: theApp->OnKeyDown(SDLK_u,0); b=true; break;
-	case 0x203: theApp->OnKeyDown(SDLK_UP,0); b=true; break;
-	case 0x202: theApp->OnKeyDown(SDLK_r,0); b=true; break;
-	case 0x201: theApp->OnKeyDown(SDLK_r,KMOD_CTRL); b=true; break;
-	case 0x104: theApp->OnKeyDown(SDLK_LEFT,0); b=true; break;
-	case 0x103: theApp->OnKeyDown(SDLK_DOWN,0); b=true; break;
-	case 0x102: theApp->OnKeyDown(SDLK_RIGHT,0); b=true; break;
-	case 0x101: theApp->OnKeyDown(SDLK_SPACE,0); b=true; break;
-	}
-
-	if(m_bShowYesNoScreenKeyboard){
-		switch(idx){
-		case 0x107: theApp->OnKeyDown(SDLK_RETURN,0); b=true; break;
-		case 0x106: theApp->OnKeyDown(SDLK_ESCAPE,0); b=true; break;
-		}
-	}
-
-	if(b){
-		m_nDraggingState=3;
-	}else{
-		theApp->OnMouseEvent(SDL_BUTTON(button),x,y,SDL_MOUSEBUTTONDOWN);
-	}
-}*/
 
 class MainMenuScreen:public SimpleListScreen{
 public:
@@ -515,10 +373,25 @@ int main(int argc,char** argv){
 	//load record file
 	theApp->m_objRecordMgr.LoadFile((externalStoragePath+"/PuzzleBoyRecord.dat").c_str());
 
-	//TEST: load default level file
-	if(!theApp->LoadFile("data/levels/PuzzleBoy.lev")){
-		printf("[main] Error: Failed to load default level file\n");
-	}
+	//load level file and progress
+	do{
+		if(theApp->m_bAutoSave){
+			if(theApp->LoadFile(theApp->m_sLastFile)){
+				if(theApp->m_nLastLevel>=0 && theApp->m_nLastLevel<(int)theApp->m_pDocument->m_objLevels.size()){
+					theApp->m_nCurrentLevel=theApp->m_nLastLevel;
+				}else{
+					printf("[main] Error: Level number specified by autosave out of range\n");
+					theApp->m_sLastRecord.clear();
+				}
+				break;
+			}else{
+				printf("[main] Error: Failed to load level file specified by autosave\n");
+			}
+		}
+		if(!theApp->LoadFile("data/levels/PuzzleBoy.lev")){
+			printf("[main] Error: Failed to load default level file\n");
+		}
+	}while(0);
 
 #ifdef ANDROID
 	//experimental orientation aware
@@ -638,6 +511,11 @@ int main(int argc,char** argv){
 	//init level and graphics
 	theApp->StartGame(1);
 
+	//load autosave
+	if(theApp->m_bAutoSave && !theApp->m_sLastRecord.empty()){
+		theApp->m_view[0]->m_objPlayingLevel->ApplyRecord(theApp->m_sLastRecord);
+	}
+
 	while(m_bRun){
 		//game logic
 		theApp->OnTimer();
@@ -673,8 +551,9 @@ int main(int argc,char** argv){
 					<<(theApp->m_view[0]->m_objPlayingLevel->m_nMoves)<<(theApp->m_view[1]->m_objPlayingLevel->m_nMoves);
 			}
 
-			mainFont->DrawString(str(fmt),0.0f,0.0f,(float)screenWidth,(float)screenHeight,
-				1.0f,DrawTextFlags::Multiline | DrawTextFlags::Bottom,SDL_MakeColor(255,255,255,255));
+			mainFont->DrawString(str(fmt),0.0f,0.0f,float(screenWidth-256),float(screenHeight),1.0f,
+				DrawTextFlags::Multiline | DrawTextFlags::Bottom | DrawTextFlags::AutoSize,
+				SDL_MakeColor(255,255,255,255));
 		}
 
 		SDL_GL_SwapWindow(mainWindow);
@@ -685,6 +564,14 @@ int main(int argc,char** argv){
 			switch(event.type){
 			case SDL_QUIT:
 				m_bRun=false;
+				break;
+			case SDL_APP_WILLENTERBACKGROUND:
+				//save progress (???)
+				if(theApp->m_bAutoSave && theApp->m_view[0]){
+					theApp->m_nLastLevel=theApp->m_view[0]->m_nCurrentLevel;
+					theApp->m_sLastRecord=theApp->m_view[0]->m_objPlayingLevel->GetRecord();
+					theApp->SaveConfig(externalStoragePath+"/PuzzleBoy.cfg");
+				}
 				break;
 			case SDL_WINDOWEVENT:
 				switch(event.window.event){
@@ -734,6 +621,14 @@ int main(int argc,char** argv){
 		WaitForNextFrame();
 	}
 
+	//save progress at exit
+	if(theApp->m_bAutoSave && theApp->m_view[0]){
+		theApp->m_nLastLevel=theApp->m_view[0]->m_nCurrentLevel;
+		theApp->m_sLastRecord=theApp->m_view[0]->m_objPlayingLevel->GetRecord();
+		theApp->SaveConfig(externalStoragePath+"/PuzzleBoy.cfg");
+	}
+
+	//destroy everything
 	glDeleteTextures(1,&adhoc_screenkb_tex);
 
 	delete mainFont;
