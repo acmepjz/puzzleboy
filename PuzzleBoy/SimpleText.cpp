@@ -129,6 +129,8 @@ void SimpleText::AddString(SimpleBaseFont *font,const u8string& str,float x,floa
 
 void SimpleText::AddChar(SimpleBaseFont *font,int c,float x,float w,float scale,int flags){
 	bool bNewLine=false;
+	float yNewLine=0.0f;
+
 	SimpleFontGlyphMetric metric;
 
 	//tell the font to load this character
@@ -176,9 +178,9 @@ void SimpleText::AddChar(SimpleBaseFont *font,int c,float x,float w,float scale,
 	case '\n':
 		if(flags & DrawTextFlags::Multiline){
 			if(font==NULL){
-				yy+=scale*32.0f;
+				yNewLine=scale*32.0f;
 			}else{
-				yy+=scale*font->GetFontHeight();
+				yNewLine=scale*font->GetFontHeight();
 			}
 		}
 		//fall-through
@@ -246,11 +248,27 @@ void SimpleText::AddChar(SimpleBaseFont *font,int c,float x,float w,float scale,
 
 	//adjust horizontal position
 	if(bNewLine){
-		if(flags & DrawTextFlags::Center){
+		if(ww>w && (flags & DrawTextFlags::AutoSize)!=0){
+			float factor=w/ww;
+
+			float vcenter=yy;
+
+			if(font) vcenter+=scale*(font->GetFontDescender()-font->GetFontAscender())*0.5f;
+			else vcenter+=scale*16.0f;
+
+			for(int i=nRowStartIndex;i<nCount;i++){
+				v[i*4]*=factor;
+				v[i*4+1]=vcenter+(v[i*4+1]-vcenter)*factor;
+			}
+
+			yNewLine*=factor;
+		}else if(flags & DrawTextFlags::Center){
 			x+=(w-ww)*0.5f;
 		}else if(flags & DrawTextFlags::Right){
 			x+=(w-ww);
 		}
+
+		yy+=yNewLine;
 
 		for(int i=nRowStartIndex;i<nCount;i++){
 			v[i*4]+=x;

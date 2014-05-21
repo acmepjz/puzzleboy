@@ -31,6 +31,10 @@ const int SCREEN_KEYBOARD_RESTART=0x3;
 const int SCREEN_KEYBOARD_YES=0x200;
 const int SCREEN_KEYBOARD_NO=0x201;
 const int SCREEN_KEYBOARD_OPEN=0x202;
+const int SCREEN_KEYBOARD_SEARCH=0x203;
+const int SCREEN_KEYBOARD_MORE=0x300;
+
+const int SCREEN_KEYBOARD_EMPTY=0x303;
 
 extern int screenWidth;
 extern int screenHeight;

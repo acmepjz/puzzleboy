@@ -64,7 +64,13 @@ namespace DrawTextFlags{
 
 	const int Multiline=16;
 
-	const int WordWrap=32;
+	const int WordWrap=32; //currently unsupported
+
+	const int EndEllipsis=64; //currently unsupported
+	const int WordEllipsis=128; //currently unsupported
+	const int PathEllipsis=256; //currently unsupported
+
+	const int AutoSize=512; //currently only horizontal autosize supported, and is buggy
 }
 
 class SimpleInputScreen;

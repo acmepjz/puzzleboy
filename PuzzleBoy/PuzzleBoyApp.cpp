@@ -25,6 +25,7 @@ PuzzleBoyApp::PuzzleBoyApp()
 ,m_bShowGrid(false)
 ,m_bShowLines(true)
 ,m_bInternationalFont(true)
+,m_bAutoSave(true)
 ,m_pDocument(NULL)
 ,m_nCurrentLevel(0)
 ,m_nMyResizeTime(-1)
@@ -62,6 +63,8 @@ bool PuzzleBoyApp::LoadFile(const u8string& fileName){
 	DestroyGame();
 
 	m_nCurrentLevel=0;
+
+	m_sLastFile=fileName;
 
 	return true;
 }
@@ -190,6 +193,11 @@ void PuzzleBoyApp::LoadConfig(const u8string& fileName){
 
 	m_nOrientation=GetConfig(cfg,"Orientation",0);
 	if(m_nOrientation<0 || m_nOrientation>2) m_nOrientation=0;
+
+	m_bAutoSave=GetConfig(cfg,"AutoSave",1)!=0;
+	m_sLastFile=GetConfig(cfg,"LastFile","");
+	m_nLastLevel=GetConfig(cfg,"LastLevel",0);
+	m_sLastRecord=GetConfig(cfg,"LastRecord","");
 }
 
 void PuzzleBoyApp::SaveConfig(const u8string& fileName){
@@ -213,6 +221,11 @@ void PuzzleBoyApp::SaveConfig(const u8string& fileName){
 
 	PutConfig(cfg,"ThreadCount",m_nThreadCount);
 	PutConfig(cfg,"Orientation",m_nOrientation);
+
+	PutConfig(cfg,"AutoSave",m_bAutoSave?1:0);
+	cfg["LastFile"]=m_sLastFile;
+	PutConfig(cfg,"LastLevel",m_nLastLevel);
+	cfg["LastRecord"]=m_sLastRecord;
 
 	u8file *f=u8fopen(fileName.c_str(),"wb");
 	if(f){

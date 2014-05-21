@@ -181,19 +181,35 @@ int SimpleListScreen::DoModal(){
 		if(scrollBarIdleTime<32){
 			float ratio=float(largeChange)/float(ym+largeChange);
 
-			float v[]={
-				float(screenWidth-16),64.0f+float(y02)*ratio,
-				float(screenWidth-8),64.0f+float(y02)*ratio,
-				float(screenWidth-16),64.0f+float(y02+largeChange)*ratio,
-				float(screenWidth-8),64.0f+float(y02+largeChange)*ratio,
-			};
+#if 1
+			//new ugly scrollbar
+			float transparency=float(32-scrollBarIdleTime)/32.0f;
+			if(transparency>0.5f) transparency=0.5f;
 
-			const unsigned short i[]={0,1,3,0,3,2};
+			glColor4f(1.0f,1.0f,1.0f,transparency);
 
+			const int x1=screenWidth-64;
+			const int x2=screenWidth;
+#else
+			//old scrollbar
 			float transparency=float(32-scrollBarIdleTime)/16.0f;
 			if(transparency>1.0f) transparency=1.0f;
 
 			glColor4f(0.5f,0.5f,0.5f,transparency);
+
+			const int x1=screenWidth-16;
+			const int x2=screenWidth-8;
+#endif
+
+			float v[]={
+				float(x1),64.0f+float(y02)*ratio,
+				float(x2),64.0f+float(y02)*ratio,
+				float(x1),64.0f+float(y02+largeChange)*ratio,
+				float(x2),64.0f+float(y02+largeChange)*ratio,
+			};
+
+			const unsigned short i[]={0,1,3,0,3,2};
+
 			glEnableClientState(GL_VERTEX_ARRAY);
 			glVertexPointer(2,GL_FLOAT,0,v);
 			glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,i);

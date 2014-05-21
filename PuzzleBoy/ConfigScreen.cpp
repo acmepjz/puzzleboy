@@ -75,7 +75,8 @@ enum ConfigType{
 	ConfigLanguage, //4
 	ConfigThreadCount, //5
 	ConfigOrientation, //6
-	ConfigEmpty_1, //7
+	ConfigAutoSave,
+	ConfigEmpty_1,
 	ConfigPlayerName, //player2,empty,title
 	ConfigKey=ConfigPlayerName+4,
 	//ConfigKey1=xx,
@@ -147,6 +148,11 @@ void ConfigScreen::OnDirty(){
 		m_txtList->AddString(mainFont,_("Multiplayer Orientation: ")+s[theApp->m_nOrientation],
 			0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
 	}
+
+	//auto save
+	m_txtList->NewStringIndex();
+	m_txtList->AddString(mainFont,_("Save Progress At Exit: ")+yesno[theApp->m_bAutoSave?1:0],
+		0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
 
 	//empty line
 	m_txtList->NewStringIndex();
@@ -245,6 +251,12 @@ int ConfigScreen::OnClick(int index){
 	case ConfigOrientation:
 		//orientation
 		if((++(theApp->m_nOrientation))>2) theApp->m_nOrientation=0;
+		m_bConfigDirty=true;
+		m_bDirty=true;
+		break;
+	case ConfigAutoSave:
+		//auto save
+		theApp->m_bAutoSave=!theApp->m_bAutoSave;
 		m_bConfigDirty=true;
 		m_bDirty=true;
 		break;

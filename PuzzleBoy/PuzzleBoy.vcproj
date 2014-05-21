@@ -183,6 +183,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ChooseLevelScreen.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ConfigScreen.cpp"
 				>
 			</File>
@@ -314,6 +318,10 @@
 			</File>
 			<File
 				RelativePath=".\blake2.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ChooseLevelScreen.h"
 				>
 			</File>
 			<File

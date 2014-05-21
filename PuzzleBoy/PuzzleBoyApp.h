@@ -44,9 +44,14 @@ public:
 	int m_nAnimationSpeed;
 	bool m_bShowGrid;
 	bool m_bShowLines;
+	bool m_bInternationalFont;
+	bool m_bAutoSave;
 	u16string m_sPlayerName[2];
 
-	bool m_bInternationalFont;
+	u8string m_sLastFile;
+	int m_nLastLevel;
+	u8string m_sLastRecord;
+
 	u8string m_sLocale; ///< empty means automatic, "?" means disabled
 
 	int m_nThreadCount; ///< 0-8, 0 means automatic

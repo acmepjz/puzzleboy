@@ -330,7 +330,7 @@ bool MultiTouchManager::OnEvent(){
 							views[idx].f1=f;
 						}
 					}else{
-						fingers.erase(it);
+						fingers.erase(it); //???
 					}
 				}
 			}
@@ -366,7 +366,7 @@ bool MultiTouchManager::OnEvent(){
 						&& (views[i].m_nDraggingState==1 || views[i].m_nDraggingState==2))
 					{
 						//check dragging
-						if(views[m_nDraggingIndex].flags & MultiTouchViewFlags::AcceptDragging){
+						if(views[i].flags & MultiTouchViewFlags::AcceptDragging){
 							CheckDragging(i,views[i].f0->x*screenAspectRatio,views[i].f0->y);
 						}else{
 							views[i].view->OnMouseEvent(
@@ -383,9 +383,11 @@ bool MultiTouchManager::OnEvent(){
 						views[i].m_fMultitouchOldDistSquared=-1.0f;
 					}
 				}else{
-					//reset dragging state if no fingers
+					// XXX don't reset state here because SDL will
+					// remove all fingers before SDL_FINGERUP event
+					/*//reset dragging state if no fingers
 					views[i].m_nDraggingState=0;
-					views[i].m_fMultitouchOldDistSquared=-1.0f;
+					views[i].m_fMultitouchOldDistSquared=-1.0f;*/
 				}
 			}
 		}
