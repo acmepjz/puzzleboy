@@ -6,6 +6,9 @@
 #include "PuzzleBoyLevelFile.h"
 #include "SimpleMiscScreen.h"
 
+#include <stdio.h>
+#include <string.h>
+
 void ChooseLevelFileScreen::OnDirty(){
 	m_nListCount=m_files.size();
 

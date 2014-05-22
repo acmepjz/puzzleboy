@@ -13,6 +13,7 @@ $(LOCAL_PATH)/$(FREETYPE_PATH)/include
 # Add your application source files here...
 LOCAL_SRC_FILES := \
 ../../blake2s-ref.cpp \
+../../ChooseLevelScreen.cpp \
 ../../ConfigScreen.cpp \
 ../../FileSystem.cpp \
 ../../GNUGetText.cpp \
