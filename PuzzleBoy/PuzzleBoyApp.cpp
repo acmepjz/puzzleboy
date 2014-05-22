@@ -83,6 +83,8 @@ bool PuzzleBoyApp::SaveFile(const u8string& fileName){
 
 	u8fclose(f);
 
+	m_sLastFile=fileName;
+
 	return ret;
 }
 
@@ -390,9 +392,12 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount){
 	return true;
 }
 
-void PuzzleBoyApp::OnTimer(){
+bool PuzzleBoyApp::OnTimer(){
+	bool bDirty=false;
+
 	if(m_nMyResizeTime!=m_nResizeTime){
 		m_nMyResizeTime=m_nResizeTime;
+		bDirty=true;
 
 		for(unsigned int i=0;i<m_view.size();i++){
 			MultiTouchViewStruct *view=touchMgr.FindView(m_view[i]);
@@ -433,8 +438,10 @@ void PuzzleBoyApp::OnTimer(){
 	}
 
 	for(unsigned int i=0;i<m_view.size();i++){
-		m_view[i]->OnTimer();
+		bDirty=m_view[i]->OnTimer() || bDirty;
 	}
+
+	return bDirty;
 }
 
 bool PuzzleBoyApp::OnKeyDown(int nChar,int nFlags){

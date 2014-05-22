@@ -23,7 +23,7 @@ public:
 	void Undo();
 	void Redo();
 
-	void OnTimer();
+	bool OnTimer();
 	bool OnKeyDown(int nChar,int nFlags);
 	void OnKeyUp(int nChar,int nFlags);
 

@@ -105,11 +105,14 @@ int SimpleListScreen::DoModal(){
 	Uint32 lastSwipeTime=SDL_GetTicks();
 	float dy=0.0f;
 
+	int nIdleTime=0;
+
 	while(m_bRun && b){
 		//update list
 		if(m_bDirty){
 			OnDirty();
 			m_bDirty=false;
+			nIdleTime=0;
 		}
 
 		//update animation
@@ -127,108 +130,121 @@ int SimpleListScreen::DoModal(){
 
 		if(m_nDraggingState==3 || y0<y02-1 || y0>y02+1){
 			if(scrollBarIdleTime>0) scrollBarIdleTime-=4;
+			nIdleTime=0;
 			y02=(y0+y02)>>1;
 		}else{
-			if(scrollBarIdleTime<32) scrollBarIdleTime++;
+			if(scrollBarIdleTime<32){
+				scrollBarIdleTime++;
+				nIdleTime=0;
+			}
 			y02=y0;
 		}
 
 		if(selected0>=0){
 			selected2=selected0;
 			if(selectedTime<8) selectedTime++;
+			nIdleTime=0;
 		}else{
-			if(selectedTime>0) selectedTime--;
+			if(selectedTime>0){
+				selectedTime--;
+				nIdleTime=0;
+			}
 		}
 
-		//clear and draw
-		ClearScreen();
+		//update idle time
+		if((++nIdleTime)>=64) nIdleTime=32;
 
-		SetProjectionMatrix(1);
+		//clear and draw (if not idle, otherwise only draw after 32 frames)
+		if(nIdleTime<=32){
+			ClearScreen();
 
-		glDisable(GL_LIGHTING);
+			SetProjectionMatrix(1);
 
-		//draw selected
-		if(selected2>=0 && selectedTime>0){
-			float v[]={
-				0.0f,float(64-y02+selected2*32),
-				float(screenWidth),float(64-y02+selected2*32),
-				0.0f,float(96-y02+selected2*32),
-				float(screenWidth),float(96-y02+selected2*32),
-			};
+			glDisable(GL_LIGHTING);
 
-			const unsigned short i[]={0,1,3,0,3,2};
+			//draw selected
+			if(selected2>=0 && selectedTime>0){
+				float v[]={
+					0.0f,float(64-y02+selected2*32),
+					float(screenWidth),float(64-y02+selected2*32),
+					0.0f,float(96-y02+selected2*32),
+					float(screenWidth),float(96-y02+selected2*32),
+				};
 
-			float transparency=float(selectedTime)/8.0f;
-			if(transparency>1.0f) transparency=1.0f;
+				const unsigned short i[]={0,1,3,0,3,2};
 
-			glColor4f(0.5f,0.5f,0.5f,transparency);
-			glEnableClientState(GL_VERTEX_ARRAY);
-			glVertexPointer(2,GL_FLOAT,0,v);
-			glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,i);
-			glDisableClientState(GL_VERTEX_ARRAY);
-		}
+				float transparency=float(selectedTime)/8.0f;
+				if(transparency>1.0f) transparency=1.0f;
 
-		//draw list box
-		if(m_txtList && !m_txtList->empty()){
-			mainFont->BeginDraw();
-			glTranslatef(0.0f,float(64-y02),0.0f);
-			m_txtList->Draw(SDL_MakeColor(255,255,255,255),y02/32,screenHeight/32);
-			glLoadIdentity();
-			mainFont->EndDraw();
-		}
+				glColor4f(0.5f,0.5f,0.5f,transparency);
+				glEnableClientState(GL_VERTEX_ARRAY);
+				glVertexPointer(2,GL_FLOAT,0,v);
+				glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,i);
+				glDisableClientState(GL_VERTEX_ARRAY);
+			}
 
-		//draw scrollbar (experimental)
-		if(scrollBarIdleTime<32){
-			float ratio=float(largeChange)/float(ym+largeChange);
+			//draw list box
+			if(m_txtList && !m_txtList->empty()){
+				mainFont->BeginDraw();
+				glTranslatef(0.0f,float(64-y02),0.0f);
+				m_txtList->Draw(SDL_MakeColor(255,255,255,255),y02/32,screenHeight/32);
+				glLoadIdentity();
+				mainFont->EndDraw();
+			}
+
+			//draw scrollbar (experimental)
+			if(scrollBarIdleTime<32){
+				float ratio=float(largeChange)/float(ym+largeChange);
 
 #if 1
-			//new ugly scrollbar
-			float transparency=float(32-scrollBarIdleTime)/32.0f;
-			if(transparency>0.5f) transparency=0.5f;
+				//new ugly scrollbar
+				float transparency=float(32-scrollBarIdleTime)/32.0f;
+				if(transparency>0.5f) transparency=0.5f;
 
-			glColor4f(1.0f,1.0f,1.0f,transparency);
+				glColor4f(1.0f,1.0f,1.0f,transparency);
 
-			const int x1=screenWidth-64;
-			const int x2=screenWidth;
+				const int x1=screenWidth-64;
+				const int x2=screenWidth;
 #else
-			//old scrollbar
-			float transparency=float(32-scrollBarIdleTime)/16.0f;
-			if(transparency>1.0f) transparency=1.0f;
+				//old scrollbar
+				float transparency=float(32-scrollBarIdleTime)/16.0f;
+				if(transparency>1.0f) transparency=1.0f;
 
-			glColor4f(0.5f,0.5f,0.5f,transparency);
+				glColor4f(0.5f,0.5f,0.5f,transparency);
 
-			const int x1=screenWidth-16;
-			const int x2=screenWidth-8;
+				const int x1=screenWidth-16;
+				const int x2=screenWidth-8;
 #endif
 
-			float v[]={
-				float(x1),64.0f+float(y02)*ratio,
-				float(x2),64.0f+float(y02)*ratio,
-				float(x1),64.0f+float(y02+largeChange)*ratio,
-				float(x2),64.0f+float(y02+largeChange)*ratio,
-			};
+				float v[]={
+					float(x1),64.0f+float(y02)*ratio,
+					float(x2),64.0f+float(y02)*ratio,
+					float(x1),64.0f+float(y02+largeChange)*ratio,
+					float(x2),64.0f+float(y02+largeChange)*ratio,
+				};
 
-			const unsigned short i[]={0,1,3,0,3,2};
+				const unsigned short i[]={0,1,3,0,3,2};
 
-			glEnableClientState(GL_VERTEX_ARRAY);
-			glVertexPointer(2,GL_FLOAT,0,v);
-			glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,i);
-			glDisableClientState(GL_VERTEX_ARRAY);
+				glEnableClientState(GL_VERTEX_ARRAY);
+				glVertexPointer(2,GL_FLOAT,0,v);
+				glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,i);
+				glDisableClientState(GL_VERTEX_ARRAY);
+			}
+
+			//ad-hoc title bar
+			DrawScreenKeyboard(m_v,m_idx);
+
+			//draw title text
+			if(m_txtTitle && !m_txtTitle->empty()){
+				SimpleBaseFont *fnt=titleFont?titleFont:mainFont;
+
+				fnt->BeginDraw();
+				m_txtTitle->Draw(SDL_MakeColor(255,255,255,255));
+				fnt->EndDraw();
+			}
+
+			SDL_GL_SwapWindow(mainWindow);
 		}
-
-		//ad-hoc title bar
-		DrawScreenKeyboard(m_v,m_idx);
-
-		//draw title text
-		if(m_txtTitle && !m_txtTitle->empty()){
-			SimpleBaseFont *fnt=titleFont?titleFont:mainFont;
-
-			fnt->BeginDraw();
-			m_txtTitle->Draw(SDL_MakeColor(255,255,255,255));
-			fnt->EndDraw();
-		}
-
-		SDL_GL_SwapWindow(mainWindow);
 
 		while(SDL_PollEvent(&event)){
 			switch(event.type){
@@ -237,6 +253,7 @@ int SimpleListScreen::DoModal(){
 				break;
 			case SDL_MOUSEMOTION:
 				//experimental dragging support
+				nIdleTime=0;
 				if(event.motion.state){
 					switch(m_nDraggingState){
 					case 1:
@@ -263,6 +280,7 @@ int SimpleListScreen::DoModal(){
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				//experimental dragging support
+				nIdleTime=0;
 				if(m_nDraggingState==0){
 					if(event.button.x>=screenWidth-64 && event.button.y>=64){
 						//dragging scrollbar
@@ -284,6 +302,7 @@ int SimpleListScreen::DoModal(){
 
 				break;
 			case SDL_MOUSEBUTTONUP:
+				nIdleTime=0;
 				if(m_nDraggingState<2){
 					if(event.button.y<64){
 						//check clicked title bar buttons
@@ -325,16 +344,16 @@ int SimpleListScreen::DoModal(){
 
 				break;
 			case SDL_MOUSEWHEEL:
-				{
-					if(event.wheel.y){
-						if(event.wheel.y>0) y0-=128;
-						else y0+=128;
-					}
+				if(event.wheel.y){
+					nIdleTime=0;
+					if(event.wheel.y>0) y0-=128;
+					else y0+=128;
 				}
 				break;
 			case SDL_WINDOWEVENT:
 				switch(event.window.event){
 				case SDL_WINDOWEVENT_SIZE_CHANGED:
+					nIdleTime=0;
 					OnVideoResize(
 						event.window.data1,
 						event.window.data2);
@@ -342,11 +361,18 @@ int SimpleListScreen::DoModal(){
 				}
 				break;
 			case SDL_KEYDOWN:
+				nIdleTime=0;
 				switch(event.key.keysym.sym){
 				case SDLK_AC_BACK:
 				case SDLK_ESCAPE:
 					m_bKeyDownProcessed=true;
-					b=false;
+					{
+						int idx=OnTitleBarButtonClick(SCREEN_KEYBOARD_LEFT);
+						if(idx>=0){
+							m_nReturnValue=idx;
+							b=false;
+						}
+					}
 					break;
 				case SDLK_UP:
 					y0-=32;
@@ -375,6 +401,7 @@ int SimpleListScreen::DoModal(){
 			m_nMyResizeTime=m_nResizeTime;
 			CreateTitleBarButtons();
 			if(m_bDirtyOnResize) m_bDirty=true;
+			nIdleTime=0;
 		}
 
 		WaitForNextFrame();

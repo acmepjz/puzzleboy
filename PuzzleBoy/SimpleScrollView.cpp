@@ -39,7 +39,9 @@ SimpleScrollView::SimpleScrollView()
 	m_nScissorOffset[3]=0;
 }
 
-void SimpleScrollView::OnTimer(){
+bool SimpleScrollView::OnTimer(){
+	bool bDirty=false;
+
 	//check screen resize
 	if(m_bAutoResize){
 		if(m_nMyResizeTime!=m_nResizeTime){
@@ -57,6 +59,8 @@ void SimpleScrollView::OnTimer(){
 			}
 
 			ConstraintView(true);
+
+			bDirty=true;
 		}
 	}else{
 		m_nMyResizeTime=-1;
@@ -73,10 +77,16 @@ void SimpleScrollView::OnTimer(){
 
 	//scroll bar animation (experimental)
 	if(fabs(m_zoom-m_zoom2)<1E-3f && fabs(m_x-m_x2)<1E-3f && fabs(m_y-m_y2)<1E-3f){
-		if(m_nScrollBarIdleTime<32) m_nScrollBarIdleTime++;
+		if(m_nScrollBarIdleTime<32){
+			m_nScrollBarIdleTime++;
+			bDirty=true;
+		}
 	}else{
 		if(m_nScrollBarIdleTime>0) m_nScrollBarIdleTime-=4;
+		bDirty=true;
 	}
+
+	return bDirty;
 }
 
 void SimpleScrollView::OnMultiGesture(float fx,float fy,float dx,float dy,float zoom){
