@@ -31,7 +31,7 @@ public:
 	void DestroyGame();
 	bool StartGame(int nPlayerCount);
 
-	void OnTimer();
+	bool OnTimer();
 	bool OnKeyDown(int nChar,int nFlags);
 	void OnKeyUp(int nChar,int nFlags);
 public:

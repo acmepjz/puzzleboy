@@ -6,7 +6,7 @@ class SimpleScrollView{
 public:
 	SimpleScrollView();
 
-	void OnTimer();
+	bool OnTimer();
 
 	//0=down 1=right 2=up 3=left
 	void SetProjectionMatrix();

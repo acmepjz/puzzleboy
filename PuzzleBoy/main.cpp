@@ -266,6 +266,8 @@ public:
 					if(doc){
 						delete theApp->m_pDocument;
 						theApp->m_pDocument=doc;
+						theApp->m_nCurrentLevel=0;
+						theApp->m_sLastFile.clear();
 						return 1;
 					}
 				}
@@ -280,6 +282,8 @@ public:
 					if(doc){
 						delete theApp->m_pDocument;
 						theApp->m_pDocument=doc;
+						theApp->m_nCurrentLevel=0;
+						theApp->m_sLastFile.clear();
 						return 1;
 					}
 				}
@@ -336,6 +340,14 @@ static bool OnKeyDown(int nChar,int nFlags){
 
 static void OnKeyUp(int nChar,int nFlags){
 	theApp->OnKeyUp(nChar,nFlags);
+}
+
+static void OnAutoSave(){
+	if(theApp->m_bAutoSave && theApp->m_view[0] && !theApp->m_sLastFile.empty()){
+		theApp->m_nLastLevel=theApp->m_view[0]->m_nCurrentLevel;
+		theApp->m_sLastRecord=theApp->m_view[0]->m_objPlayingLevel->GetRecord();
+		theApp->SaveConfig(externalStoragePath+"/PuzzleBoy.cfg");
+	}
 }
 
 int main(int argc,char** argv){
@@ -516,50 +528,58 @@ int main(int argc,char** argv){
 		theApp->m_view[0]->m_objPlayingLevel->ApplyRecord(theApp->m_sLastRecord);
 	}
 
+	int nIdleTime=0;
+
 	while(m_bRun){
 		//game logic
-		theApp->OnTimer();
+		if(theApp->OnTimer()) nIdleTime=0;
+		else if((++nIdleTime)>=64) nIdleTime=32;
 
-		//clear and draw
-		ClearScreen();
+		//clear and draw (if not idle, otherwise only draw after 32 frames)
+		if(nIdleTime<=32){
+			ClearScreen();
 
-		theApp->Draw();
+			theApp->Draw();
 
-		SetProjectionMatrix(1);
+			SetProjectionMatrix(1);
 
-		//TEST
-		{
-			MyFormat fmt(_("Pack: %s"));
-			fmt<<toUTF8(theApp->m_pDocument->m_sLevelPackName);
+			//TEST
+			{
+				MyFormat fmt(_("Pack: %s"));
+				fmt<<toUTF8(theApp->m_pDocument->m_sLevelPackName);
 
-			int m=theApp->m_view.size();
+				int m=theApp->m_view.size();
 
-			if(m==1){
-				PuzzleBoyLevelView *view=theApp->m_view[0];
+				if(m==1){
+					PuzzleBoyLevelView *view=theApp->m_view[0];
 
-				fmt("\n")(_("Level %d: %s"))("\n")(_("Moves: %d"))<<(view->m_nCurrentLevel+1)
-					<<toUTF8(view->m_objPlayingLevel->m_sLevelName)
-					<<view->m_objPlayingLevel->m_nMoves;
+					fmt("\n")(_("Level %d: %s"))("\n")(_("Moves: %d"))<<(view->m_nCurrentLevel+1)
+						<<toUTF8(view->m_objPlayingLevel->m_sLevelName)
+						<<view->m_objPlayingLevel->m_nMoves;
 
-				if(view->m_nCurrentBestStep>0){
-					fmt(" - ")(_("Best: %d (%s)"))<<view->m_nCurrentBestStep
-						<<view->m_sCurrentBestStepOwner;
+					if(view->m_nCurrentBestStep>0){
+						fmt(" - ")(_("Best: %d (%s)"))<<view->m_nCurrentBestStep
+							<<view->m_sCurrentBestStepOwner;
+					}
+				}else if(m>=2){
+					fmt("\nLevel: %d vs %d\nMoves: %d vs %d")<<(theApp->m_view[0]->m_nCurrentLevel+1)
+						<<(theApp->m_view[1]->m_nCurrentLevel+1)
+						<<(theApp->m_view[0]->m_objPlayingLevel->m_nMoves)<<(theApp->m_view[1]->m_objPlayingLevel->m_nMoves);
 				}
-			}else if(m>=2){
-				fmt("\nLevel: %d vs %d\nMoves: %d vs %d")<<(theApp->m_view[0]->m_nCurrentLevel+1)
-					<<(theApp->m_view[1]->m_nCurrentLevel+1)
-					<<(theApp->m_view[0]->m_objPlayingLevel->m_nMoves)<<(theApp->m_view[1]->m_objPlayingLevel->m_nMoves);
+
+				mainFont->DrawString(str(fmt),0.0f,0.0f,float(screenWidth-256),float(screenHeight),1.0f,
+					DrawTextFlags::Multiline | DrawTextFlags::Bottom | DrawTextFlags::AutoSize,
+					SDL_MakeColor(255,255,255,255));
 			}
 
-			mainFont->DrawString(str(fmt),0.0f,0.0f,float(screenWidth-256),float(screenHeight),1.0f,
-				DrawTextFlags::Multiline | DrawTextFlags::Bottom | DrawTextFlags::AutoSize,
-				SDL_MakeColor(255,255,255,255));
+			SDL_GL_SwapWindow(mainWindow);
 		}
 
-		SDL_GL_SwapWindow(mainWindow);
-
 		while(SDL_PollEvent(&event)){
-			if(theApp->touchMgr.OnEvent()) continue;
+			if(theApp->touchMgr.OnEvent()){
+				nIdleTime=0;
+				continue;
+			}
 
 			switch(event.type){
 			case SDL_QUIT:
@@ -567,15 +587,12 @@ int main(int argc,char** argv){
 				break;
 			case SDL_APP_WILLENTERBACKGROUND:
 				//save progress (???)
-				if(theApp->m_bAutoSave && theApp->m_view[0]){
-					theApp->m_nLastLevel=theApp->m_view[0]->m_nCurrentLevel;
-					theApp->m_sLastRecord=theApp->m_view[0]->m_objPlayingLevel->GetRecord();
-					theApp->SaveConfig(externalStoragePath+"/PuzzleBoy.cfg");
-				}
+				OnAutoSave();
 				break;
 			case SDL_WINDOWEVENT:
 				switch(event.window.event){
 				case SDL_WINDOWEVENT_SIZE_CHANGED:
+					nIdleTime=0;
 					OnVideoResize(
 						event.window.data1,
 						event.window.data2);
@@ -586,6 +603,7 @@ int main(int argc,char** argv){
 				switch(event.key.keysym.sym){
 				case SDLK_AC_BACK: event.key.keysym.sym=SDLK_ESCAPE; break;
 				}
+				nIdleTime=0;
 				OnKeyUp(
 					event.key.keysym.sym,
 					event.key.keysym.mod);
@@ -611,6 +629,7 @@ int main(int argc,char** argv){
 				switch(event.key.keysym.sym){
 				case SDLK_AC_BACK: event.key.keysym.sym=SDLK_ESCAPE; break;
 				}
+				nIdleTime=0;
 				if(OnKeyDown(
 					event.key.keysym.sym,
 					event.key.keysym.mod)) m_bKeyDownProcessed=true;
@@ -622,11 +641,7 @@ int main(int argc,char** argv){
 	}
 
 	//save progress at exit
-	if(theApp->m_bAutoSave && theApp->m_view[0]){
-		theApp->m_nLastLevel=theApp->m_view[0]->m_nCurrentLevel;
-		theApp->m_sLastRecord=theApp->m_view[0]->m_objPlayingLevel->GetRecord();
-		theApp->SaveConfig(externalStoragePath+"/PuzzleBoy.cfg");
-	}
+	OnAutoSave();
 
 	//destroy everything
 	glDeleteTextures(1,&adhoc_screenkb_tex);

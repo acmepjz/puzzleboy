@@ -334,16 +334,17 @@ void PuzzleBoyLevelView::Redo(){
 	}
 }
 
-void PuzzleBoyLevelView::OnTimer(){
-	m_scrollView.OnTimer();
+bool PuzzleBoyLevelView::OnTimer(){
+	bool bDirty=m_scrollView.OnTimer();
 
 	if(!m_bEditMode && m_objPlayingLevel){
 		if(m_objPlayingLevel->IsAnimating()){
+			bDirty=true;
 			m_objPlayingLevel->OnTimer();
 		}else{
 			if(m_objPlayingLevel->IsWin()){
 				FinishGame();
-				return;
+				return true;
 			}else if(m_sRecord.empty()){
 				m_bPlayFromRecord=false;
 				//get continuous key event
@@ -354,6 +355,7 @@ void PuzzleBoyLevelView::OnTimer(){
 					for(int i=0;i<6;i++){
 						if(m_nKey[i] && b[SDL_GetScancodeFromKey(m_nKey[i])]){
 							InternalKeyDown(i);
+							bDirty=true;
 							break;
 						}
 					}
@@ -435,9 +437,12 @@ void PuzzleBoyLevelView::OnTimer(){
 				}
 
 				m_nEditingBlockIndex=-1;
+				bDirty=true;
 			}
 		}
 	}
+
+	return bDirty;
 }
 
 bool PuzzleBoyLevelView::OnKeyDown(int nChar,int nFlags){

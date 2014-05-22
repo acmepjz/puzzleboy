@@ -414,6 +414,8 @@ int SimpleConfigKeyScreen(int key){
 	std::vector<float> m_v;
 	std::vector<unsigned short> m_idx;
 
+	int nIdleTime=0;
+
 	while(m_bRun && b){
 		//get position of text box
 		SDL_Rect r={64,screenHeight/2,screenWidth-192,64};
@@ -421,6 +423,7 @@ int SimpleConfigKeyScreen(int key){
 		//create title bar buttons
 		if(m_nMyResizeTime!=m_nResizeTime){
 			m_nMyResizeTime=m_nResizeTime;
+			nIdleTime=0;
 
 			m_v.clear();
 			m_idx.clear();
@@ -457,63 +460,68 @@ int SimpleConfigKeyScreen(int key){
 			m_idx.insert(m_idx.end(),ii,ii+18);
 		}
 
-		//clear and draw
-		ClearScreen();
+		//update idle time
+		if((++nIdleTime)>=64) nIdleTime=32;
 
-		SetProjectionMatrix(1);
+		//clear and draw (if not idle, otherwise only draw after 32 frames)
+		if(nIdleTime<=32){
+			ClearScreen();
 
-		glDisable(GL_LIGHTING);
+			SetProjectionMatrix(1);
 
-		//ad-hoc title bar
-		DrawScreenKeyboard(m_v,m_idx);
+			glDisable(GL_LIGHTING);
 
-		//draw title text
-		if(m_txtTitle && !m_txtTitle->empty()){
-			SimpleBaseFont *fnt=titleFont?titleFont:mainFont;
+			//ad-hoc title bar
+			DrawScreenKeyboard(m_v,m_idx);
 
-			fnt->BeginDraw();
-			m_txtTitle->Draw(SDL_MakeColor(255,255,255,255));
-			fnt->EndDraw();
+			//draw title text
+			if(m_txtTitle && !m_txtTitle->empty()){
+				SimpleBaseFont *fnt=titleFont?titleFont:mainFont;
+
+				fnt->BeginDraw();
+				m_txtTitle->Draw(SDL_MakeColor(255,255,255,255));
+				fnt->EndDraw();
+			}
+
+			//draw prompt text
+			if(m_txtPrompt && !m_txtPrompt->empty()){
+				mainFont->BeginDraw();
+				m_txtPrompt->Draw(SDL_MakeColor(255,255,255,255));
+				mainFont->EndDraw();
+			}
+
+			//draw border
+			{
+				float vv[8]={
+					float(r.x),float(r.y),
+					float(r.x),float(r.y+r.h),
+					float(r.x+r.w),float(r.y+r.h),
+					float(r.x+r.w),float(r.y),
+				};
+
+				unsigned short ii[6]={
+					3,0,0,1,1,2,
+				};
+
+				glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
+
+				glEnableClientState(GL_VERTEX_ARRAY);
+				glVertexPointer(2,GL_FLOAT,0,vv);
+				glDrawElements(GL_LINES,6,GL_UNSIGNED_SHORT,ii);
+				glDisableClientState(GL_VERTEX_ARRAY);
+
+				//draw text
+				u8string s;
+				if(key) s=SDL_GetKeyName(key);
+				else s=_("(None)");
+
+				mainFont->DrawString(s,float(r.x),float(r.y),float(r.w),float(r.h),
+					1.0f,DrawTextFlags::Center | DrawTextFlags::VCenter,SDL_MakeColor(255,255,255,255));
+			}
+
+			//over
+			SDL_GL_SwapWindow(mainWindow);
 		}
-
-		//draw prompt text
-		if(m_txtPrompt && !m_txtPrompt->empty()){
-			mainFont->BeginDraw();
-			m_txtPrompt->Draw(SDL_MakeColor(255,255,255,255));
-			mainFont->EndDraw();
-		}
-
-		//draw border
-		{
-			float vv[8]={
-				float(r.x),float(r.y),
-				float(r.x),float(r.y+r.h),
-				float(r.x+r.w),float(r.y+r.h),
-				float(r.x+r.w),float(r.y),
-			};
-
-			unsigned short ii[6]={
-				3,0,0,1,1,2,
-			};
-
-			glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
-
-			glEnableClientState(GL_VERTEX_ARRAY);
-			glVertexPointer(2,GL_FLOAT,0,vv);
-			glDrawElements(GL_LINES,6,GL_UNSIGNED_SHORT,ii);
-			glDisableClientState(GL_VERTEX_ARRAY);
-
-			//draw text
-			u8string s;
-			if(key) s=SDL_GetKeyName(key);
-			else s=_("(None)");
-
-			mainFont->DrawString(s,float(r.x),float(r.y),float(r.w),float(r.h),
-				1.0f,DrawTextFlags::Center | DrawTextFlags::VCenter,SDL_MakeColor(255,255,255,255));
-		}
-
-		//over
-		SDL_GL_SwapWindow(mainWindow);
 
 		while(SDL_PollEvent(&event)){
 			switch(event.type){
@@ -527,6 +535,7 @@ int SimpleConfigKeyScreen(int key){
 				//TODO:
 				break;
 			case SDL_MOUSEBUTTONUP:
+				nIdleTime=0;
 				if(event.button.y<64){
 					//check clicked title bar buttons
 					if(event.button.x>=0 && event.button.x<64){
@@ -545,6 +554,7 @@ int SimpleConfigKeyScreen(int key){
 			case SDL_WINDOWEVENT:
 				switch(event.window.event){
 				case SDL_WINDOWEVENT_SIZE_CHANGED:
+					nIdleTime=0;
 					OnVideoResize(
 						event.window.data1,
 						event.window.data2);
@@ -552,6 +562,7 @@ int SimpleConfigKeyScreen(int key){
 				}
 				break;
 			case SDL_KEYDOWN:
+				nIdleTime=0;
 				switch(event.key.keysym.sym){
 				case SDLK_AC_BACK:
 				case SDLK_ESCAPE:
