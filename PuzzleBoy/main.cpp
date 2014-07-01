@@ -56,6 +56,12 @@ SimpleBaseFont *titleFont=NULL;
 
 //================
 
+float m_FPS=0.0f;
+int m_nFPSLastCount=0;
+unsigned int m_nFPSLastTime=0;
+
+//================
+
 void WaitForNextFrame(){
 	SDL_Delay(25);
 }
@@ -117,6 +123,92 @@ void ClearScreen(){
 	//glEnableClientState(GL_COLOR_ARRAY);*/
 }
 
+void ShowScreen(int* lpIdleTime){
+	bool bDirty=false;
+
+	if(theApp->m_bShowFPS){
+		//update FPS
+		m_nFPSLastCount++;
+		unsigned int t=SDL_GetTicks();
+		int dt=t-m_nFPSLastTime;
+		if(dt>500){
+			m_FPS=float(m_nFPSLastCount)*1000.0f/float(dt);
+			m_nFPSLastTime=t;
+			m_nFPSLastCount=0;
+		}
+
+		//draw FPS
+		char s[64];
+		SDL_snprintf(s,sizeof(s),"FPS: %0.1f",m_FPS);
+		mainFont->DrawString(s,float(screenWidth-128),0,0,0,0.75f,0,SDL_MakeColor(255,255,255,255));
+	}else{
+		m_FPS=0.0f;
+		m_nFPSLastCount=0;
+		m_nFPSLastTime=0;
+	}
+
+	//show tooltip
+	if(theApp->m_nToolTipTime>0){
+		bDirty=true;
+
+		int alpha=theApp->m_nToolTipTime;
+		if(alpha>64) alpha=128-alpha;
+		if(alpha>0){
+			alpha<<=4;
+			if(alpha>255) alpha=255;
+
+			//create text object
+			size_t m=theApp->m_sToolTipText.size();
+			SimpleText txt;
+
+			U8STRING_FOR_EACH_CHARACTER_DO_BEGIN((theApp->m_sToolTipText),i,m,c,'?');
+
+			//we need to call some internal functions
+			txt.AddChar(mainFont,c,0,0,1.0f,0);
+
+			U8STRING_FOR_EACH_CHARACTER_DO_END();
+
+			//get width of text
+			float ww=txt.ww;
+			float hh=mainFont->GetFontHeight();
+			float xx=(float(screenWidth)-ww)*0.5f;
+			float yy=float(screenHeight)*0.75f-hh*0.5f;
+
+			txt.AddChar(mainFont,-1,xx,0,1.0f,0);
+			txt.AdjustVerticalPosition(mainFont,0,yy,0,1.0f,0);
+
+			//xx-=4.0f;ww+=8.0f;
+			//yy-=4.0f;hh+=8.0f;
+
+			//draw background
+			float vv[8]={
+				xx,yy,xx,yy+hh,
+				xx+ww,yy,xx+ww,yy+hh,
+			};
+
+			unsigned short ii[6]={0,1,3,0,3,2};
+
+			glColor4ub(64,64,64,alpha);
+
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glVertexPointer(2,GL_FLOAT,0,vv);
+			glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,ii);
+			glDisableClientState(GL_VERTEX_ARRAY);
+
+			//draw text
+			mainFont->BeginDraw();
+			txt.Draw(SDL_MakeColor(255,255,255,alpha));
+			mainFont->EndDraw();
+		}
+
+		if((--(theApp->m_nToolTipTime))==0) theApp->m_bToolTipIsExit=false;
+	}
+
+	SDL_GL_SwapWindow(mainWindow);
+
+	if(bDirty && lpIdleTime) *lpIdleTime=0;
+}
+
 void AddScreenKeyboard(float x,float y,float w,float h,int index,std::vector<float>& v,std::vector<unsigned short>& idx){
 	unsigned short m=(unsigned short)(v.size()>>2);
 
@@ -173,45 +265,25 @@ class MainMenuScreen:public SimpleListScreen{
 public:
 	static const int TestFeatureStart=5;
 public:
-	virtual void OnDirty(){
-		if(m_txtList) m_txtList->clear();
-		else m_txtList=new SimpleText;
+	void OnDirty() override{
+		ResetList();
 
-		m_nListCount=0;
-
-		m_txtList->NewStringIndex();
-		m_txtList->AddString(mainFont,_("Choose Level"),0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
-
-		m_txtList->NewStringIndex();
-		m_txtList->AddString(mainFont,_("Choose Level File"),0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
-
-		m_txtList->NewStringIndex();
-		m_txtList->AddString(mainFont,_("Config"),0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
-
-		m_txtList->NewStringIndex();
-		m_txtList->AddString(mainFont,_("Exit Game"),0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
+		AddItem(_("Choose Level"));
+		AddItem(_("Choose Level File"));
+		AddItem(_("Config"));
+		AddItem(_("Exit Game"));
 
 		//test feature
-		m_txtList->NewStringIndex();
-		m_nListCount++;
+		AddEmptyItem();
 
-		m_txtList->NewStringIndex();
-		m_txtList->AddString(mainFont,"Test Solver",0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
-
-		m_txtList->NewStringIndex();
-		m_txtList->AddString(mainFont,_("Random Map"),0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
-
-		m_txtList->NewStringIndex();
-		m_txtList->AddString(mainFont,"Random Map x10",0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
-
-		m_txtList->NewStringIndex();
-		m_txtList->AddString(mainFont,"Save Temp Level File",0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
-
-		m_txtList->NewStringIndex();
-		m_txtList->AddString(mainFont,_("Start Multiplayer"),0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
+		AddItem("Test Solver");
+		AddItem(_("Random Map"));
+		AddItem("Random Map x10");
+		AddItem(_("Save Temp Level File"));
+		AddItem(_("Start Multiplayer"));
 	}
 
-	virtual int OnClick(int index){
+	int OnClick(int index) override{
 		switch(index){
 		case 0:
 			//choose level
@@ -227,6 +299,12 @@ public:
 		case 2:
 			//config
 			ConfigScreen().DoModal();
+			m_bDirty=true;
+			//recreate header in case of button size changed
+			CreateTitleBarText(_("Main Menu"));
+			CreateTitleBarButtons();
+			//resize the game screen in case of button size changed
+			m_nResizeTime++;
 			break;
 		case 3:
 			//exit game
@@ -297,6 +375,7 @@ public:
 				char s[128];
 				strftime(s,sizeof(s),"/levels/tmp-%Y%m%d%H%M%S.lev",timeinfo);
 				theApp->SaveFile(externalStoragePath+s);
+				theApp->ShowToolTip(str(MyFormat(_("File saved to %s"))<<s));
 			}
 			return 0;
 			break;
@@ -309,7 +388,7 @@ public:
 		return -1;
 	}
 
-	virtual int DoModal(){
+	int DoModal() override{
 		//show
 		m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
 		CreateTitleBarText(_("Main Menu"));
@@ -343,11 +422,26 @@ static void OnKeyUp(int nChar,int nFlags){
 }
 
 static void OnAutoSave(){
-	if(theApp->m_bAutoSave && theApp->m_view[0] && !theApp->m_sLastFile.empty()){
+	if(theApp && theApp->m_bAutoSave && theApp->m_view[0] && !theApp->m_sLastFile.empty()){
 		theApp->m_nLastLevel=theApp->m_view[0]->m_nCurrentLevel;
 		theApp->m_sLastRecord=theApp->m_view[0]->m_objPlayingLevel->GetRecord();
 		theApp->SaveConfig(externalStoragePath+"/PuzzleBoy.cfg");
 	}
+}
+
+static int HandleAppEvents(void *userdata, SDL_Event *event){
+	switch(event->type){
+	case SDL_APP_TERMINATING:
+	case SDL_APP_WILLENTERBACKGROUND:
+		OnAutoSave();
+		break;
+	case SDL_APP_LOWMEMORY:
+		OnAutoSave();
+		abort();
+		break;
+	}
+
+	return 1;
 }
 
 int main(int argc,char** argv){
@@ -360,7 +454,11 @@ int main(int argc,char** argv){
 	//init freetype
 	if(!FreeType_Init()) abort();
 
+	//create main object
 	theApp=new PuzzleBoyApp;
+
+	//register event callback
+	SDL_SetEventFilter(HandleAppEvents,NULL);
 
 	//init random number
 	{
@@ -445,13 +543,7 @@ int main(int argc,char** argv){
 
 	//FIXME: ad-hoc screen keypad
 	{
-#if 0
-		IMG_Init(IMG_INIT_PNG);
-		SDL_Surface *tmp=IMG_Load("data/gfx/adhoc.png");
-		IMG_Quit();
-#else
 		SDL_Surface *tmp=SDL_LoadBMP("data/gfx/adhoc.bmp");
-#endif
 
 		glGenTextures(1,&adhoc_screenkb_tex);
 		glBindTexture(GL_TEXTURE_2D, adhoc_screenkb_tex);
@@ -567,12 +659,12 @@ int main(int argc,char** argv){
 						<<(theApp->m_view[0]->m_objPlayingLevel->m_nMoves)<<(theApp->m_view[1]->m_objPlayingLevel->m_nMoves);
 				}
 
-				mainFont->DrawString(str(fmt),0.0f,0.0f,float(screenWidth-256),float(screenHeight),1.0f,
+				mainFont->DrawString(str(fmt),0.0f,0.0f,float(screenWidth-theApp->m_nButtonSize*4),float(screenHeight),1.0f,
 					DrawTextFlags::Multiline | DrawTextFlags::Bottom | DrawTextFlags::AutoSize,
 					SDL_MakeColor(255,255,255,255));
 			}
 
-			SDL_GL_SwapWindow(mainWindow);
+			ShowScreen(&nIdleTime);
 		}
 
 		while(SDL_PollEvent(&event)){
@@ -585,12 +677,11 @@ int main(int argc,char** argv){
 			case SDL_QUIT:
 				m_bRun=false;
 				break;
-			case SDL_APP_WILLENTERBACKGROUND:
-				//save progress (???)
-				OnAutoSave();
-				break;
 			case SDL_WINDOWEVENT:
 				switch(event.window.event){
+				case SDL_WINDOWEVENT_EXPOSED:
+					nIdleTime=0;
+					break;
 				case SDL_WINDOWEVENT_SIZE_CHANGED:
 					nIdleTime=0;
 					OnVideoResize(
@@ -608,22 +699,18 @@ int main(int argc,char** argv){
 					event.key.keysym.sym,
 					event.key.keysym.mod);
 
-				//chcek exit event
 				if(m_bKeyDownProcessed) m_bKeyDownProcessed=false;
-				else{
-					switch(event.key.keysym.sym){
 #ifdef ANDROID
-					case SDLK_ESCAPE:
-						{ //just press Esc
-#else
-					case SDLK_F4:
-						if(event.key.keysym.mod & KMOD_ALT){ //Alt+F4
-#endif
-							m_bRun=false;
-						}
-						break;
+				//chcek exit event (Android only)
+				else if(event.key.keysym.sym==SDLK_ESCAPE){
+					//just press Esc
+					if(theApp->m_bToolTipIsExit){
+						m_bRun=false;
+					}else{
+						theApp->ShowToolTip(_("Press again to exit"),true);
 					}
 				}
+#endif
 				break;
 			case SDL_KEYDOWN:
 				switch(event.key.keysym.sym){
@@ -633,6 +720,14 @@ int main(int argc,char** argv){
 				if(OnKeyDown(
 					event.key.keysym.sym,
 					event.key.keysym.mod)) m_bKeyDownProcessed=true;
+
+				//check Alt+F4 exit event (for all platforms)
+				if(!m_bKeyDownProcessed && event.key.keysym.sym==SDLK_F4
+					&& (event.key.keysym.mod & KMOD_ALT)!=0)
+				{
+					m_bRun=false;
+				}
+
 				break;
 			}
 		}

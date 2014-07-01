@@ -1,5 +1,6 @@
 #include "SimpleListScreen.h"
 #include "SimpleText.h"
+#include "PuzzleBoyApp.h"
 #include "main.h"
 
 #include <string.h>
@@ -10,7 +11,6 @@
 
 //ad-hoc
 extern SDL_Event event;
-extern SDL_Window *mainWindow;
 extern bool m_bKeyDownProcessed;
 
 SimpleListScreen::SimpleListScreen()
@@ -42,38 +42,65 @@ int SimpleListScreen::OnTitleBarButtonClick(int index){
 	return m_nReturnValue;
 }
 
+void SimpleListScreen::ResetList(){
+	if(m_txtList) m_txtList->clear();
+	else m_txtList=new SimpleText;
+
+	m_nListCount=0;
+}
+
+void SimpleListScreen::AddEmptyItem(){
+	m_txtList->NewStringIndex();
+	m_nListCount++;
+}
+
+void SimpleListScreen::AddItem(const u8string& str,bool newIndex,float x,float w,int extraFlags){
+	if(newIndex){
+		m_txtList->NewStringIndex();
+		m_nListCount++;
+	}
+
+	m_txtList->AddString(mainFont,str,
+		x,float((m_nListCount-1)*theApp->m_nMenuHeight),
+		w,float(theApp->m_nMenuHeight),theApp->m_fMenuTextScale,
+		DrawTextFlags::VCenter | extraFlags);
+}
+
 void SimpleListScreen::CreateTitleBarText(const u8string& title){
 	if(m_txtTitle) m_txtTitle->clear();
 	else m_txtTitle=new SimpleText;
 
-	m_txtTitle->AddString(titleFont?titleFont:mainFont,title,float(m_LeftButtons.size()*64+16),0,0,64,
-		titleFont?1.0f:1.5f,DrawTextFlags::VCenter);
+	m_txtTitle->AddString(titleFont?titleFont:mainFont,title,
+		(float(m_LeftButtons.size())+0.25f)*float(theApp->m_nButtonSize),0,0,float(theApp->m_nButtonSize),
+		(titleFont?1.0f:1.5f)*float(theApp->m_nButtonSize)/64.0f,DrawTextFlags::VCenter);
 }
 
 void SimpleListScreen::CreateTitleBarButtons(){
 	m_v.clear();
 	m_idx.clear();
 
-	int left=int(m_LeftButtons.size())*64;
-	int right=screenWidth-int(m_RightButtons.size())*64;
+	int buttonSize=theApp->m_nButtonSize;
+
+	int left=int(m_LeftButtons.size())*buttonSize;
+	int right=screenWidth-int(m_RightButtons.size())*buttonSize;
 
 	for(int i=0,m=m_LeftButtons.size();i<m;i++){
-		AddScreenKeyboard(float(i*64),0,64,64,m_LeftButtons[i],m_v,m_idx);
+		AddScreenKeyboard(float(i*buttonSize),0,float(buttonSize),float(buttonSize),m_LeftButtons[i],m_v,m_idx);
 	}
 
 	for(int i=0,m=m_RightButtons.size();i<m;i++){
-		AddScreenKeyboard(float(right+i*64),0,64,64,m_RightButtons[i],m_v,m_idx);
+		AddScreenKeyboard(float(right+i*buttonSize),0,float(buttonSize),float(buttonSize),m_RightButtons[i],m_v,m_idx);
 	}
 
 	float vv[32]={
 		float(left),0,0.75f,0.75f,
-		float(left+32),0,0.875f,0.75f,
-		float(right-32),0,0.875f,0.75f,
+		float(left+buttonSize/2),0,0.875f,0.75f,
+		float(right-buttonSize/2),0,0.875f,0.75f,
 		float(right),0,1.0f,0.75f,
-		float(left),64,0.75f,1.0f,
-		float(left+32),64,0.875f,1.0f,
-		float(right-32),64,0.875f,1.0f,
-		float(right),64,1.0f,1.0f,
+		float(left),float(buttonSize),0.75f,1.0f,
+		float(left+buttonSize/2),float(buttonSize),0.875f,1.0f,
+		float(right-buttonSize/2),float(buttonSize),0.875f,1.0f,
+		float(right),float(buttonSize),1.0f,1.0f,
 	};
 
 	unsigned short idxs=(unsigned short)(m_v.size()>>2);
@@ -116,8 +143,8 @@ int SimpleListScreen::DoModal(){
 		}
 
 		//update animation
-		int largeChange=screenHeight-64;
-		ym=m_nListCount*32-largeChange;
+		int largeChange=screenHeight-theApp->m_nButtonSize;
+		ym=m_nListCount*theApp->m_nMenuHeight-largeChange;
 		if(ym<0) ym=0;
 
 		if(m_nDraggingState==0){
@@ -164,11 +191,14 @@ int SimpleListScreen::DoModal(){
 
 			//draw selected
 			if(selected2>=0 && selectedTime>0){
+				int y1=theApp->m_nButtonSize-y02+selected2*theApp->m_nMenuHeight;
+				int y2=y1+theApp->m_nMenuHeight;
+
 				float v[]={
-					0.0f,float(64-y02+selected2*32),
-					float(screenWidth),float(64-y02+selected2*32),
-					0.0f,float(96-y02+selected2*32),
-					float(screenWidth),float(96-y02+selected2*32),
+					0.0f,float(y1),
+					float(screenWidth),float(y1),
+					0.0f,float(y2),
+					float(screenWidth),float(y2),
 				};
 
 				const unsigned short i[]={0,1,3,0,3,2};
@@ -186,8 +216,9 @@ int SimpleListScreen::DoModal(){
 			//draw list box
 			if(m_txtList && !m_txtList->empty()){
 				mainFont->BeginDraw();
-				glTranslatef(0.0f,float(64-y02),0.0f);
-				m_txtList->Draw(SDL_MakeColor(255,255,255,255),y02/32,screenHeight/32);
+				glTranslatef(0.0f,float(theApp->m_nButtonSize-y02),0.0f);
+				m_txtList->Draw(SDL_MakeColor(255,255,255,255),
+					y02/theApp->m_nMenuHeight,screenHeight/theApp->m_nMenuHeight+1);
 				glLoadIdentity();
 				mainFont->EndDraw();
 			}
@@ -217,10 +248,10 @@ int SimpleListScreen::DoModal(){
 #endif
 
 				float v[]={
-					float(x1),64.0f+float(y02)*ratio,
-					float(x2),64.0f+float(y02)*ratio,
-					float(x1),64.0f+float(y02+largeChange)*ratio,
-					float(x2),64.0f+float(y02+largeChange)*ratio,
+					float(x1),float(theApp->m_nButtonSize)+float(y02)*ratio,
+					float(x2),float(theApp->m_nButtonSize)+float(y02)*ratio,
+					float(x1),float(theApp->m_nButtonSize)+float(y02+largeChange)*ratio,
+					float(x2),float(theApp->m_nButtonSize)+float(y02+largeChange)*ratio,
 				};
 
 				const unsigned short i[]={0,1,3,0,3,2};
@@ -243,7 +274,7 @@ int SimpleListScreen::DoModal(){
 				fnt->EndDraw();
 			}
 
-			SDL_GL_SwapWindow(mainWindow);
+			ShowScreen(&nIdleTime);
 		}
 
 		while(SDL_PollEvent(&event)){
@@ -282,10 +313,10 @@ int SimpleListScreen::DoModal(){
 				//experimental dragging support
 				nIdleTime=0;
 				if(m_nDraggingState==0){
-					if(event.button.x>=screenWidth-64 && event.button.y>=64){
+					if(event.button.x>=screenWidth-64 && event.button.y>=theApp->m_nButtonSize){
 						//dragging scrollbar
 						m_nDraggingState=3;
-						y0=int(float(event.button.y-64)*float(ym+largeChange)/float(largeChange)+0.5f)-largeChange/2;
+						y0=int(float(event.button.y-theApp->m_nButtonSize)*float(ym+largeChange)/float(largeChange)+0.5f)-largeChange/2;
 					}else{
 						m_nDraggingState=1;
 						dy=0.0f;
@@ -296,22 +327,25 @@ int SimpleListScreen::DoModal(){
 
 				//update selection (display only)
 				if(m_nDraggingState!=3){
-					int idx=(y02+event.button.y-64)>>5;
-					if(idx>=0 && idx<m_nListCount) selected0=idx;
+					int idx=y02+event.button.y-theApp->m_nButtonSize;
+					if(idx>=0){
+						idx/=theApp->m_nMenuHeight;
+						if(idx<m_nListCount) selected0=idx;
+					}
 				}
 
 				break;
 			case SDL_MOUSEBUTTONUP:
 				nIdleTime=0;
 				if(m_nDraggingState<2){
-					if(event.button.y<64){
+					if(event.button.y<theApp->m_nButtonSize){
 						//check clicked title bar buttons
 						int idx=-1;
 
-						if(event.button.x>=0 && event.button.x<int(m_LeftButtons.size())*64){
-							idx=m_LeftButtons[event.button.x>>6];
-						}else if(event.button.x>=screenWidth-int(m_RightButtons.size())*64 && event.button.x<screenWidth){
-							idx=m_RightButtons[(event.button.x-screenWidth+int(m_RightButtons.size())*64)>>6];
+						if(event.button.x>=0 && event.button.x<int(m_LeftButtons.size())*theApp->m_nButtonSize){
+							idx=m_LeftButtons[event.button.x/theApp->m_nButtonSize];
+						}else if(event.button.x>=screenWidth-int(m_RightButtons.size())*theApp->m_nButtonSize && event.button.x<screenWidth){
+							idx=m_RightButtons[(event.button.x-screenWidth+int(m_RightButtons.size())*theApp->m_nButtonSize)/theApp->m_nButtonSize];
 						}
 
 						if(idx>=0){
@@ -323,12 +357,15 @@ int SimpleListScreen::DoModal(){
 						}
 					}else{
 						//check clicked list box
-						int idx=(y02+event.button.y-64)>>5;
-						if(idx>=0 && idx<m_nListCount){
-							idx=OnClick(idx);
-							if(idx>=0){
-								m_nReturnValue=idx;
-								b=false;
+						int idx=y02+event.button.y-theApp->m_nButtonSize;
+						if(idx>=0){
+							idx/=theApp->m_nMenuHeight;
+							if(idx<m_nListCount){
+								idx=OnClick(idx);
+								if(idx>=0){
+									m_nReturnValue=idx;
+									b=false;
+								}
 							}
 						}
 					}
@@ -346,12 +383,15 @@ int SimpleListScreen::DoModal(){
 			case SDL_MOUSEWHEEL:
 				if(event.wheel.y){
 					nIdleTime=0;
-					if(event.wheel.y>0) y0-=128;
-					else y0+=128;
+					if(event.wheel.y>0) y0-=theApp->m_nMenuHeight*4;
+					else y0+=theApp->m_nMenuHeight*4;
 				}
 				break;
 			case SDL_WINDOWEVENT:
 				switch(event.window.event){
+				case SDL_WINDOWEVENT_EXPOSED:
+					nIdleTime=0;
+					break;
 				case SDL_WINDOWEVENT_SIZE_CHANGED:
 					nIdleTime=0;
 					OnVideoResize(
@@ -375,10 +415,10 @@ int SimpleListScreen::DoModal(){
 					}
 					break;
 				case SDLK_UP:
-					y0-=32;
+					y0-=theApp->m_nMenuHeight;
 					break;
 				case SDLK_DOWN:
-					y0+=32;
+					y0+=theApp->m_nMenuHeight;
 					break;
 				case SDLK_HOME:
 					y0=0;
@@ -408,4 +448,23 @@ int SimpleListScreen::DoModal(){
 	}
 
 	return m_nReturnValue;
+}
+
+void SimpleStaticListScreen::OnDirty(){
+	ResetList();
+
+	for(int i=0,m=m_sList.size();i<m;i++){
+		if(m_sList[i].empty()) AddEmptyItem();
+		else AddItem(m_sList[i]);
+	}
+}
+
+int SimpleStaticListScreen::OnClick(int index){
+	return index+1;
+}
+
+int SimpleStaticListScreen::DoModal(){
+	m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
+	CreateTitleBarText(m_sTitle);
+	return SimpleListScreen::DoModal();
 }

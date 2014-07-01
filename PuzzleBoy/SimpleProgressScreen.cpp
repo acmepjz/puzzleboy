@@ -9,7 +9,6 @@
 
 //ad-hoc
 extern SDL_Event event;
-extern SDL_Window *mainWindow;
 extern bool m_bKeyDownProcessed;
 
 SimpleProgressScreen::SimpleProgressScreen()
@@ -159,7 +158,7 @@ bool SimpleProgressScreen::DrawAndDoEvents(){
 	//over
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	SDL_GL_SwapWindow(mainWindow);
+	ShowScreen();
 
 	//check events
 	bool b=true;

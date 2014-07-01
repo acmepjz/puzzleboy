@@ -63,9 +63,6 @@ public:
 	MultiTouchViewStruct* FindView(MultiTouchView* view);
 	void RemoveView(MultiTouchView* view);
 
-	//ad-hoc function
-	void DisableTemporarily(MultiTouchView* view);
-
 	bool OnEvent();
 private:
 	std::vector<MultiTouchViewStruct> views;

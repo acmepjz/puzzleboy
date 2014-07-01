@@ -10,14 +10,12 @@
 #include <string.h>
 
 void ChooseLevelFileScreen::OnDirty(){
-	m_nListCount=m_files.size();
+	int count=m_files.size();
 
-	if(m_txtList) m_txtList->clear();
-	else m_txtList=new SimpleText;
+	ResetList();
 
-	for(int i=0;i<m_nListCount;i++){
-		m_txtList->NewStringIndex();
-		m_txtList->AddString(mainFont,m_fileDisplayName[i],0,float(i*32),0,32,1,DrawTextFlags::VCenter);
+	for(int i=0;i<count;i++){
+		AddItem(m_fileDisplayName[i]);
 	}
 }
 
@@ -66,36 +64,35 @@ void ChooseLevelScreen::OnDirty(){
 		}
 	}
 
+	int count;
+
 	if(m_searchFilter.empty()){
 		CreateTitleBarText(_("Choose Level"));
-		m_nListCount=theApp->m_pDocument->m_objLevels.size();
+		count=theApp->m_pDocument->m_objLevels.size();
 	}else{
 		CreateTitleBarText(_("Search Result"));
-		m_nListCount=m_searchResult.size();
+		count=m_searchResult.size();
 	}
 
-	if(m_txtList) m_txtList->clear();
-	else m_txtList=new SimpleText;
+	ResetList();
 
-	for(int index=0;index<m_nListCount;index++){
+	for(int index=0;index<count;index++){
 		int i=m_searchFilter.empty()?index:m_searchResult[index];
 
 		char s[32];
-		m_txtList->NewStringIndex();
 		sprintf(s,"%d",i+1);
-		m_txtList->AddString(mainFont,s,0,float(index*32),0,32,1,DrawTextFlags::VCenter);
-		m_txtList->AddString(mainFont,toUTF8(theApp->m_pDocument->m_objLevels[i]->m_sLevelName),
-			80,float(index*32),float(screenWidth-256),32,1,DrawTextFlags::VCenter | DrawTextFlags::AutoSize);
+		AddItem(s);
+		AddItem(toUTF8(theApp->m_pDocument->m_objLevels[i]->m_sLevelName),false,
+			80,float(screenWidth-256),DrawTextFlags::AutoSize);
 		sprintf(s,"%dx%d",theApp->m_pDocument->m_objLevels[i]->m_nWidth,
 			theApp->m_pDocument->m_objLevels[i]->m_nHeight);
-		m_txtList->AddString(mainFont,s,float(screenWidth-160),float(index*32),0,32,1,DrawTextFlags::VCenter);
+		AddItem(s,false,float(screenWidth-160));
 
 		//get record (???)
 		int st=m_bestStep[i];
 		if(st>0) sprintf(s,"%d",st);
 		else strcpy(s,"---");
-		m_txtList->AddString(mainFont,s,float(screenWidth),float(index*32),0,32,1,
-			DrawTextFlags::Right | DrawTextFlags::VCenter);
+		AddItem(s,false,float(screenWidth),0,DrawTextFlags::Right);
 	}
 }
 

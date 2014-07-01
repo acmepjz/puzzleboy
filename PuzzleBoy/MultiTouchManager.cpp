@@ -68,15 +68,6 @@ void MultiTouchManager::RemoveView(MultiTouchView* view){
 	}
 }
 
-void MultiTouchManager::DisableTemporarily(MultiTouchView* view){
-	for(int i=0,m=views.size();i<m;i++){
-		if(views[i].view==view){
-			views[i].m_nDraggingState=3;
-			views[i].m_fMultitouchOldDistSquared=-1.0f;
-		}
-	}
-}
-
 int MultiTouchManager::HitTest(float x,float y){
 	for(int i=0,m=views.size();i<m;i++){
 		if(views[i].flags>=0 && x>=views[i].left && y>=views[i].top

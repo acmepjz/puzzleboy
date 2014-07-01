@@ -34,6 +34,8 @@ public:
 	bool OnTimer();
 	bool OnKeyDown(int nChar,int nFlags);
 	void OnKeyUp(int nChar,int nFlags);
+
+	void ShowToolTip(const u8string& text,bool isExit=false);
 public:
 	GNUGetText m_objGetText;
 	MT19937 m_objMainRnd;
@@ -46,8 +48,11 @@ public:
 	bool m_bShowLines;
 	bool m_bInternationalFont;
 	bool m_bAutoSave;
+	bool m_bContinuousKey;
+	bool m_bShowFPS;
 	u16string m_sPlayerName[2];
 
+	//for saved progress
 	u8string m_sLastFile;
 	int m_nLastLevel;
 	u8string m_sLastRecord;
@@ -61,6 +66,19 @@ public:
 	//2=vertical up-down
 	int m_nOrientation;
 
+	//64=normal size
+	int m_nButtonSize;
+	//32=normal size
+	int m_nMenuTextSize;
+	//1.0f=normal size
+	float m_fMenuTextScale;
+	//4=normal size (=1.0f)
+	int m_nMenuHeightFactor;
+
+	//the actual menu item height, in pixels
+	int m_nMenuHeight;
+
+	//input keys
 	int m_nKey[24];
 
 	//level file object
@@ -77,6 +95,11 @@ public:
 
 	//resize time
 	int m_nMyResizeTime;
+
+	//tooltip overlay
+	u8string m_sToolTipText;
+	int m_nToolTipTime;
+	bool m_bToolTipIsExit;
 };
 
 extern PuzzleBoyApp *theApp;

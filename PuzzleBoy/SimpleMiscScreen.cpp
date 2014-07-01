@@ -11,19 +11,20 @@
 
 //ad-hoc
 extern SDL_Event event;
-extern SDL_Window *mainWindow;
 extern bool m_bKeyDownProcessed;
 
 bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& text){
 	bool b=true,ret=false;
 
+	int buttonSize=theApp->m_nButtonSize;
+
 	SimpleText *m_txtTitle=new SimpleText,*m_txtPrompt=new SimpleText;
 	int m_nMyResizeTime=-1;
 
 	//create text
-	m_txtTitle->AddString(titleFont?titleFont:mainFont,title,80.0f,0,0,64,
-		titleFont?1.0f:1.5f,DrawTextFlags::VCenter);
-	m_txtPrompt->AddString(mainFont,prompt,64,96,0,0,
+	m_txtTitle->AddString(titleFont?titleFont:mainFont,title,1.25f*float(buttonSize),0,0,float(buttonSize),
+		(titleFont?1.0f:1.5f)*float(theApp->m_nButtonSize)/64.0f,DrawTextFlags::VCenter);
+	m_txtPrompt->AddString(mainFont,prompt,64,float(buttonSize+32),0,0,
 		1.0f,DrawTextFlags::Multiline);
 
 	//for title bar buttons
@@ -59,22 +60,22 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 			m_v.clear();
 			m_idx.clear();
 
-			const int left=64;
-			const int right=screenWidth-64;
+			const int left=buttonSize;
+			const int right=screenWidth-buttonSize;
 
-			AddScreenKeyboard(0,0,64,64,SCREEN_KEYBOARD_LEFT,m_v,m_idx);
+			AddScreenKeyboard(0,0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_LEFT,m_v,m_idx);
 
-			AddScreenKeyboard(float(right),0,64,64,SCREEN_KEYBOARD_YES,m_v,m_idx);
+			AddScreenKeyboard(float(right),0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_YES,m_v,m_idx);
 
 			float vv[32]={
 				float(left),0,0.75f,0.75f,
-				float(left+32),0,0.875f,0.75f,
-				float(right-32),0,0.875f,0.75f,
+				float(left+buttonSize/2),0,0.875f,0.75f,
+				float(right-buttonSize/2),0,0.875f,0.75f,
 				float(right),0,1.0f,0.75f,
-				float(left),64,0.75f,1.0f,
-				float(left+32),64,0.875f,1.0f,
-				float(right-32),64,0.875f,1.0f,
-				float(right),64,1.0f,1.0f,
+				float(left),float(buttonSize),0.75f,1.0f,
+				float(left+buttonSize/2),float(buttonSize),0.875f,1.0f,
+				float(right-buttonSize/2),float(buttonSize),0.875f,1.0f,
+				float(right),float(buttonSize),1.0f,1.0f,
 			};
 
 			unsigned short idxs=(unsigned short)(m_v.size()>>2);
@@ -117,9 +118,9 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 
 		//draw textbox border
 #ifdef ANDROID
-		SDL_Rect r={64,200,screenWidth-128,40};
+		SDL_Rect r={64,buttonSize+136,screenWidth-128,40};
 #else
-		SDL_Rect r={64,screenHeight/2,screenWidth-128,40};
+		SDL_Rect r={64,(screenHeight+buttonSize-64)/2,screenWidth-128,40};
 #endif
 		{
 			float vv[8]={
@@ -238,7 +239,7 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 		glDisable(GL_SCISSOR_TEST);
 
 		//over
-		SDL_GL_SwapWindow(mainWindow);
+		ShowScreen();
 
 		while(SDL_PollEvent(&event)){
 			switch(event.type){
@@ -258,11 +259,11 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 				//TODO: move caret
 				break;
 			case SDL_MOUSEBUTTONUP:
-				if(event.button.y<64){
+				if(event.button.y<buttonSize){
 					//check clicked title bar buttons
-					if(event.button.x>=0 && event.button.x<64){
+					if(event.button.x>=0 && event.button.x<buttonSize){
 						b=false;
-					}else if(event.button.x>=screenWidth-64 && event.button.x<screenWidth){
+					}else if(event.button.x>=screenWidth-buttonSize && event.button.x<screenWidth){
 						b=false;
 						ret=true;
 					}
@@ -401,14 +402,15 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 int SimpleConfigKeyScreen(int key){
 	bool b=true;
 
+	int buttonSize=theApp->m_nButtonSize;
+
 	SimpleText *m_txtTitle=new SimpleText,*m_txtPrompt=new SimpleText;
 	int m_nMyResizeTime=-1;
 
 	//create text
-	m_txtTitle->AddString(titleFont?titleFont:mainFont,_("Config Key"),80.0f,0,0,64,
-		titleFont?1.0f:1.5f,DrawTextFlags::VCenter);
-	m_txtPrompt->AddString(mainFont,_("Press any key..."),64,96,0,0,
-		1.0f,DrawTextFlags::Multiline);
+	m_txtTitle->AddString(titleFont?titleFont:mainFont,_("Config Key"),1.25f*float(buttonSize),0,0,float(buttonSize),
+		(titleFont?1.0f:1.5f)*float(theApp->m_nButtonSize)/64.0f,DrawTextFlags::VCenter);
+	m_txtPrompt->AddString(mainFont,_("Press any key..."),64,float(buttonSize+32),0,0,1.0f,0);
 
 	//for title bar buttons
 	std::vector<float> m_v;
@@ -418,7 +420,7 @@ int SimpleConfigKeyScreen(int key){
 
 	while(m_bRun && b){
 		//get position of text box
-		SDL_Rect r={64,screenHeight/2,screenWidth-192,64};
+		SDL_Rect r={64,(screenHeight+buttonSize-64)/2,screenWidth-192,64};
 
 		//create title bar buttons
 		if(m_nMyResizeTime!=m_nResizeTime){
@@ -428,24 +430,24 @@ int SimpleConfigKeyScreen(int key){
 			m_v.clear();
 			m_idx.clear();
 
-			const int left=64;
-			const int right=screenWidth-64;
+			const int left=buttonSize;
+			const int right=screenWidth-buttonSize;
 
-			AddScreenKeyboard(0,0,64,64,SCREEN_KEYBOARD_LEFT,m_v,m_idx);
+			AddScreenKeyboard(0,0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_LEFT,m_v,m_idx);
 
-			AddScreenKeyboard(float(right),0,64,64,SCREEN_KEYBOARD_YES,m_v,m_idx);
+			AddScreenKeyboard(float(right),0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_YES,m_v,m_idx);
 
 			AddScreenKeyboard(float(r.x+r.w),float(r.y),64,64,SCREEN_KEYBOARD_NO,m_v,m_idx);
 
 			float vv[32]={
 				float(left),0,0.75f,0.75f,
-				float(left+32),0,0.875f,0.75f,
-				float(right-32),0,0.875f,0.75f,
+				float(left+buttonSize/2),0,0.875f,0.75f,
+				float(right-buttonSize/2),0,0.875f,0.75f,
 				float(right),0,1.0f,0.75f,
-				float(left),64,0.75f,1.0f,
-				float(left+32),64,0.875f,1.0f,
-				float(right-32),64,0.875f,1.0f,
-				float(right),64,1.0f,1.0f,
+				float(left),float(buttonSize),0.75f,1.0f,
+				float(left+buttonSize/2),float(buttonSize),0.875f,1.0f,
+				float(right-buttonSize/2),float(buttonSize),0.875f,1.0f,
+				float(right),float(buttonSize),1.0f,1.0f,
 			};
 
 			unsigned short idxs=(unsigned short)(m_v.size()>>2);
@@ -520,7 +522,7 @@ int SimpleConfigKeyScreen(int key){
 			}
 
 			//over
-			SDL_GL_SwapWindow(mainWindow);
+			ShowScreen(&nIdleTime);
 		}
 
 		while(SDL_PollEvent(&event)){
@@ -536,12 +538,12 @@ int SimpleConfigKeyScreen(int key){
 				break;
 			case SDL_MOUSEBUTTONUP:
 				nIdleTime=0;
-				if(event.button.y<64){
+				if(event.button.y<buttonSize){
 					//check clicked title bar buttons
-					if(event.button.x>=0 && event.button.x<64){
+					if(event.button.x>=0 && event.button.x<buttonSize){
 						b=false;
 						key=-1;
-					}else if(event.button.x>=screenWidth-64 && event.button.x<screenWidth){
+					}else if(event.button.x>=screenWidth-buttonSize && event.button.x<screenWidth){
 						b=false;
 					}
 				}else if(event.button.x>=r.x+r.w && event.button.x<r.x+r.w+64
@@ -553,6 +555,9 @@ int SimpleConfigKeyScreen(int key){
 				break;
 			case SDL_WINDOWEVENT:
 				switch(event.window.event){
+				case SDL_WINDOWEVENT_EXPOSED:
+					nIdleTime=0;
+					break;
 				case SDL_WINDOWEVENT_SIZE_CHANGED:
 					nIdleTime=0;
 					OnVideoResize(

@@ -28,6 +28,7 @@ static const int m_nDefaultKey[8]={
 
 PuzzleBoyLevelView::PuzzleBoyLevelView()
 :m_bShowYesNoScreenKeyboard(false)
+,m_nScreenKeyboardPressedIndex(-1)
 ,m_pDocument(NULL)
 ,m_nCurrentLevel(0)
 ,m_bEditMode(false)
@@ -137,15 +138,15 @@ void PuzzleBoyLevelView::Draw(){
 			int y1=m_scrollView.m_screen.y+m_scrollView.m_screen.h;
 
 			float v[]={
-				float(x1-256),float(y1),0.0f,0.0f,
+				float(x1-4*theApp->m_nButtonSize),float(y1),0.0f,0.0f,
 				float(x1),float(y1),1.0f,0.0f,
-				float(x1),float(y1+128),1.0f,0.5f,
-				float(x1-256),float(y1+128),0.0f,0.5f,
+				float(x1),float(y1+2*theApp->m_nButtonSize),1.0f,0.5f,
+				float(x1-4*theApp->m_nButtonSize),float(y1+2*theApp->m_nButtonSize),0.0f,0.5f,
 
-				float(x1-448),float(y1+64),0.0f,0.5f,
-				float(x1-320),float(y1+64),0.5f,0.5f,
-				float(x1-320),float(y1+128),0.5f,0.75f,
-				float(x1-448),float(y1+128),0.0f,0.75f,
+				float(x1-7*theApp->m_nButtonSize),float(y1+theApp->m_nButtonSize),0.0f,0.5f,
+				float(x1-5*theApp->m_nButtonSize),float(y1+theApp->m_nButtonSize),0.5f,0.5f,
+				float(x1-5*theApp->m_nButtonSize),float(y1+2*theApp->m_nButtonSize),0.5f,0.75f,
+				float(x1-7*theApp->m_nButtonSize),float(y1+2*theApp->m_nButtonSize),0.0f,0.75f,
 			};
 
 			switch(m_scrollView.m_nOrientation){
@@ -281,14 +282,7 @@ void PuzzleBoyLevelView::FinishGame(){
 	}*/
 
 	//save record
-	if(m_bPlayFromRecord){
-#ifdef _DEBUG
-		printf("[PuzzleBoyApp] Play from record, don't save it\n");
-#endif
-	}else{
-#ifdef _DEBUG
-		printf("[PuzzleBoyApp] Not play from record, save it\n");
-#endif
+	if(!m_bPlayFromRecord){
 		theApp->m_objRecordMgr.AddLevelAndRecord(
 			*(pDoc->GetLevel(m_nCurrentLevel)),
 			m_objPlayingLevel->m_nMoves,
@@ -311,11 +305,11 @@ void PuzzleBoyLevelView::Undo(){
 		//TODO: edit undo
 	}else if(m_objPlayingLevel && !m_objPlayingLevel->IsAnimating() && m_sRecord.empty()){
 		if(!m_objPlayingLevel->CanUndo()){
-			//TODO: MessageBeep(0);
+			theApp->ShowToolTip(_("Can't undo"));
 		}else if(m_objPlayingLevel->Undo()){
 			m_nEditingBlockIndex=-1;
 		}else{
-			//TODO: AfxMessageBox(_T("出现错误"));
+			theApp->ShowToolTip(_("Failed to undo"));
 		}
 	}
 }
@@ -325,11 +319,11 @@ void PuzzleBoyLevelView::Redo(){
 		//TODO: edit redo
 	}else if(m_objPlayingLevel && !m_objPlayingLevel->IsAnimating() && m_sRecord.empty()){
 		if(!m_objPlayingLevel->CanRedo()){
-			//TODO: MessageBeep(0);
+			theApp->ShowToolTip(_("Can't redo"));
 		}else if(m_objPlayingLevel->Redo()){
 			m_nEditingBlockIndex=-1;
 		}else{
-			//TODO: AfxMessageBox(_T("出现错误"));
+			theApp->ShowToolTip(_("Failed to redo"));
 		}
 	}
 }
@@ -348,15 +342,50 @@ bool PuzzleBoyLevelView::OnTimer(){
 			}else if(m_sRecord.empty()){
 				m_bPlayFromRecord=false;
 				//get continuous key event
-				if(theApp->m_nAnimationSpeed<=2){
-					const Uint8 *b=SDL_GetKeyboardState(NULL);
+				if(theApp->m_bContinuousKey){
+					const Uint8 *bKey=SDL_GetKeyboardState(NULL);
+					bool b=false;
 
-					//only arrow keys and undo/redo, still buggy
+					//only arrow keys and undo/redo
 					for(int i=0;i<6;i++){
-						if(m_nKey[i] && b[SDL_GetScancodeFromKey(m_nKey[i])]){
+						if(m_nKey[i] && bKey[SDL_GetScancodeFromKey(m_nKey[i])]){
 							InternalKeyDown(i);
 							bDirty=true;
+							b=true;
 							break;
+						}
+					}
+
+					MultiTouchViewStruct *viewStruct=theApp->touchMgr.FindView(this);
+
+					//check right button
+					if(!b && !m_bTouchscreen
+						&& viewStruct && viewStruct->m_nDraggingState
+						&& (SDL_GetMouseState(NULL,NULL) & SDL_BUTTON_RMASK)!=0)
+					{
+						if(SDL_GetModState() & KMOD_SHIFT){
+							//redo
+							InternalKeyDown(5);
+							bDirty=true;
+							b=true;
+						}else{
+							//undo
+							InternalKeyDown(4);
+							bDirty=true;
+							b=true;
+						}
+					}
+
+					//check screen keyboard
+					if(m_nScreenKeyboardPressedIndex>=0){
+						if(viewStruct && viewStruct->m_nDraggingState==3){
+							if(!b){
+								InternalKeyDown(m_nScreenKeyboardPressedIndex);
+								bDirty=true;
+								b=true;
+							}
+						}else{
+							m_nScreenKeyboardPressedIndex=-1;
 						}
 					}
 				}
@@ -580,7 +609,7 @@ bool PuzzleBoyLevelView::InternalKeyDown(int keyIndex){
 							m_sRecord=s;
 							m_nRecordIndex=0;
 						}else{
-							//TODO: MessageBeep(0);
+							theApp->ShowToolTip(_("Can't move to specified location"));
 						}
 
 						return true;
@@ -658,149 +687,164 @@ void PuzzleBoyLevelView::OnMouseEvent(int which,int state,int xMouse,int yMouse,
 		//process ad-hoc screen keyboard event
 		if(nType==SDL_MOUSEBUTTONDOWN && state==SDL_BUTTON_LMASK){
 			bool b=false;
-			int idx=0;
+			int idx=0,keyIndex=-1;
 			int tmp;
 
 			switch(m_scrollView.m_nOrientation){
 			case 2:
-				tmp=m_scrollView.m_screen.y-128;
+				tmp=m_scrollView.m_screen.y-2*theApp->m_nButtonSize;
 				if(yMouse>=tmp){
-					int i=1+((yMouse-tmp)>>6);
+					int i=1+((yMouse-tmp)/theApp->m_nButtonSize);
 					idx=i<<8;
 				}
 				tmp=m_scrollView.m_screen.x;
 				if(xMouse>=tmp){
-					int i=1+((xMouse-tmp)>>6);
+					int i=1+((xMouse-tmp)/theApp->m_nButtonSize);
 					idx|=i;
 				}
 				break;
 			default:
-				tmp=m_scrollView.m_screen.y+m_scrollView.m_screen.h+128;
+				tmp=m_scrollView.m_screen.y+m_scrollView.m_screen.h+2*theApp->m_nButtonSize;
 				if(yMouse<tmp){
-					int i=1+((tmp-yMouse-1)>>6);
+					int i=1+((tmp-yMouse-1)/theApp->m_nButtonSize);
 					idx=i<<8;
 				}
 				tmp=m_scrollView.m_screen.x+m_scrollView.m_screen.w;
 				if(xMouse<tmp){
-					int i=1+((tmp-xMouse-1)>>6);
+					int i=1+((tmp-xMouse-1)/theApp->m_nButtonSize);
 					idx|=i;
 				}
 				break;
 			}
 
 			switch(idx){
-			case 0x204: InternalKeyDown(4); b=true; break;
-			case 0x203: InternalKeyDown(0); b=true; break;
-			case 0x202: InternalKeyDown(5); b=true; break;
-			case 0x201: InternalKeyDown(7); b=true; break;
-			case 0x104: InternalKeyDown(2); b=true; break;
-			case 0x103: InternalKeyDown(1); b=true; break;
-			case 0x102: InternalKeyDown(3); b=true; break;
-			case 0x101: InternalKeyDown(6); b=true; break;
+			case 0x204: keyIndex=4; b=true; break;
+			case 0x203: keyIndex=0; b=true; break;
+			case 0x202: keyIndex=5; b=true; break;
+			case 0x201: keyIndex=7; break;
+			case 0x104: keyIndex=2; b=true; break;
+			case 0x103: keyIndex=1; b=true; break;
+			case 0x102: keyIndex=3; b=true; break;
+			case 0x101: keyIndex=6; break;
 			}
 
 			if(m_bShowYesNoScreenKeyboard){
 				switch(idx){
-				case 0x107: InternalKeyDown(64); b=true; break;
-				case 0x106: InternalKeyDown(65); b=true; break;
+				case 0x107: keyIndex=64; break;
+				case 0x106: keyIndex=65; break;
 				}
 			}
 
-			if(b){
-				theApp->touchMgr.DisableTemporarily(this);
+			if(keyIndex>=0){
+				InternalKeyDown(keyIndex);
+				m_nScreenKeyboardPressedIndex=(b && theApp->m_bContinuousKey)?keyIndex:-1;
+
+				//ad-hoc: disable drag event temporarily
+				MultiTouchViewStruct *viewStruct=theApp->touchMgr.FindView(this);
+				if(viewStruct){
+					viewStruct->m_nDraggingState=3;
+					viewStruct->m_fMultitouchOldDistSquared=-1.0f;
+				}
 				return;
 			}
 		}
 
 		//process in-game mouse events
-		//FIXME: mouse up??
-		if(nType==SDL_MOUSEBUTTONUP && (state&(SDL_BUTTON_LMASK|SDL_BUTTON_RMASK))!=0
-			&& m_objPlayingLevel
-			)
+		//mouse down for right key
+		if(nType==SDL_MOUSEBUTTONDOWN && (state & SDL_BUTTON_RMASK)!=0
+			&& m_objPlayingLevel)
 		{
-			if(state&SDL_BUTTON_RMASK){
-				if(m_nEditingBlockIndex>=0){
-					//cancel moving blocks
-					m_nEditingBlockIndex=-1;
-				}else if(!m_sRecord.empty()){
-					//skip demo
-					m_bPlayFromRecord=false;
-					m_sRecord.clear();
-					m_nRecordIndex=-1;
-				}else if(!m_objPlayingLevel->IsAnimating()){
-					//undo
+			if(m_nEditingBlockIndex>=0){
+				//cancel moving blocks
+				m_nEditingBlockIndex=-1;
+			}else if(!m_sRecord.empty()){
+				//skip demo
+				m_bPlayFromRecord=false;
+				m_sRecord.clear();
+				m_nRecordIndex=-1;
+			}else if(!m_objPlayingLevel->IsAnimating()){
+				//undo or redo
+				if(nFlags & KMOD_SHIFT){
+					if(m_objPlayingLevel->CanRedo()) Redo();
+					else{
+						theApp->ShowToolTip(_("Can't redo"));
+					}
+				}else{
 					if(m_objPlayingLevel->CanUndo()) Undo();
 					else{
-						//TODO: MessageBeep(0);
+						theApp->ShowToolTip(_("Can't undo"));
 					}
 				}
-			}else if(
-				!m_objPlayingLevel->IsAnimating()
-				&& !m_objPlayingLevel->IsWin()
-				&& m_sRecord.empty()
-				)
-			{
-				int x,y;
-				m_scrollView.TranslateCoordinate(xMouse,yMouse,x,y);
+			}
+		}
 
-				if(x>=0 && y>=0 && x<m_objPlayingLevel->m_nWidth && y<m_objPlayingLevel->m_nHeight){
-					if(m_objPlayingLevel->SwitchPlayer(x,y,true)){
-						//it's switch player
-						//do nothing in SDL version
-					}else if(m_nEditingBlockIndex>=0 && m_nEditingBlockIndex<(int)m_objPlayingLevel->m_objBlocks.size()){
-						//workaround on Android and other devices without mouse move event
-						OnMouseEvent(0,0,xMouse,yMouse,0,SDL_MOUSEMOTION);
+		//mouse up for left key
+		if(nType==SDL_MOUSEBUTTONUP && (state & SDL_BUTTON_LMASK)!=0
+			&& m_objPlayingLevel && !m_objPlayingLevel->IsAnimating()
+			&& !m_objPlayingLevel->IsWin()
+			&& m_sRecord.empty()
+			)
+		{
+			int x,y;
+			m_scrollView.TranslateCoordinate(xMouse,yMouse,x,y);
 
-						//move a moveable block to new position
-						if(!m_bTouchscreen
-							|| m_objPlayingLevel->m_objBlocks[m_nEditingBlockIndex]->m_nType==ROTATE_BLOCK)
-						{
-							InternalKeyDown(64);
-						}
+			if(x>=0 && y>=0 && x<m_objPlayingLevel->m_nWidth && y<m_objPlayingLevel->m_nHeight){
+				if(m_objPlayingLevel->SwitchPlayer(x,y,true)){
+					//it's switch player
+					//do nothing in SDL version
+				}else if(m_nEditingBlockIndex>=0 && m_nEditingBlockIndex<(int)m_objPlayingLevel->m_objBlocks.size()){
+					//workaround on Android and other devices without mouse move event
+					OnMouseEvent(0,0,xMouse,yMouse,0,SDL_MOUSEMOTION);
+
+					//move a moveable block to new position
+					if(!m_bTouchscreen
+						|| m_objPlayingLevel->m_objBlocks[m_nEditingBlockIndex]->m_nType==ROTATE_BLOCK)
+					{
+						InternalKeyDown(64);
+					}
+				}else{
+					int x0=m_objPlayingLevel->GetCurrentPlayerX();
+					int y0=m_objPlayingLevel->GetCurrentPlayerY();
+
+					//check if a block clicked
+					int idx=m_objPlayingLevel->HitTestForPlacingBlocks(x,y,-1);
+					int nType=-1;
+					PushableBlock *objBlock=NULL;
+					if(idx>=0){
+						objBlock=m_objPlayingLevel->m_objBlocks[idx];
+						nType=objBlock->m_nType;
+					}
+					if(nType==NORMAL_BLOCK || nType==TARGET_BLOCK){
+						//clicked a moveable block
+						m_nEditingBlockIndex=idx;
+						m_nEditingBlockX=objBlock->m_x;
+						m_nEditingBlockY=objBlock->m_y;
+						m_nEditingBlockDX=m_nEditingBlockX-x;
+						m_nEditingBlockDY=m_nEditingBlockY-y;
+					}else if(nType==ROTATE_BLOCK && (x!=objBlock->m_x || y!=objBlock->m_y)){
+						//clicked a rotate block
+						m_nEditingBlockIndex=idx;
+						m_nEditingBlockX=x;
+						m_nEditingBlockY=y;
+						m_nEditingBlockDX=x;
+						m_nEditingBlockDY=y;
+					}else if(x==x0 && y==y0-1){ //check if the clicked position is adjacent to the player
+						InternalKeyDown(0);
+					}else if(x==x0 && y==y0+1){
+						InternalKeyDown(1);
+					}else if(x==x0-1 && y==y0){
+						InternalKeyDown(2);
+					}else if(x==x0+1 && y==y0){
+						InternalKeyDown(3);
 					}else{
-						int x0=m_objPlayingLevel->GetCurrentPlayerX();
-						int y0=m_objPlayingLevel->GetCurrentPlayerY();
+						u8string s;
 
-						//check if a block clicked
-						int idx=m_objPlayingLevel->HitTestForPlacingBlocks(x,y,-1);
-						int nType=-1;
-						PushableBlock *objBlock=NULL;
-						if(idx>=0){
-							objBlock=m_objPlayingLevel->m_objBlocks[idx];
-							nType=objBlock->m_nType;
-						}
-						if(nType==NORMAL_BLOCK || nType==TARGET_BLOCK){
-							//clicked a moveable block
-							m_nEditingBlockIndex=idx;
-							m_nEditingBlockX=objBlock->m_x;
-							m_nEditingBlockY=objBlock->m_y;
-							m_nEditingBlockDX=m_nEditingBlockX-x;
-							m_nEditingBlockDY=m_nEditingBlockY-y;
-						}else if(nType==ROTATE_BLOCK && (x!=objBlock->m_x || y!=objBlock->m_y)){
-							//clicked a rotate block
-							m_nEditingBlockIndex=idx;
-							m_nEditingBlockX=x;
-							m_nEditingBlockY=y;
-							m_nEditingBlockDX=x;
-							m_nEditingBlockDY=y;
-						}else if(x==x0 && y==y0-1){ //check if the clicked position is adjacent to the player
-							InternalKeyDown(0);
-						}else if(x==x0 && y==y0+1){
-							InternalKeyDown(1);
-						}else if(x==x0-1 && y==y0){
-							InternalKeyDown(2);
-						}else if(x==x0+1 && y==y0){
-							InternalKeyDown(3);
+						if(m_objPlayingLevel->FindPath(s,x,y) && !s.empty()){
+							//it's pathfinding
+							m_sRecord=s;
+							m_nRecordIndex=0;
 						}else{
-							u8string s;
-
-							if(m_objPlayingLevel->FindPath(s,x,y) && !s.empty()){
-								//it's pathfinding
-								m_sRecord=s;
-								m_nRecordIndex=0;
-							}else{
-								//TODO: MessageBeep(0);
-							}
+							theApp->ShowToolTip(_("Can't move to specified location"));
 						}
 					}
 				}

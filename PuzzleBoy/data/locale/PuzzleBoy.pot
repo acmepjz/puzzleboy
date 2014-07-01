@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PuzzleBoy 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-05-21 22:30+0800\n"
+"POT-Creation-Date: 2014-06-29 11:52+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,19 +16,19 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ChooseLevelScreen.cpp:46
+#: ChooseLevelScreen.cpp:47
 msgid "User level: "
 msgstr ""
 
-#: ChooseLevelScreen.cpp:52 main.cpp:186
+#: ChooseLevelScreen.cpp:53 main.cpp:272
 msgid "Choose Level File"
 msgstr ""
 
-#: ChooseLevelScreen.cpp:67 main.cpp:183
+#: ChooseLevelScreen.cpp:70 main.cpp:271
 msgid "Choose Level"
 msgstr ""
 
-#: ChooseLevelScreen.cpp:70
+#: ChooseLevelScreen.cpp:73
 msgid "Search Result"
 msgstr ""
 
@@ -40,190 +40,218 @@ msgstr ""
 msgid "Please input the keyword"
 msgstr ""
 
-#: ConfigScreen.cpp:21 ConfigScreen.cpp:121
-msgid "Disabled"
+#: ConfigScreen.cpp:37
+msgid "No"
 msgstr ""
 
-#: ConfigScreen.cpp:29 ConfigScreen.cpp:120
+#: ConfigScreen.cpp:38
+msgid "Yes"
+msgstr ""
+
+#: ConfigScreen.cpp:41 ConfigScreen.cpp:154
+msgid "Animation Speed"
+msgstr ""
+
+#: ConfigScreen.cpp:44
+msgid "Show Grid: "
+msgstr ""
+
+#: ConfigScreen.cpp:47
+msgid "Show Lines: "
+msgstr ""
+
+#: ConfigScreen.cpp:50
+#, c-format
+msgid "International Font: %s (requires restart)"
+msgstr ""
+
+#: ConfigScreen.cpp:56 ConfigScreen.cpp:229
 #, c-format
 msgid "Use system language (%s)"
 msgstr ""
 
-#: ConfigScreen.cpp:62
+#: ConfigScreen.cpp:57 ConfigScreen.cpp:225
+msgid "Disabled"
+msgstr ""
+
+#: ConfigScreen.cpp:59 ConfigScreen.cpp:235
 msgid "Language"
 msgstr ""
 
-#: ConfigScreen.cpp:93
-msgid "No"
-msgstr ""
-
-#: ConfigScreen.cpp:94
-msgid "Yes"
-msgstr ""
-
-#: ConfigScreen.cpp:98
-#, c-format
-msgid "Animation Speed: %dx"
-msgstr ""
-
-#: ConfigScreen.cpp:103
-msgid "Show Grid: "
-msgstr ""
-
-#: ConfigScreen.cpp:108
-msgid "Show Lines: "
-msgstr ""
-
-#: ConfigScreen.cpp:113
-#, c-format
-msgid "International Font: %s (reqiures restart)"
-msgstr ""
-
-#: ConfigScreen.cpp:124
-msgid "Language: "
-msgstr ""
-
-#: ConfigScreen.cpp:133
+#: ConfigScreen.cpp:67 ConfigScreen.cpp:253
 #, c-format
 msgid "Automatic (%d)"
 msgstr ""
 
-#: ConfigScreen.cpp:136
-msgid "Thread Count: "
+#: ConfigScreen.cpp:69 ConfigScreen.cpp:258
+msgid "Thread Count"
 msgstr ""
 
-#: ConfigScreen.cpp:143
+#: ConfigScreen.cpp:75 ConfigScreen.cpp:275
 msgid "Normal"
 msgstr ""
 
-#: ConfigScreen.cpp:144
+#: ConfigScreen.cpp:76 ConfigScreen.cpp:276
 msgid "Horizontal Up-Down"
 msgstr ""
 
-#: ConfigScreen.cpp:145
+#: ConfigScreen.cpp:77 ConfigScreen.cpp:277
 msgid "Vertical Up-Down"
 msgstr ""
 
-#: ConfigScreen.cpp:148
-msgid "Multiplayer Orientation: "
+#: ConfigScreen.cpp:79 ConfigScreen.cpp:279
+msgid "Multiplayer Orientation"
 msgstr ""
 
-#: ConfigScreen.cpp:154
+#: ConfigScreen.cpp:83
 msgid "Save Progress At Exit: "
 msgstr ""
 
-#: ConfigScreen.cpp:164
+#: ConfigScreen.cpp:86
+msgid "Continuous Key Event: "
+msgstr ""
+
+#: ConfigScreen.cpp:89
+msgid "Show FPS: "
+msgstr ""
+
+#: ConfigScreen.cpp:92 ConfigScreen.cpp:193
+msgid "Button Size"
+msgstr ""
+
+#: ConfigScreen.cpp:95 ConfigScreen.cpp:318
+msgid "Menu Text Size"
+msgstr ""
+
+#: ConfigScreen.cpp:98 ConfigScreen.cpp:341
+msgid "Menu Height"
+msgstr ""
+
+#: ConfigScreen.cpp:105
 #, c-format
 msgid "Name of Player %d: "
 msgstr ""
 
-#: ConfigScreen.cpp:171
+#: ConfigScreen.cpp:111
 msgid "Single Player Keys:"
 msgstr ""
 
-#: ConfigScreen.cpp:172
+#: ConfigScreen.cpp:112
 msgid "Multiplayer Keys (Player 1):"
 msgstr ""
 
-#: ConfigScreen.cpp:173
+#: ConfigScreen.cpp:113
 msgid "Multiplayer Keys (Player 2):"
 msgstr ""
 
-#: ConfigScreen.cpp:174 SimpleMiscScreen.cpp:509
+#: ConfigScreen.cpp:114 SimpleMiscScreen.cpp:518
 msgid "(None)"
 msgstr ""
 
-#: ConfigScreen.cpp:175
+#: ConfigScreen.cpp:115
 msgid "Up: "
 msgstr ""
 
-#: ConfigScreen.cpp:176
+#: ConfigScreen.cpp:116
 msgid "Down: "
 msgstr ""
 
-#: ConfigScreen.cpp:177
+#: ConfigScreen.cpp:117
 msgid "Left: "
 msgstr ""
 
-#: ConfigScreen.cpp:178
+#: ConfigScreen.cpp:118
 msgid "Right: "
 msgstr ""
 
-#: ConfigScreen.cpp:179
+#: ConfigScreen.cpp:119
 msgid "Undo: "
 msgstr ""
 
-#: ConfigScreen.cpp:180
+#: ConfigScreen.cpp:120
 msgid "Redo: "
 msgstr ""
 
-#: ConfigScreen.cpp:181
+#: ConfigScreen.cpp:121
 msgid "Switch: "
 msgstr ""
 
-#: ConfigScreen.cpp:182
+#: ConfigScreen.cpp:122
 msgid "Restart: "
 msgstr ""
 
-#: ConfigScreen.cpp:271
+#: ConfigScreen.cpp:202 ConfigScreen.cpp:396 main.cpp:273
+msgid "Config"
+msgstr ""
+
+#: ConfigScreen.cpp:361
 #, c-format
 msgid "Name of Player %d"
 msgstr ""
 
-#: ConfigScreen.cpp:272
+#: ConfigScreen.cpp:362
 #, c-format
 msgid "Please input the new name of player %d"
 msgstr ""
 
-#: ConfigScreen.cpp:306 main.cpp:189
-msgid "Config"
-msgstr ""
-
-#: main.cpp:192
+#: main.cpp:274
 msgid "Exit Game"
 msgstr ""
 
-#: main.cpp:202 RandomMapScreen.cpp:38
+#: main.cpp:280 RandomMapScreen.cpp:29
 msgid "Random Map"
 msgstr ""
 
-#: main.cpp:211
+#: main.cpp:282
+msgid "Save Temp Level File"
+msgstr ""
+
+#: main.cpp:283
 msgid "Start Multiplayer"
 msgstr ""
 
-#: main.cpp:311
+#: main.cpp:304 main.cpp:394
 msgid "Main Menu"
 msgstr ""
 
-#: main.cpp:427
+#: main.cpp:378
+#, c-format
+msgid "File saved to %s"
+msgstr ""
+
+#: main.cpp:537
 msgid "Puzzle Boy"
 msgstr ""
 
-#: main.cpp:532
+#: main.cpp:640
 #, c-format
 msgid "Pack: %s"
 msgstr ""
 
-#: main.cpp:540
+#: main.cpp:648
 #, c-format
 msgid "Level %d: %s"
 msgstr ""
 
-#: main.cpp:540
+#: main.cpp:648
 #, c-format
 msgid "Moves: %d"
 msgstr ""
 
-#: main.cpp:545
+#: main.cpp:653
 #, c-format
 msgid "Best: %d (%s)"
 msgstr ""
 
-#: PuzzleBoyApp.cpp:152
+#: main.cpp:710
+msgid "Press again to exit"
+msgstr ""
+
+#: PuzzleBoyApp.cpp:158
 msgid "Player"
 msgstr ""
 
-#: PuzzleBoyApp.cpp:153
+#: PuzzleBoyApp.cpp:159
 msgid "Player2"
 msgstr ""
 
@@ -235,35 +263,55 @@ msgstr ""
 msgid "Unnamed level pack"
 msgstr ""
 
-#: RandomMapScreen.cpp:19
+#: PuzzleBoyLevelView.cpp:308 PuzzleBoyLevelView.cpp:775
+msgid "Can't undo"
+msgstr ""
+
+#: PuzzleBoyLevelView.cpp:312
+msgid "Failed to undo"
+msgstr ""
+
+#: PuzzleBoyLevelView.cpp:322 PuzzleBoyLevelView.cpp:770
+msgid "Can't redo"
+msgstr ""
+
+#: PuzzleBoyLevelView.cpp:326
+msgid "Failed to redo"
+msgstr ""
+
+#: PuzzleBoyLevelView.cpp:612 PuzzleBoyLevelView.cpp:847
+msgid "Can't move to specified location"
+msgstr ""
+
+#: RandomMapScreen.cpp:15
 msgid "Rotate block only 6x6"
 msgstr ""
 
-#: RandomMapScreen.cpp:22
+#: RandomMapScreen.cpp:16
 msgid "Rotate block only 8x6"
 msgstr ""
 
-#: RandomMapScreen.cpp:25
+#: RandomMapScreen.cpp:17
 msgid "Rotate block only 8x8"
 msgstr ""
 
-#: RandomMapScreen.cpp:28
+#: RandomMapScreen.cpp:19
 msgid "Random"
 msgstr ""
 
-#: RandomMapScreen.cpp:113
+#: RandomMapScreen.cpp:104
 #, c-format
 msgid "Random Level %d"
 msgstr ""
 
-#: RandomMapScreen.cpp:115 RandomMapScreen.cpp:139
+#: RandomMapScreen.cpp:106 RandomMapScreen.cpp:130
 msgid "Random Level"
 msgstr ""
 
-#: SimpleMiscScreen.cpp:408
+#: SimpleMiscScreen.cpp:411
 msgid "Config Key"
 msgstr ""
 
-#: SimpleMiscScreen.cpp:410
+#: SimpleMiscScreen.cpp:413
 msgid "Press any key..."
 msgstr ""

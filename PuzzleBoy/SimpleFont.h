@@ -26,15 +26,15 @@ public:
 	SimpleFont(SimpleFontFile& font,float fontSize);
 	virtual ~SimpleFont();
 
-	virtual void Destroy();
-	virtual void Reset();
+	void Destroy() override;
+	void Reset() override;
 
-	virtual void UpdateTexture();
+	void UpdateTexture() override;
 
-	virtual bool AddChar(int c);
-	virtual bool AddGlyph(int glyphIndex,bool saveBitmap); //internal function
+	bool AddChar(int c) override;
+	bool AddGlyph(int glyphIndex,bool saveBitmap) override; //internal function
 
-	virtual bool GetCharMetric(int c,SimpleFontGlyphMetric& metric);
+	bool GetCharMetric(int c,SimpleFontGlyphMetric& metric) override;
 private:
 	SimpleFontFileData *data; //weak reference, don't delete
 	int fontSize;

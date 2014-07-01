@@ -13,14 +13,28 @@
 #endif
 
 bool GNUGetText::GetSystemLocale(char* buf,int size){
-	char *s=getenv("LANG");
-	if(s){
+	char *s;
+
+	s=getenv("LC_ALL");
+	if(s && s[0]){
+		strncpy(buf,s,size);
+		return true;
+	}
+
+	s=getenv("LC_MESSAGES");
+	if(s && s[0]){
+		strncpy(buf,s,size);
+		return true;
+	}
+
+	s=getenv("LANG");
+	if(s && s[0]){
 		strncpy(buf,s,size);
 		return true;
 	}
 
 	s=getenv("LANGUAGE");
-	if(s){
+	if(s && s[0]){
 		strncpy(buf,s,size);
 		return true;
 	}
@@ -68,21 +82,27 @@ bool GNUGetText::LoadFileWithAutoLocale(const u8string& sFileName){
 		fn.replace(nReplaceIndex,1,str);
 		if(LoadFile(fn)) return true;
 
-		size_t i=str.find_first_of('.');
+		size_t i=str.find_first_of('.'); //e.g. en_US.ISO_8859-1
 		if(i!=str.npos){
 			fn=sFileName;
 			fn.replace(nReplaceIndex,1,str.substr(0,i));
 			if(LoadFile(fn)) return true;
 		}
 
-		i=str.find_first_of('@');
+		i=str.find_first_of('@'); //e.g. sr@latin
 		if(i!=str.npos){
 			fn=sFileName;
 			fn.replace(nReplaceIndex,1,str.substr(0,i));
 			if(LoadFile(fn)) return true;
 		}
 
-		i=str.find_first_of('_');
+		i=str.find_first_of('_'); //e.g. de_DE
+		size_t i2=str.find_first_of('_',i+1); //e.g. no_NO_NB
+		if(i2!=str.npos){
+			fn=sFileName;
+			fn.replace(nReplaceIndex,1,str.substr(0,i2));
+			if(LoadFile(fn)) return true;
+		}
 		if(i!=str.npos){
 			fn=sFileName;
 			fn.replace(nReplaceIndex,1,str.substr(0,i));
