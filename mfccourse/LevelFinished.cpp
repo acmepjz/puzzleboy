@@ -54,8 +54,11 @@ BOOL CLevelFinished::OnInitDialog()
 	//init listview
 	m_lstRecord.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 
-	m_lstRecord.InsertColumn(0,_T("Íæ¼ÒÃû³Æ"),LVCFMT_LEFT,80);
-	m_lstRecord.InsertColumn(1,_T("¼ÍÂ¼"),LVCFMT_LEFT,48);
+	CString s;
+	s.LoadString(IDS_PLAYER_NAME);
+	m_lstRecord.InsertColumn(0,s,LVCFMT_LEFT,80);
+	s.LoadString(IDS_RECORD);
+	m_lstRecord.InsertColumn(1,s,LVCFMT_LEFT,48);
 
 	//load records
 	if(m_objCurrentLevel){

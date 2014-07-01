@@ -51,13 +51,21 @@ BOOL CLevelDatabase::OnInitDialog()
 	m_lstLevels.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 	m_lstRecord.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 
-	m_lstLevels.InsertColumn(0,_T("关卡名称"),LVCFMT_LEFT,224);
-	m_lstLevels.InsertColumn(1,_T("大小"),LVCFMT_LEFT,48);
-	m_lstLevels.InsertColumn(2,_T("纪录"),LVCFMT_LEFT,128);
-	m_lstLevels.InsertColumn(3,_T("校验和"),LVCFMT_LEFT,288);
+	CString s;
 
-	m_lstRecord.InsertColumn(0,_T("玩家名称"),LVCFMT_LEFT,80);
-	m_lstRecord.InsertColumn(1,_T("纪录"),LVCFMT_LEFT,48);
+	s.LoadString(IDS_LEVEL_NAME);
+	m_lstLevels.InsertColumn(0,s,LVCFMT_LEFT,224);
+	s.LoadString(IDS_SIZE);
+	m_lstLevels.InsertColumn(1,s,LVCFMT_LEFT,48);
+	s.LoadString(IDS_RECORD);
+	m_lstLevels.InsertColumn(2,s,LVCFMT_LEFT,128);
+	s.LoadString(IDS_CHECKSUM);
+	m_lstLevels.InsertColumn(3,s,LVCFMT_LEFT,288);
+
+	s.LoadString(IDS_PLAYER_NAME);
+	m_lstRecord.InsertColumn(0,s,LVCFMT_LEFT,80);
+	s.LoadString(IDS_RECORD);
+	m_lstRecord.InsertColumn(1,s,LVCFMT_LEFT,48);
 
 	ShowLevels();
 
@@ -110,7 +118,7 @@ void CLevelDatabase::ShowLevels(){
 			}
 			s.Append(_T(")"));
 		}else{
-			s=_T("不存在");
+			s.LoadString(IDS_DOES_NOT_EXIST);
 		}
 		m_lstLevels.SetItemText(j,2,s);
 	}
@@ -119,9 +127,11 @@ void CLevelDatabase::ShowLevels(){
 void CLevelDatabase::OnBnClickedYes()
 {
 	//choose open file name
+	CString s;
+	s.LoadString(IDS_FILE_FORMAT_DAT);
 	CFileDialog cd(TRUE,_T("dat"),NULL,
 		OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER,
-		_T("关卡数据库文件(*.dat)|*.dat||"),this);
+		s,this);
 	if(cd.DoModal()!=IDOK) return;
 
 	//open file
@@ -206,12 +216,11 @@ void CLevelDatabase::OnBnClickedYes()
 	if(f) fclose(f);
 
 	if(b){
-		CString s;
-		s.Format(_T("完成。新增 %d 关卡, %d 最佳纪录。"),nNewLevel,nNewRecord);
+		s.Format(IDS_IMPORT_DATABASE_COMPLETED,nNewLevel,nNewRecord);
 		AfxMessageBox(s,MB_ICONINFORMATION);
 		ShowLevels();
 	}else{
-		AfxMessageBox(_T("出现错误"));
+		AfxMessageBox(IDS_ERROR_OCCURED);
 	}
 }
 
@@ -226,7 +235,7 @@ void CLevelDatabase::OnLvnKeydownList1(NMHDR *pNMHDR, LRESULT *pResult)
 
 	if(pLVKeyDown->wVKey==VK_DELETE
 		&& idx2>=0 && idx2<(int)m_tFile.objLevels.size()
-		&& AfxMessageBox(_T("确定删除"),MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2)==IDYES)
+		&& AfxMessageBox(IDS_CONFIRM_DELETE,MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2)==IDYES)
 	{
 		m_tFile.objLevels[idx2].bData.clear();
 		memset(&(m_tFile.objLevels[idx2].objChecksum),0,sizeof(RecordLevelChecksum));
@@ -273,7 +282,7 @@ void CLevelDatabase::OnLvnKeydownList2(NMHDR *pNMHDR, LRESULT *pResult)
 	if(pLVKeyDown->wVKey==VK_DELETE
 		&& idx>=0 && idx<(int)m_tFile.objLevels.size()
 		&& idx2>=0 && idx2<(int)m_tFile.objLevels[idx].objRecord.size()
-		&& AfxMessageBox(_T("确定删除"),MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2)==IDYES)
+		&& AfxMessageBox(IDS_CONFIRM_DELETE,MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2)==IDYES)
 	{
 		m_tFile.objLevels[idx].objRecord.erase(
 			m_tFile.objLevels[idx].objRecord.begin()+idx2
@@ -286,7 +295,7 @@ void CLevelDatabase::OnLvnKeydownList2(NMHDR *pNMHDR, LRESULT *pResult)
 
 void CLevelDatabase::OnBnClickedOk()
 {
-	if(AfxMessageBox(_T("确定保存修改? 请做好备份工作"),MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2)!=IDYES){
+	if(AfxMessageBox(IDS_CONFIRM_SAVE,MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2)!=IDYES){
 		return;
 	}
 
