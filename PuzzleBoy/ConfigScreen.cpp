@@ -9,73 +9,20 @@
 #include "include_sdl.h"
 #include "include_gl.h"
 
-class ChooseLanguageScreen:public SimpleListScreen{
-public:
-	virtual void OnDirty(){
-		if(m_txtList) m_txtList->clear();
-		else m_txtList=new SimpleText;
-
-		m_nListCount=0;
-
-		m_txtList->NewStringIndex();
-		m_txtList->AddString(mainFont,_("Disabled"),0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
-
-		{
-			char buf[256];
-
-			GNUGetText::GetSystemLocale(buf,sizeof(buf));
-
-			m_txtList->NewStringIndex();
-			m_txtList->AddString(mainFont,str(MyFormat(_("Use system language (%s)"))<<buf),
-				0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
-		}
-
-		for(unsigned int i=2;i<m_sAvailableLocale.size();i++){
-			m_txtList->NewStringIndex();
-			m_txtList->AddString(mainFont,m_sAvailableLocale[i],0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
-		}
-	}
-
-	virtual int OnClick(int index){
-		m_sLocale=m_sAvailableLocale[index];
-		return 1;
-	}
-
-	virtual int DoModal(){
-		//init locale
-		m_sLocale=theApp->m_sLocale;
-		m_sAvailableLocale.clear();
-		m_sAvailableLocale.push_back("?");
-		m_sAvailableLocale.push_back("");
-
-		{
-			std::vector<u8string> fs=enumAllFiles("data/locale/","mo");
-			for(unsigned int i=0;i<fs.size();i++){
-				u8string::size_type lps=fs[i].find_last_of('.');
-				if(lps!=u8string::npos) m_sAvailableLocale.push_back(fs[i].substr(0,lps));
-				else m_sAvailableLocale.push_back(fs[i]);
-			}
-		}
-
-		//show
-		m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
-		CreateTitleBarText(_("Language"));
-		return SimpleListScreen::DoModal();
-	}
-public:
-	std::vector<u8string> m_sAvailableLocale;
-	u8string m_sLocale;
-};
-
 enum ConfigType{
 	ConfigAnimationSpeed=0,
-	ConfigShowGrid, //1
-	ConfigShowLines, //2
-	ConfigInternationalFont, //3
-	ConfigLanguage, //4
-	ConfigThreadCount, //5
-	ConfigOrientation, //6
+	ConfigShowGrid,
+	ConfigShowLines,
+	ConfigInternationalFont,
+	ConfigLanguage,
+	ConfigThreadCount,
+	ConfigOrientation,
 	ConfigAutoSave,
+	ConfigContinuousKey,
+	ConfigShowFPS,
+	ConfigButtonSize,
+	ConfigMenuTextSize,
+	ConfigMenuHeightFactor,
 	ConfigEmpty_1,
 	ConfigPlayerName, //player2,empty,title
 	ConfigKey=ConfigPlayerName+4,
@@ -84,34 +31,23 @@ enum ConfigType{
 };
 
 void ConfigScreen::OnDirty(){
-	if(m_txtList) m_txtList->clear();
-	else m_txtList=new SimpleText;
-
-	m_nListCount=0;
+	ResetList();
 
 	u8string yesno[2];
 	yesno[0]=_("No");
 	yesno[1]=_("Yes");
 
 	//animation speed
-	m_txtList->NewStringIndex();
-	m_txtList->AddString(mainFont,str(MyFormat(_("Animation Speed: %dx"))<<(1<<theApp->m_nAnimationSpeed)),
-		0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
+	AddItem(str(MyFormat(_("Animation Speed")+": %d%%")<<(100<<theApp->m_nAnimationSpeed)));
 
 	//show grid
-	m_txtList->NewStringIndex();
-	m_txtList->AddString(mainFont,_("Show Grid: ")+yesno[theApp->m_bShowGrid?1:0],
-		0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
+	AddItem(_("Show Grid: ")+yesno[theApp->m_bShowGrid?1:0]);
 
 	//show lines
-	m_txtList->NewStringIndex();
-	m_txtList->AddString(mainFont,_("Show Lines: ")+yesno[theApp->m_bShowLines?1:0],
-		0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
+	AddItem(_("Show Lines: ")+yesno[theApp->m_bShowLines?1:0]);
 
 	//international font
-	m_txtList->NewStringIndex();
-	m_txtList->AddString(mainFont,str(MyFormat(_("International Font: %s (reqiures restart)"))<<yesno[theApp->m_bInternationalFont?1:0]),
-		0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
+	AddItem(str(MyFormat(_("International Font: %s (requires restart)"))<<yesno[theApp->m_bInternationalFont?1:0]));
 
 	//language
 	{
@@ -120,9 +56,7 @@ void ConfigScreen::OnDirty(){
 		if(s.empty()) s=str(MyFormat(_("Use system language (%s)"))<<theApp->m_objGetText.m_sCurrentLocale);
 		else if(s.find_first_of('?')!=u8string::npos) s=_("Disabled");
 
-		m_txtList->NewStringIndex();
-		m_txtList->AddString(mainFont,_("Language: ")+s,
-			0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
+		AddItem(_("Language")+": "+s);
 	}
 
 	//thread count
@@ -132,9 +66,7 @@ void ConfigScreen::OnDirty(){
 		if(theApp->m_nThreadCount>0) s=str(MyFormat("%d")<<theApp->m_nThreadCount);
 		else s=str(MyFormat(_("Automatic (%d)"))<<SDL_GetCPUCount());
 
-		m_txtList->NewStringIndex();
-		m_txtList->AddString(mainFont,_("Thread Count: ")+s,
-			0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
+		AddItem(_("Thread Count")+": "+s);
 	}
 
 	//orientation
@@ -144,25 +76,33 @@ void ConfigScreen::OnDirty(){
 		s[1]=_("Horizontal Up-Down");
 		s[2]=_("Vertical Up-Down");
 
-		m_txtList->NewStringIndex();
-		m_txtList->AddString(mainFont,_("Multiplayer Orientation: ")+s[theApp->m_nOrientation],
-			0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
+		AddItem(_("Multiplayer Orientation")+": "+s[theApp->m_nOrientation]);
 	}
 
 	//auto save
-	m_txtList->NewStringIndex();
-	m_txtList->AddString(mainFont,_("Save Progress At Exit: ")+yesno[theApp->m_bAutoSave?1:0],
-		0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
+	AddItem(_("Save Progress At Exit: ")+yesno[theApp->m_bAutoSave?1:0]);
+
+	//continuous key
+	AddItem(_("Continuous Key Event: ")+yesno[theApp->m_bContinuousKey?1:0]);
+
+	//show FPS
+	AddItem(_("Show FPS: ")+yesno[theApp->m_bShowFPS?1:0]);
+
+	//button size
+	AddItem(str(MyFormat(_("Button Size")+": %d%%")<<(theApp->m_nButtonSize*100/64)));
+
+	//menu text size
+	AddItem(str(MyFormat(_("Menu Text Size")+": %d%%")<<int(theApp->m_fMenuTextScale*100.0f)));
+
+	//menu height
+	AddItem(str(MyFormat(_("Menu Height")+": %d%%")<<(theApp->m_nMenuHeightFactor*25)));
 
 	//empty line
-	m_txtList->NewStringIndex();
-	m_nListCount++;
+	AddEmptyItem();
 
 	//player name
 	for(int i=0;i<2;i++){
-		m_txtList->NewStringIndex();
-		m_txtList->AddString(mainFont,str(MyFormat(_("Name of Player %d: "))<<(i+1))+toUTF8(theApp->m_sPlayerName[i]),
-			0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
+		AddItem(str(MyFormat(_("Name of Player %d: "))<<(i+1))+toUTF8(theApp->m_sPlayerName[i]));
 	}
 
 	//keys
@@ -183,22 +123,17 @@ void ConfigScreen::OnDirty(){
 
 		for(int idx=0;idx<3;idx++){
 			//empty line
-			m_txtList->NewStringIndex();
-			m_nListCount++;
+			AddEmptyItem();
 
 			//title
-			m_txtList->NewStringIndex();
-			m_txtList->AddString(mainFont,keysTitle[idx],
-				0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
+			AddItem(keysTitle[idx]);
 
 			for(int i=0;i<8;i++){
 				u8string s;
 				if(theApp->m_nKey[idx*8+i]) s=SDL_GetKeyName(theApp->m_nKey[idx*8+i]);
 				else s=keysTitle[3];
 
-				m_txtList->NewStringIndex();
-				m_txtList->AddString(mainFont,keysTitle[i+4]+s,
-					0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
+				AddItem(keysTitle[i+4]+s);
 			}
 		}
 	}
@@ -208,9 +143,24 @@ int ConfigScreen::OnClick(int index){
 	switch(index){
 	case ConfigAnimationSpeed:
 		//animation speed
-		if((++(theApp->m_nAnimationSpeed))>3) theApp->m_nAnimationSpeed=0;
-		m_bConfigDirty=true;
-		m_bDirty=true;
+		{
+			//init list box
+			SimpleStaticListScreen screen;
+
+			for(int i=0;i<4;i++){
+				screen.m_sList.push_back(str(MyFormat("%d%%")<<(100<<i)));
+			}
+
+			screen.m_sTitle=_("Animation Speed");
+
+			//show and get result
+			int ret=screen.DoModal();
+			if(ret>0 && ret-1!=theApp->m_nAnimationSpeed){
+				theApp->m_nAnimationSpeed=ret-1;
+				m_bConfigDirty=true;
+				m_bDirty=true;
+			}
+		}
 		break;
 	case ConfigShowGrid:
 		//show grid
@@ -230,12 +180,64 @@ int ConfigScreen::OnClick(int index){
 		m_bConfigDirty=true;
 		m_bDirty=true;
 		break;
+	case ConfigButtonSize:
+		//button size
+		{
+			//init list box
+			SimpleStaticListScreen screen;
+
+			for(int i=4;i<=16;i++){
+				screen.m_sList.push_back(str(MyFormat("%d%%")<<(i*25)));
+			}
+
+			screen.m_sTitle=_("Button Size");
+
+			//show and get result
+			int ret=screen.DoModal();
+			if(ret>0){
+				theApp->m_nButtonSize=(ret+3)*16;
+				m_bConfigDirty=true;
+				m_bDirty=true;
+				//recreate header
+				CreateTitleBarText(_("Config"));
+				CreateTitleBarButtons();
+			}
+		}
+		break;
 	case ConfigLanguage:
 		//language
 		{
-			ChooseLanguageScreen screen;
-			if(screen.DoModal() && screen.m_sLocale!=theApp->m_sLocale){
-				theApp->m_sLocale=screen.m_sLocale;
+			//enumerate available locale
+			std::vector<u8string> availableLocale;
+			availableLocale.push_back("?");
+			availableLocale.push_back("");
+
+			std::vector<u8string> fs=enumAllFiles("data/locale/","mo");
+			for(unsigned int i=0;i<fs.size();i++){
+				u8string::size_type lps=fs[i].find_last_of('.');
+				if(lps!=u8string::npos) availableLocale.push_back(fs[i].substr(0,lps));
+				else availableLocale.push_back(fs[i]);
+			}
+
+			//init list box
+			SimpleStaticListScreen screen;
+
+			screen.m_sList.push_back(_("Disabled"));
+
+			char buf[256];
+			GNUGetText::GetSystemLocale(buf,sizeof(buf));
+			screen.m_sList.push_back(str(MyFormat(_("Use system language (%s)"))<<buf));
+
+			for(unsigned int i=2;i<availableLocale.size();i++){
+				screen.m_sList.push_back(availableLocale[i]);
+			}
+
+			screen.m_sTitle=_("Language");
+
+			//show and get result
+			int ret=screen.DoModal();
+			if(ret>0 && availableLocale[ret-1]!=theApp->m_sLocale){
+				theApp->m_sLocale=availableLocale[ret-1];
 				theApp->LoadLocale();
 				m_bConfigDirty=true;
 				m_bDirty=true;
@@ -244,21 +246,109 @@ int ConfigScreen::OnClick(int index){
 		break;
 	case ConfigThreadCount:
 		//thread count
-		if((++(theApp->m_nThreadCount))>8) theApp->m_nThreadCount=0;
-		m_bConfigDirty=true;
-		m_bDirty=true;
+		{
+			//init list box
+			SimpleStaticListScreen screen;
+
+			screen.m_sList.push_back(str(MyFormat(_("Automatic (%d)"))<<SDL_GetCPUCount()));
+			for(int i=1;i<=8;i++){
+				screen.m_sList.push_back(str(MyFormat("%d")<<i));
+			}
+
+			screen.m_sTitle=_("Thread Count");
+
+			//show and get result
+			int ret=screen.DoModal();
+			if(ret>0 && ret-1!=theApp->m_nThreadCount){
+				theApp->m_nThreadCount=ret-1;
+				m_bConfigDirty=true;
+				m_bDirty=true;
+			}
+		}
 		break;
 	case ConfigOrientation:
 		//orientation
-		if((++(theApp->m_nOrientation))>2) theApp->m_nOrientation=0;
-		m_bConfigDirty=true;
-		m_bDirty=true;
+		{
+			//init list box
+			SimpleStaticListScreen screen;
+
+			screen.m_sList.push_back(_("Normal"));
+			screen.m_sList.push_back(_("Horizontal Up-Down"));
+			screen.m_sList.push_back(_("Vertical Up-Down"));
+
+			screen.m_sTitle=_("Multiplayer Orientation");
+
+			//show and get result
+			int ret=screen.DoModal();
+			if(ret>0 && ret-1!=theApp->m_nOrientation){
+				theApp->m_nOrientation=ret-1;
+				m_bConfigDirty=true;
+				m_bDirty=true;
+			}
+		}
 		break;
 	case ConfigAutoSave:
 		//auto save
 		theApp->m_bAutoSave=!theApp->m_bAutoSave;
 		m_bConfigDirty=true;
 		m_bDirty=true;
+		break;
+	case ConfigContinuousKey:
+		//continuous key
+		theApp->m_bContinuousKey=!theApp->m_bContinuousKey;
+		m_bConfigDirty=true;
+		m_bDirty=true;
+		break;
+	case ConfigShowFPS:
+		//show fps
+		theApp->m_bShowFPS=!theApp->m_bShowFPS;
+		m_bConfigDirty=true;
+		m_bDirty=true;
+		break;
+	case ConfigMenuTextSize:
+		//menu text size
+		{
+			//init list box
+			SimpleStaticListScreen screen;
+
+			for(int i=4;i<=16;i++){
+				screen.m_sList.push_back(str(MyFormat("%d%%")<<(i*25)));
+			}
+
+			screen.m_sTitle=_("Menu Text Size");
+
+			//show and get result
+			int ret=screen.DoModal();
+			if(ret>0){
+				theApp->m_nMenuTextSize=(ret+3)<<3;
+				theApp->m_fMenuTextScale=theApp->m_nMenuTextSize/32.0f;
+				theApp->m_nMenuHeight=(theApp->m_nMenuTextSize*theApp->m_nMenuHeightFactor)>>2;
+				m_bConfigDirty=true;
+				m_bDirty=true;
+			}
+		}
+		break;
+	case ConfigMenuHeightFactor:
+		//menu height
+		{
+			//init list box
+			SimpleStaticListScreen screen;
+
+			for(int i=4;i<=16;i++){
+				screen.m_sList.push_back(str(MyFormat("%d%%")<<(i*25)));
+			}
+
+			screen.m_sTitle=_("Menu Height");
+
+			//show and get result
+			int ret=screen.DoModal();
+			if(ret>0){
+				theApp->m_nMenuHeightFactor=(ret+3);
+				theApp->m_nMenuHeight=(theApp->m_nMenuTextSize*theApp->m_nMenuHeightFactor)>>2;
+				m_bConfigDirty=true;
+				m_bDirty=true;
+			}
+		}
 		break;
 	case ConfigPlayerName:
 	case ConfigPlayerName+1:

@@ -10,22 +10,13 @@
 #include "include_sdl.h"
 
 void RandomMapScreen::OnDirty(){
-	if(m_txtList) m_txtList->clear();
-	else m_txtList=new SimpleText;
+	ResetList();
 
-	m_nListCount=0;
+	AddItem(_("Rotate block only 6x6"));
+	AddItem(_("Rotate block only 8x6"));
+	AddItem(_("Rotate block only 8x8"));
 
-	m_txtList->NewStringIndex();
-	m_txtList->AddString(mainFont,_("Rotate block only 6x6"),0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
-
-	m_txtList->NewStringIndex();
-	m_txtList->AddString(mainFont,_("Rotate block only 8x6"),0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
-
-	m_txtList->NewStringIndex();
-	m_txtList->AddString(mainFont,_("Rotate block only 8x8"),0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
-
-	m_txtList->NewStringIndex();
-	m_txtList->AddString(mainFont,_("Random"),0,float((m_nListCount++)*32),0,32,1,DrawTextFlags::VCenter);
+	AddItem(_("Random"));
 }
 
 int RandomMapScreen::OnClick(int index){

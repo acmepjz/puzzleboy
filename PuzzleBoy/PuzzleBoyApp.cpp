@@ -26,9 +26,13 @@ PuzzleBoyApp::PuzzleBoyApp()
 ,m_bShowLines(true)
 ,m_bInternationalFont(true)
 ,m_bAutoSave(true)
+,m_bContinuousKey(true)
+,m_bShowFPS(false)
 ,m_pDocument(NULL)
 ,m_nCurrentLevel(0)
 ,m_nMyResizeTime(-1)
+,m_nToolTipTime(0)
+,m_bToolTipIsExit(false)
 {
 }
 
@@ -200,6 +204,15 @@ void PuzzleBoyApp::LoadConfig(const u8string& fileName){
 	m_sLastFile=GetConfig(cfg,"LastFile","");
 	m_nLastLevel=GetConfig(cfg,"LastLevel",0);
 	m_sLastRecord=GetConfig(cfg,"LastRecord","");
+
+	m_bContinuousKey=GetConfig(cfg,"ContinuousKey",1)!=0;
+	m_bShowFPS=GetConfig(cfg,"ShowFPS",0)!=0;
+
+	m_nButtonSize=GetConfig(cfg,"ButtonSize",64);
+	m_nMenuTextSize=GetConfig(cfg,"MenuTextSize",32);
+	m_fMenuTextScale=m_nMenuTextSize/32.0f;
+	m_nMenuHeightFactor=GetConfig(cfg,"MenuHeightFactor",4);
+	m_nMenuHeight=(m_nMenuTextSize*m_nMenuHeightFactor)>>2;
 }
 
 void PuzzleBoyApp::SaveConfig(const u8string& fileName){
@@ -228,6 +241,13 @@ void PuzzleBoyApp::SaveConfig(const u8string& fileName){
 	cfg["LastFile"]=m_sLastFile;
 	PutConfig(cfg,"LastLevel",m_nLastLevel);
 	cfg["LastRecord"]=m_sLastRecord;
+
+	PutConfig(cfg,"ContinuousKey",m_bContinuousKey?1:0);
+	PutConfig(cfg,"ShowFPS",m_bShowFPS?1:0);
+
+	PutConfig(cfg,"ButtonSize",m_nButtonSize);
+	PutConfig(cfg,"MenuTextSize",m_nMenuTextSize);
+	PutConfig(cfg,"MenuHeightFactor",m_nMenuHeightFactor);
 
 	u8file *f=u8fopen(fileName.c_str(),"wb");
 	if(f){
@@ -299,25 +319,25 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount){
 			view->m_scrollView.m_fAutoResizeScale[2]=0.5f;
 			view->m_scrollView.m_fAutoResizeScale[3]=1.0f;
 			view->m_scrollView.m_nAutoResizeOffset[2]=-4;
-			view->m_scrollView.m_nAutoResizeOffset[3]=-128;
-			view->m_scrollView.m_nScissorOffset[3]=128;
+			view->m_scrollView.m_nAutoResizeOffset[3]=-2*m_nButtonSize;
+			view->m_scrollView.m_nScissorOffset[3]=2*m_nButtonSize;
 			break;
 		case 1:
 			//horizontal up-down
 			view->m_scrollView.m_fAutoResizeScale[2]=0.5f;
 			view->m_scrollView.m_fAutoResizeScale[3]=1.0f;
 			view->m_scrollView.m_nAutoResizeOffset[2]=-4;
-			view->m_scrollView.m_nAutoResizeOffset[1]=128;
-			view->m_scrollView.m_nScissorOffset[1]=-128;
+			view->m_scrollView.m_nAutoResizeOffset[1]=2*m_nButtonSize;
+			view->m_scrollView.m_nScissorOffset[1]=-2*m_nButtonSize;
 			view->m_scrollView.m_nOrientation=2;
 			break;
 		case 2:
 			//vertical up-down
 			view->m_scrollView.m_fAutoResizeScale[2]=1.0f;
 			view->m_scrollView.m_fAutoResizeScale[3]=0.5f;
-			view->m_scrollView.m_nAutoResizeOffset[1]=128;
+			view->m_scrollView.m_nAutoResizeOffset[1]=2*m_nButtonSize;
 			view->m_scrollView.m_nAutoResizeOffset[3]=-4;
-			view->m_scrollView.m_nScissorOffset[1]=-128;
+			view->m_scrollView.m_nScissorOffset[1]=-2*m_nButtonSize;
 			view->m_scrollView.m_nOrientation=2;
 			break;
 		}
@@ -341,8 +361,8 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount){
 		view->m_scrollView.m_bAutoResize=true;
 		view->m_scrollView.m_fAutoResizeScale[2]=1.0f;
 		view->m_scrollView.m_fAutoResizeScale[3]=1.0f;
-		view->m_scrollView.m_nAutoResizeOffset[3]=-128;
-		view->m_scrollView.m_nScissorOffset[3]=128;
+		view->m_scrollView.m_nAutoResizeOffset[3]=-2*m_nButtonSize;
+		view->m_scrollView.m_nScissorOffset[3]=2*m_nButtonSize;
 		switch(m_nOrientation){
 		case 0:
 		case 1:
@@ -374,8 +394,8 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount){
 		view->m_scrollView.m_bAutoResize=true;
 		view->m_scrollView.m_fAutoResizeScale[2]=1.0f;
 		view->m_scrollView.m_fAutoResizeScale[3]=1.0f;
-		view->m_scrollView.m_nAutoResizeOffset[3]=-128;
-		view->m_scrollView.m_nScissorOffset[3]=128;
+		view->m_scrollView.m_nAutoResizeOffset[3]=-2*m_nButtonSize;
+		view->m_scrollView.m_nScissorOffset[3]=2*m_nButtonSize;
 		view->m_scrollView.OnTimer();
 
 		view->m_pDocument=m_pDocument;
@@ -404,11 +424,15 @@ bool PuzzleBoyApp::OnTimer(){
 
 			if(view){
 				if(m_view.size()==1){
+					//single player
 					view->left=0.0f;
 					view->top=0.0f;
 					view->right=screenAspectRatio;
 					view->bottom=1.0f;
+					m_view[i]->m_scrollView.m_nAutoResizeOffset[3]=-2*m_nButtonSize;
+					m_view[i]->m_scrollView.m_nScissorOffset[3]=2*m_nButtonSize;
 				}else if(i==0){
+					//player 1
 					if(m_nOrientation==2){
 						view->left=0.0f;
 						view->top=0.0f;
@@ -420,7 +444,15 @@ bool PuzzleBoyApp::OnTimer(){
 						view->right=screenAspectRatio*0.5f;
 						view->bottom=1.0f;
 					}
+					if(m_nOrientation==0){
+						m_view[i]->m_scrollView.m_nAutoResizeOffset[3]=-2*m_nButtonSize;
+						m_view[i]->m_scrollView.m_nScissorOffset[3]=2*m_nButtonSize;
+					}else{
+						m_view[i]->m_scrollView.m_nAutoResizeOffset[1]=2*m_nButtonSize;
+						m_view[i]->m_scrollView.m_nScissorOffset[1]=-2*m_nButtonSize;
+					}
 				}else{
+					//player 2
 					if(m_nOrientation==2){
 						view->left=0.0f;
 						view->top=0.5f;
@@ -432,6 +464,8 @@ bool PuzzleBoyApp::OnTimer(){
 						view->right=screenAspectRatio;
 						view->bottom=1.0f;
 					}
+					m_view[i]->m_scrollView.m_nAutoResizeOffset[3]=-2*m_nButtonSize;
+					m_view[i]->m_scrollView.m_nScissorOffset[3]=2*m_nButtonSize;
 				}
 			}
 		}
@@ -456,4 +490,12 @@ void PuzzleBoyApp::OnKeyUp(int nChar,int nFlags){
 	for(unsigned int i=0;i<m_view.size();i++){
 		m_view[i]->OnKeyUp(nChar,nFlags);
 	}
+}
+
+void PuzzleBoyApp::ShowToolTip(const u8string& text,bool isExit){
+	m_sToolTipText=text;
+	m_bToolTipIsExit=isExit;
+
+	if(m_nToolTipTime<16) m_nToolTipTime=127-m_nToolTipTime;
+	else if(m_nToolTipTime<112) m_nToolTipTime=112;
 }

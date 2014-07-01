@@ -27,14 +27,15 @@ public:
 	bool OnKeyDown(int nChar,int nFlags);
 	void OnKeyUp(int nChar,int nFlags);
 
-	virtual void OnMultiGesture(float fx,float fy,float dx,float dy,float zoom);
+	void OnMultiGesture(float fx,float fy,float dx,float dy,float zoom) override;
 
 	//nType: SDL_MOUSEBUTTONDOWN or SDL_MOUSEBUTTONUP or SDL_MOUSEMOTION
-	virtual void OnMouseEvent(int which,int state,int xMouse,int yMouse,int nFlags,int nType);
+	void OnMouseEvent(int which,int state,int xMouse,int yMouse,int nFlags,int nType) override;
 public:
 	SimpleScrollView m_scrollView;
 
 	bool m_bShowYesNoScreenKeyboard;
+	int m_nScreenKeyboardPressedIndex;
 
 	u16string m_sPlayerName;
 

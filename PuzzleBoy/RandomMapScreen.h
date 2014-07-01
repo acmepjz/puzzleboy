@@ -9,9 +9,9 @@ class MT19937;
 //ad-hoc random level TEST
 class RandomMapScreen:public SimpleListScreen{
 public:
-	virtual void OnDirty();
-	virtual int OnClick(int index);
-	virtual int DoModal();
+	void OnDirty() override;
+	int OnClick(int index) override;
+	int DoModal() override;
 
 	static int DoRandom(int type,PuzzleBoyLevelData*& outputLevel,MT19937 *rnd,void *userData=NULL,RandomLevelCallback callback=NULL);
 

@@ -15,10 +15,12 @@ void SetProjectionMatrix(int idx=0);
 void ClearScreen();
 void OnVideoResize(int width, int height);
 
+//draw FPS and other various overlay
+//lpIdleTime: optional variable, if the overlay is dirty then it set idle time to 0
+void ShowScreen(int* lpIdleTime=NULL);
+
 void AddScreenKeyboard(float x,float y,float w,float h,int index,std::vector<float>& v,std::vector<unsigned short>& idx);
 void DrawScreenKeyboard(const std::vector<float>& v,const std::vector<unsigned short>& idx);
-
-bool IsTouchscreen();
 
 const int SCREEN_KEYBOARD_UP=0x1;
 const int SCREEN_KEYBOARD_DOWN=0x101;
@@ -40,10 +42,6 @@ extern int screenWidth;
 extern int screenHeight;
 extern int m_nResizeTime;
 extern float screenAspectRatio;
-
-struct SDL_Window;
-
-extern SDL_Window *mainWindow;
 
 extern bool m_bRun;
 extern bool m_bTouchscreen;

@@ -4,9 +4,9 @@
 
 class ConfigScreen:public SimpleListScreen{
 public:
-	virtual void OnDirty();
-	virtual int OnClick(int index);
-	virtual int DoModal();
+	void OnDirty() override;
+	int OnClick(int index) override;
+	int DoModal() override;
 public:
 	bool m_bConfigDirty;
 };
