@@ -24,6 +24,7 @@ public:
 	int m_nAnimationSpeed;
 	bool m_bShowGrid;
 	CString m_sPlayerName;
+	int m_nLanguage;
 
 // ÖØÐ´
 public:

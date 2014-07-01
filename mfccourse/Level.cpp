@@ -113,7 +113,7 @@ void CLevel::CreateDefault()
 	for(int i=0;i<m_objBlocks.GetSize();i++) delete m_objBlocks[i];
 	m_objBlocks.RemoveAll();
 
-	m_sLevelName=_T("Î´ÃüÃû¹Ø¿¨");
+	m_sLevelName.LoadString(IDS_UNNAMED_LEVEL);
 }
 
 int CLevel::HitTestForPlacingBlocks(int x,int y,int nEditingBlockIndex) const

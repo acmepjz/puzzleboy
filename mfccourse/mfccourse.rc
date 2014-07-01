@@ -185,6 +185,11 @@ BEGIN
             MENUITEM "编辑(&E)",                      IDR_EDIT_TOOLBAR
         END
         MENUITEM "状态栏(&S)",                     ID_VIEW_STATUS_BAR
+        POPUP "Lan&guage"
+        BEGIN
+            MENUITEM "&English",                      ID_LANGUAGE_1
+            MENUITEM "&Chinese",                      ID_LANGUAGE_99
+        END
     END
     POPUP "帮助(&H)"
     BEGIN
@@ -265,6 +270,11 @@ BEGIN
             MENUITEM "编辑(&E)",                      IDR_EDIT_TOOLBAR
         END
         MENUITEM "状态栏(&S)",                     ID_VIEW_STATUS_BAR
+        POPUP "Lan&guage"
+        BEGIN
+            MENUITEM "&English",                      ID_LANGUAGE_1
+            MENUITEM "&Chinese",                      ID_LANGUAGE_99
+        END
         MENUITEM SEPARATOR
         MENUITEM "显示网格(&G)\tCtrl+'",            ID_VIEW_GRID
         POPUP "动画速度(&E)"
@@ -369,7 +379,7 @@ BEGIN
     DEFPUSHBUTTON   "确定",IDOK,262,218,50,14,WS_GROUP
     CONTROL         "",IDC_TAB1,"SysTabControl32",0x0,6,6,306,204
     ICON            IDR_MAINFRAME,IDC_MFC_ICON,12,24,20,20
-    LTEXT           "Puzzle Boy MFC, Version 1.0\n\nCopyright (C) 2012-2013 acme_pjz\nPuzzle Boy Classical Levels 关卡版权归 Puzzle Boy Flash 以及 Kwirk, Puzzle Boy,\nAmazing Tater 所有",IDC_INFO,36,24,260,48,SS_NOPREFIX
+    LTEXT           "Puzzle Boy MFC, Version 1.0\n\nCopyright (C) 2012-2014 acme_pjz\nPuzzle Boy Classical Levels 关卡版权归 Puzzle Boy Flash 以及 Kwirk, Puzzle Boy,\nAmazing Tater 所有",IDC_INFO,36,24,260,48,SS_NOPREFIX
     CONTROL         "Puzzle Boy Flash 地址:\n<a>http://www.freegamesnews.com/en/games/2010/PuzzleBoyFlash.php</a>",IDC_PUZZLE_BOY_FLASH,
                     "SysLink",WS_TABSTOP,36,72,258,24
     CONTROL         "GNU GPL",IDC_GNU_GPL,"SysLink",WS_TABSTOP,36,96,258,102
@@ -384,7 +394,7 @@ BEGIN
     LTEXT           "黑色方块是深坑, 小人不能通过, 但是各种箱子可以通过。黄色方块是普通箱子。当箱子完全处在深坑上方时, 箱子便会填平深坑。",IDC_INFO4,36,72,228,24,SS_NOPREFIX
     LTEXT           "浅蓝色方块是旋转方块。可以推动它使其旋转, 但是旋转范围内必须没有障碍物。",IDC_INFO5,72,96,228,24,SS_NOPREFIX
     LTEXT           "绿色方块是目标箱子, 绿色小点是目标区域。目标箱子不会掉入深坑中。只有当所有绿色点上面都放置上绿色箱子时终点才会打开。",IDC_INFO6,36,156,228,24,SS_NOPREFIX
-    LTEXT           "Blah",IDC_EDIT_INFO,12,24,294,180,SS_NOPREFIX
+    LTEXT           "在添加各种箱子时, 点击已有箱子可以编辑它们。编辑箱子时, 方向键移动箱子, Enter 键应用修改, Esc 键放弃修改, Del 键删除当前箱子。",IDC_EDIT_INFO,12,24,294,180,SS_NOPREFIX
 END
 
 IDD_LEVEL_PROPERTIES DIALOGEX 0, 0, 316, 180
@@ -524,7 +534,7 @@ BEGIN
             VALUE "FileDescription", "像推箱子的山寨游戏"
             VALUE "FileVersion", "1.0.0.2"
             VALUE "InternalName", "mfccourse.exe"
-            VALUE "LegalCopyright", "Copyright (C) 2012-2013 acme_pjz"
+            VALUE "LegalCopyright", "Copyright (C) 2012-2014 acme_pjz"
             VALUE "OriginalFilename", "mfccourse.exe"
             VALUE "ProductVersion", "1.0.0.2"
         END
@@ -795,7 +805,680 @@ BEGIN
     ID_EDIT_ROTATE_CW       "顺时针旋转选择的砖块\n顺时针旋转"
 END
 
+STRINGTABLE 
+BEGIN
+IDD_ABOUTBOX  "标准"
+IDR_EDIT_TOOLBAR  "编辑"
+IDS_UNNAMED_LEVEL "未命名关卡"
+IDS_DOES_NOT_EXIST "不存在"
+IDS_ERROR_OCCURED "出现错误"
+IDS_LEVEL_NAME "关卡名称"
+IDS_NUMBER "编号"
+IDS_SIZE "大小"
+IDS_RECORD "纪录"
+IDS_CHECKSUM "校验和"
+IDS_PLAYER_NAME "玩家名称"
+IDS_CONFIRM_DELETE "确定删除"
+IDS_CONFIRM_SAVE "确定保存修改? 请做好备份工作"
+IDS_UPDATE_DATABASE_COMPLETED "完成。当前数据库共有 %d 关卡。"
+IDS_FIND_RECORD_COMPLETED "完成。共找到 %d 关卡有最佳纪录。"
+IDS_AVIStreamSetFormat_FAILED "AVIStreamSetFormat 失败"
+IDS_AVIMakeCompressedStream_FAILED "AVIMakeCompressedStream 失败"
+IDS_AVIFileCreateStream_FAILED "AVIFileCreateStream 失败"
+IDS_AVIFileOpen_FAILED "AVIFileOpen 失败"
+IDS_ICCompressQuery_FAILED "ICCompressQuery 失败。请尝试修改视频分辨率或者编码器。"
+IDS_COMPLETED "完成。"
+IDS_BEST_RECORD_NUM "最佳纪录: %d"
+IDS_BEST_RECORD_DOES_NOT_EXIST "最佳纪录不存在"
+IDS_UNNAMED_LEVEL_PACK "未命名关卡包"
+IDS_LEVEL_FINISHED "恭喜你完成本关卡!"
+IDS_LEVEL_FINISHED_2 "恭喜你完成本关卡! 进入下一关"
+IDS_LEVEL_FINISHED_3 "恭喜你完成本关卡! 回到第一关"
+IDS_LEVEL_FINISHED_4 "\n步数: %d - 最佳纪录: "
+IDS_LEVEL_FINISHED_5 "\n恭喜你打破最佳纪录!"
+IDS_IMPORT_LEVEL_COMPLETED "完成。目前共有 %d 关卡。"
+IDS_IMPORT_DATABASE_COMPLETED "完成。新增 %d 关卡, %d 最佳纪录。"
+IDS_FILE_FORMAT_TXT "支持的格式(*.txt;*.dat;*.sok;*.map)|*.txt;*.dat;*.sok;*.map||"
+IDS_FILE_FORMAT_DAT "关卡数据库文件(*.dat)|*.dat||"
+IDS_FILE_FORMAT_AVI "视频剪辑(*.avi)|*.avi||"
+IDS_EDIT_MODE " (编辑模式)"
+IDS_LEVEL_INFO "第%d关 - %s (%dx%d) - 共%d关"
+IDS_LEVEL_INFO_2 " - 步数: %d"
+IDS_LEVEL_INDO_3 " - 纪录: %d"
+IDS_ABOUT "关于"
+IDS_GAME_INFO "游戏说明"
+IDS_LEVEL_EDIT_INFO "地图编辑说明"
+END
+
 #endif    // 中文(中华人民共和国) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// 英语(美国) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New\tCtrl+N",                ID_FILE_NEW
+        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "P&rint setup...",             ID_FILE_PRINT_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "Recent files",                ID_FILE_MRU_FILE1, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Close",                      ID_FILE_CLOSE
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&View"
+    BEGIN
+        POPUP "&Toolbar"
+        BEGIN
+            MENUITEM "&Standard",                   ID_VIEW_TOOLBAR
+            MENUITEM "&Edit",                       IDR_EDIT_TOOLBAR
+        END
+        MENUITEM "&Status bar",                 ID_VIEW_STATUS_BAR
+        POPUP "Lan&guage"
+        BEGIN
+            MENUITEM "&English",                      ID_LANGUAGE_1
+            MENUITEM "&Chinese",                      ID_LANGUAGE_99
+        END
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About mfccourse...",         ID_APP_ABOUT
+    END
+END
+
+IDR_LevelTYPE MENU 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New\tCtrl+N",                ID_FILE_NEW
+        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
+        MENUITEM "&Close",                      ID_FILE_CLOSE
+        MENUITEM "&Save\tCtrl+S",               ID_FILE_SAVE
+        MENUITEM "Save &as...",                 ID_FILE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...\tCtrl+P",           ID_FILE_PRINT
+        MENUITEM "Print pre&view",              ID_FILE_PRINT_PREVIEW
+        MENUITEM "P&rint setup...",             ID_FILE_PRINT_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "Recent files",                ID_FILE_MRU_FILE1, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM "&Redo\tCtrl+Y",               ID_EDIT_REDO
+        MENUITEM "Re&start\tCtrl+R",            ID_GAME_RESTART
+        MENUITEM SEPARATOR
+        MENUITEM "&Edit mode\tCtrl+E",          ID_EDIT_EDITMODE
+        POPUP "T&ools"
+        BEGIN
+            MENUITEM "&Select",                     ID_EDIT_SELECT
+            MENUITEM SEPARATOR
+            MENUITEM "&Ground",                     ID_EDIT_BRICK0
+            MENUITEM "&Wall",                       ID_EDIT_BRICK1
+            MENUITEM "&Hole",                       ID_EDIT_BRICK2
+            MENUITEM "Box &target",                 ID_EDIT_BRICK3
+            MENUITEM "&Exit",                       ID_EDIT_BRICK4
+            MENUITEM "&Player",                     ID_EDIT_BRICK5
+            MENUITEM SEPARATOR
+            MENUITEM "Add &box",                    ID_EDIT_PUSHABLE0
+            MENUITEM "Add &rotation block",         ID_EDIT_PUSHABLE1
+            MENUITEM "&Add target box",             ID_EDIT_PUSHABLE2
+        END
+        POPUP "Selected &box"
+        BEGIN
+            MENUITEM "Move &up\tUp",                ID_EDIT_MOVE_UP
+            MENUITEM "Move &down\tDown",            ID_EDIT_MOVE_DOWN
+            MENUITEM "Move &left\tLeft",            ID_EDIT_MOVE_LEFT
+            MENUITEM "Move &right\tRight",          ID_EDIT_MOVE_RIGHT
+            MENUITEM SEPARATOR
+            MENUITEM "Rotate cloke&wise\tPgDn",     ID_EDIT_ROTATE_CW
+            MENUITEM "Rotate &counterclockwise\tPgUp", ID_EDIT_ROTATE_CCW
+            MENUITEM SEPARATOR
+            MENUITEM "&Apply changes\tEnter",       ID_EDIT_APPLY_CHANGES
+            MENUITEM "D&iscard changes\tEsc",       ID_EDIT_DISCARD_CHANGES
+        END
+        MENUITEM "Level propert&ies...\tCtrl+Enter", ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "A&dd level...",               ID_EDIT_ADD_LEVEL
+        MENUITEM "Remo&ve level",               ID_EDIT_REMOVE_LEVEL
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM "De&lete\tDel",                ID_EDIT_CLEAR
+        MENUITEM SEPARATOR
+        MENUITEM "Select &all\tCtrl+A",         ID_EDIT_SELECT_ALL
+    END
+    POPUP "&View"
+    BEGIN
+        POPUP "&Toolbar"
+        BEGIN
+            MENUITEM "&Standard",                   ID_VIEW_TOOLBAR
+            MENUITEM "&Edit",                       IDR_EDIT_TOOLBAR
+        END
+        MENUITEM "&Status bar",                 ID_VIEW_STATUS_BAR
+        POPUP "Lan&guage"
+        BEGIN
+            MENUITEM "&English",                      ID_LANGUAGE_1
+            MENUITEM "&Chinese",                      ID_LANGUAGE_99
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Show &grid\tCtrl+'",          ID_VIEW_GRID
+        POPUP "Animation sp&eed"
+        BEGIN
+            MENUITEM "&Faster\tCtrl+=",             ID_VIEW_ANIMATION_SPEED_0
+            MENUITEM "&Slower\tCtrl+-",             ID_VIEW_ANIMATION_SPEED_00
+            MENUITEM SEPARATOR
+            MENUITEM "&1x",                         ID_VIEW_ANIMATION_SPEED
+            MENUITEM "&2x",                         ID_VIEW_ANIMATION_SPEED_2
+            MENUITEM "&4x",                         ID_VIEW_ANIMATION_SPEED_3
+            MENUITEM "&8x",                         ID_VIEW_ANIMATION_SPEED_999
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&First level\tCtrl+Home",     ID_FIRST_LEVEL
+        MENUITEM "&Previous level\tCtrl+PgUp",  ID_PREV_LEVEL
+        MENUITEM "&Next level\tCtrl+PgDn",      ID_NEXT_LEVEL
+        MENUITEM "L&ast level\tCtrl+End",       ID_LAST_LEVEL
+        MENUITEM SEPARATOR
+        MENUITEM "&Level list...\tCtrl+L",      ID_LEVEL_LIST
+    END
+    POPUP "&Tools"
+    BEGIN
+        MENUITEM "Level rec&ord...",            ID_GAME_RECORD
+        MENUITEM SEPARATOR
+        MENUITEM "Level &database...",          ID_LEVEL_DATABASE
+        MENUITEM SEPARATOR
+        MENUITEM "&Import sokoban level...",    ID_TOOLS_IMPORT_SOKOBAN
+    END
+    POPUP "&Window"
+    BEGIN
+        MENUITEM "&New window",                 ID_WINDOW_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "&Cascade",                    ID_WINDOW_CASCADE
+        MENUITEM "Tile &horizontal",            ID_WINDOW_TILE_HORZ
+        MENUITEM "Tile &vertical",              ID_WINDOW_TILE_VERT
+        MENUITEM "&Arrange icons",              ID_WINDOW_ARRANGE
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About mfccourse...",         ID_APP_ABOUT
+    END
+END
+
+IDR_POPUP_SAVE MENU 
+BEGIN
+    POPUP "[]"
+    BEGIN
+        MENUITEM "&Save\tCtrl+S",               ID_FILE_SAVE
+        MENUITEM "Save &as...",                 ID_FILE_SAVE_AS
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 320, 240
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About Puzzle Boy MFC"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,262,218,50,14,WS_GROUP
+    CONTROL         "",IDC_TAB1,"SysTabControl32",0x0,6,6,306,204
+    ICON            IDR_MAINFRAME,IDC_MFC_ICON,12,24,20,20
+    LTEXT           "Puzzle Boy MFC, Version 1.0\n\nCopyright (C) 2012-2014 acme_pjz\nCopyright of Puzzle Boy Classical Levels belongs to Puzzle Boy Flash and original author of Kwirk, Puzzle Boy and Amazing Tater.",IDC_INFO,36,24,260,48,SS_NOPREFIX
+    CONTROL         "Website of Puzzle Boy Flash:\n<a>http://www.freegamesnews.com/en/games/2010/PuzzleBoyFlash.php</a>",IDC_PUZZLE_BOY_FLASH,
+                    "SysLink",WS_TABSTOP,36,72,258,24
+    CONTROL         "GNU GPL",IDC_GNU_GPL,"SysLink",WS_TABSTOP,36,96,258,102
+    LTEXT           "The objective of the game is move every player to the exit. Use arrow keys to move, Space or mouse click to switch player. The exit will open only if every green points are covered by green boxes.",IDC_INFO2,36,24,228,24,SS_NOPREFIX
+    CONTROL         131,IDR_PLAYER,"Static",SS_BITMAP,12,24,18,18
+    CONTROL         132,IDR_EXIT,"Static",SS_BITMAP,270,24,37,18
+    CONTROL         133,IDR_WALL,"Static",SS_BITMAP,12,48,18,18
+    CONTROL         134,IDR_BLOCK,"Static",SS_BITMAP,270,72,37,18
+    CONTROL         135,IDR_ROTATE_BLOCK,"Static",SS_BITMAP,12,96,55,55
+    CONTROL         136,IDR_TARGET_BLOCK,"Static",SS_BITMAP,270,156,37,18
+    LTEXT           "Orange block is wall. The player can't pass through as well as boxes.",IDC_INFO3,36,48,228,24,SS_NOPREFIX
+    LTEXT           "Black block is hole. The player can't pass through but boxes can. Yellow box is ordinary box. It can fill the hole if it is completely lying over the hole.",IDC_INFO4,36,72,228,24,SS_NOPREFIX
+    LTEXT           "Light blue box is rotate block. It can be pushed to rotate as long as no obstacle blocks it.",IDC_INFO5,72,96,228,24,SS_NOPREFIX
+    LTEXT           "Green box is target block, and green point is target area. Green box will not fall into hole. The exit will open only if every green points are covered by green boxes.",IDC_INFO6,36,156,228,24,SS_NOPREFIX
+    LTEXT           "When adding various boxes, you can edit existing boxes by click them. During editing boxes, use arrow keys to move box, Enter to apply changes, Esc to discard changes, Del to remove current box.",IDC_EDIT_INFO,12,24,294,180,SS_NOPREFIX
+END
+
+IDD_LEVEL_DATABASE DIALOGEX 0, 0, 364, 258
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Level Database (Beta)"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Save changes",IDOK,306,198,54,14
+    PUSHBUTTON      "Cancel",IDCANCEL,306,216,54,14
+    CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_TABSTOP,6,24,354,168,WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_LIST2,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_TABSTOP,6,198,132,54,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Merge from other file",IDYES,144,198,78,14
+    LTEXT           "Filter:",IDC_STATIC,6,6,24,12
+    EDITTEXT        IDC_KEYWORD,30,6,270,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Apply",IDRETRY,306,6,54,14
+END
+
+IDD_LEVEL_FINISHED DIALOGEX 0, 0, 196, 180
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Level Finished"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "Please input your name:",IDC_STATIC,6,48,84,12
+    EDITTEXT        IDC_EDIT1,6,60,186,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,144,162,50,14
+    ICON            "",IDC_ICON_INFORMATION,6,6,20,20
+    LTEXT           "",IDC_INFO,42,6,150,30
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,6,42,186,1
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,6,78,186,1
+    LTEXT           "Existing records:",IDC_STATIC,6,84,72,12
+    CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,6,96,132,78
+END
+
+IDD_LEVEL_LIST DIALOGEX 0, 0, 364, 217
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Level List"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_EDITLABELS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_TABSTOP,6,24,294,150,WS_EX_CLIENTEDGE
+    EDITTEXT        IDC_EDIT1,84,180,30,12,ES_AUTOHSCROLL | ES_NUMBER
+    PUSHBUTTON      "Move",IDC_MOVE_LEVEL,144,180,50,14
+    DEFPUSHBUTTON   "Go to",IDOK,306,6,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,306,24,50,14
+    LTEXT           "Move selected level to",IDC_STATIC,6,180,78,12
+    PUSHBUTTON      "Copy all levels to database",IDYES,6,198,96,14
+    PUSHBUTTON      "Show records for all levels",IDNO,108,198,96,14
+    CONTROL         "Show specified player only:",IDC_SHOW_SPECIFIED_PLAYER,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,210,198,102,12
+    EDITTEXT        IDC_EDIT2,312,198,48,12,ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT           "Filter:",IDC_STATIC,6,6,24,12
+    EDITTEXT        IDC_KEYWORD,30,6,270,12,ES_AUTOHSCROLL
+END
+
+IDD_LEVEL_PROPERTIES DIALOGEX 0, 0, 316, 180
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Level Properties"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_LEVEL_PACK_NAME,66,6,180,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_LEVEL_NAME,66,24,180,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_WIDTH,54,54,186,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_HEIGHT,54,72,186,12,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "Preserve contents",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,90,78,12
+    EDITTEXT        IDC_X_OFFSET,54,108,72,12,ES_AUTOHSCROLL | WS_DISABLED
+    EDITTEXT        IDC_Y_OFFSET,54,126,72,12,ES_AUTOHSCROLL | WS_DISABLED
+    DEFPUSHBUTTON   "OK",IDOK,258,6,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,258,24,50,14
+    LTEXT           "Level pack name",IDC_STATIC,6,6,60,12
+    LTEXT           "Level name",IDC_STATIC,6,24,48,12
+    GROUPBOX        "Change size",IDC_STATIC,6,42,240,132
+    LTEXT           "Width",IDC_STATIC,12,54,36,12
+    LTEXT           "Height",IDC_STATIC,12,72,36,12
+    LTEXT           "Offset X",IDC_STATIC,12,108,36,12
+    LTEXT           "Offset Y",IDC_STATIC,12,126,36,12
+    PUSHBUTTON      "",IDC_ALIGN1,150,102,24,18,WS_DISABLED
+    PUSHBUTTON      "",IDC_ALIGN2,174,102,24,18,WS_DISABLED
+    PUSHBUTTON      "",IDC_ALIGN3,198,102,24,18,WS_DISABLED
+    PUSHBUTTON      "",IDC_ALIGN4,150,120,24,18,WS_DISABLED
+    PUSHBUTTON      "",IDC_ALIGN5,174,120,24,18,WS_DISABLED
+    PUSHBUTTON      "",IDC_ALIGN6,198,120,24,18,WS_DISABLED
+    PUSHBUTTON      "",IDC_ALIGN7,150,138,24,18,WS_DISABLED
+    PUSHBUTTON      "",IDC_ALIGN8,174,138,24,18,WS_DISABLED
+    PUSHBUTTON      "",IDC_ALIGN9,198,138,24,18,WS_DISABLED
+    GROUPBOX        "Align",IDC_STATIC,138,90,96,72
+END
+
+IDD_RECORD DIALOGEX 0, 0, 316, 241
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Level Record"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Close",IDOK,246,6,62,14
+    LTEXT           "Copy record here or paste record and click 'Apply' button",IDC_STATIC,12,6,210,12
+    EDITTEXT        IDC_EDIT1,12,18,228,78,ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL
+    PUSHBUTTON      "Apply",IDYES,246,24,62,14
+    CONTROL         "Animated demo",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,246,42,66,12
+    PUSHBUTTON      "Create video",ID_GAME_RECORD,246,198,62,14
+    GROUPBOX        "Create video",IDC_STATIC,6,186,306,30
+    LTEXT           "Width",IDC_STATIC,12,198,24,12
+    EDITTEXT        IDC_EDIT2,36,198,48,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Height",IDC_STATIC,90,198,24,12
+    EDITTEXT        IDC_EDIT3,114,198,48,12,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "",IDC_PROGRESS1,"msctls_progress32",PBS_SMOOTH,6,222,306,12
+    GROUPBOX        "Level record",IDC_STATIC,6,102,306,78
+    LTEXT           "123",IDC_BEST_RECORD,246,114,60,24
+    PUSHBUTTON      "View best record",IDC_VIEW_RECORD,246,138,62,14
+    CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,12,114,228,60
+    PUSHBUTTON      "Simple optimization",IDC_OPTIMIZE,246,66,62,14
+    PUSHBUTTON      "Solve it (Beta)",IDC_SOLVE_IT,246,84,62,14,NOT WS_VISIBLE
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 232
+    END
+
+    IDD_LEVEL_DATABASE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 357
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 251
+    END
+
+    IDD_LEVEL_FINISHED, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 189
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 173
+    END
+
+    IDD_LEVEL_LIST, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 357
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 210
+    END
+
+    IDD_LEVEL_PROPERTIES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 309
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 173
+    END
+
+    IDD_RECORD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 309
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 234
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDR_MAINFRAME           "Puzzle Boy MFC"
+    IDR_LevelTYPE           "\nLevel\nLevel\nmfccourse Level (*.lev)\n.lev\nmfccourse.Level\nmfccourse.Level"
+END
+
+STRINGTABLE 
+BEGIN
+    AFX_IDS_APP_TITLE       "mfccourse"
+    AFX_IDS_IDLEMESSAGE     "Ready"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_INDICATOR_EXT        "EXT"
+    ID_INDICATOR_CAPS       "CAP"
+    ID_INDICATOR_NUM        "NUM"
+    ID_INDICATOR_SCRL       "SCRL"
+    ID_INDICATOR_OVR        "OVR"
+    ID_INDICATOR_REC        "REC"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_FILE_NEW             "Create new document\nNew"
+    ID_FILE_OPEN            "Open existing document\nOpen"
+    ID_FILE_CLOSE           "Close active document\nClose"
+    ID_FILE_SAVE            "Save active document\nSave"
+    ID_FILE_SAVE_AS         "Save active document with new name\nSave as"
+    ID_FILE_PAGE_SETUP      "Change print settings\nPage setup"
+    ID_FILE_PRINT_SETUP     "Change printer and print settings\nPrint setup"
+    ID_FILE_PRINT           "Print active document\nPrint"
+    ID_FILE_PRINT_PREVIEW   "Print preview\nPrint preview"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_APP_ABOUT            "Show application information, version and copyright\nAbout"
+    ID_APP_EXIT             "Exit application\nExit"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_FILE_MRU_FILE1       "Open this document"
+    ID_FILE_MRU_FILE2       "Open this document"
+    ID_FILE_MRU_FILE3       "Open this document"
+    ID_FILE_MRU_FILE4       "Open this document"
+    ID_FILE_MRU_FILE5       "Open this document"
+    ID_FILE_MRU_FILE6       "Open this document"
+    ID_FILE_MRU_FILE7       "Open this document"
+    ID_FILE_MRU_FILE8       "Open this document"
+    ID_FILE_MRU_FILE9       "Open this document"
+    ID_FILE_MRU_FILE10      "Open this document"
+    ID_FILE_MRU_FILE11      "Open this document"
+    ID_FILE_MRU_FILE12      "Open this document"
+    ID_FILE_MRU_FILE13      "Open this document"
+    ID_FILE_MRU_FILE14      "Open this document"
+    ID_FILE_MRU_FILE15      "Open this document"
+    ID_FILE_MRU_FILE16      "Open this document"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_NEXT_PANE            "Next pane\nNext pane"
+    ID_PREV_PANE            "Previous pane\nPrevious pane"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_WINDOW_NEW           "Create new window for active document\nNew window"
+    ID_WINDOW_ARRANGE       "Arrange icons\nArrange icons"
+    ID_WINDOW_CASCADE       "Cascade\nCascade"
+    ID_WINDOW_TILE_HORZ     "Tile horizontal\nTile horizontal"
+    ID_WINDOW_TILE_VERT     "Tile vertical\nTile vertical"
+    ID_WINDOW_SPLIT         "Split\nSplit"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_EDIT_CLEAR           "Clear selected\nClear"
+    ID_EDIT_CLEAR_ALL       "Clear all\nClear all"
+    ID_EDIT_COPY            "Copy selected to clipboard\nCopy"
+    ID_EDIT_CUT             "Cut selected to clipboard\nCut"
+    ID_EDIT_FIND            "Find\nFind"
+    ID_EDIT_PASTE           "Paste from clipboard\nPaste"
+    ID_EDIT_REPEAT          "Redo last operation\nRedo"
+    ID_EDIT_REPLACE         "Replace\nReplace"
+    ID_EDIT_SELECT_ALL      "Select all\nSelect all"
+    ID_EDIT_UNDO            "Undo last operation\nUndo"
+    ID_EDIT_REDO            "Redo last operation\nRedo"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_VIEW_TOOLBAR         "Show or hide toolbar\nToggle toolbar"
+    ID_VIEW_STATUS_BAR      "Show or hide status bar\nToggle status bar"
+END
+
+STRINGTABLE 
+BEGIN
+    AFX_IDS_SCSIZE          "Change window size"
+    AFX_IDS_SCMOVE          "Change window position"
+    AFX_IDS_SCMINIMIZE      "Minimize window"
+    AFX_IDS_SCMAXIMIZE      "Maximize window"
+    AFX_IDS_SCNEXTWINDOW    "Switch to next window"
+    AFX_IDS_SCPREVWINDOW    "Switch to previous window"
+    AFX_IDS_SCCLOSE         "Close window"
+END
+
+STRINGTABLE 
+BEGIN
+    AFX_IDS_SCRESTORE       "Restore window to default size"
+    AFX_IDS_SCTASKLIST      "Show task list"
+    AFX_IDS_MDICHILD        "Activate this window"
+END
+
+STRINGTABLE 
+BEGIN
+    AFX_IDS_PREVIEW_CLOSE   "Close print preview\nClose preview"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_VIEW_ANIMATION_SPEED_0 "Increase animation speed\nFaster"
+    ID_VIEW_ANIMATION_SPEED_00 "Decrease animation speed\nSlower"
+    ID_VIEW_ANIMATION_SPEED "Use 1x animation speed\n1x"
+    ID_VIEW_ANIMATION_SPEED_2 "Use 2x animation speed\n2x"
+    ID_VIEW_ANIMATION_SPEED_3 "Use 4x animation speed\n4x"
+    ID_VIEW_ANIMATION_SPEED_999 "Use 8x animation speed\n8x"
+    ID_VIEW_GRID            "Show grid in map\nShow grid"
+    ID_GAME_RECORD          "Show record of current level\nLevel record"
+    ID_GAME_RESTART         "Restart current level\nRestart"
+    ID_FIRST_LEVEL          "Go to first level\nFirst level"
+    ID_PREV_LEVEL           "Go to previous level\nPrevious level"
+    ID_NEXT_LEVEL           "Go to next level\nNext level"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_EDIT_EDITMODE        "Enter level edit mode\nEdit mode"
+    ID_EDIT_PROPERTIES      "Set level properties such as level name and size\nLevel properties"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_EDIT_SELECT          "Select items on the map and edit shape of boxes\nSelect"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_EDIT_BRICK0          "Place ground\nGround"
+    ID_EDIT_BRICK1          "Place wall\nWall"
+    ID_EDIT_BRICK2          "Place holes which can be filled by ordinary boxes\nHole"
+    ID_EDIT_BRICK3          "Place box targets which must be covered by target boxes\nBox target"
+    ID_EDIT_BRICK4          "Place exit\nExit"
+    ID_EDIT_BRICK5          "Place players, multiple players allowed\nPlayer"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_EDIT_PUSHABLE0       "Add ordinary box\nAdd ordinary box"
+    ID_EDIT_PUSHABLE1       "Add rotate block\nAdd rotate block"
+    ID_EDIT_PUSHABLE2       "Add target box\nAdd target box"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_EDIT_ADD_LEVEL       "Add a new level\nAdd level"
+    ID_EDIT_REMOVE_LEVEL    "Remove current level\nRemove level"
+    ID_TOOLS_IMPORT_SOKOBAN "Import sokoban level (Beta)\nImport sokoban level"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_LAST_LEVEL           "Go to last level\nLast level"
+    ID_LEVEL_LIST           "Show level list\nLevel list"
+    ID_LEVEL_DATABASE       "Show level database and best records\nLevel database"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_EDIT_MOVE_UP         "Move selected box up\nMove up"
+    ID_EDIT_MOVE_DOWN       "Move selected box down\nMove down"
+    ID_EDIT_MOVE_LEFT       "Move selected box left\nMove left"
+    ID_EDIT_MOVE_RIGHT      "Move selected box right\nMove right"
+    ID_EDIT_APPLY_CHANGES   "Apply changes to selected box\nApply changes"
+    ID_EDIT_DISCARD_CHANGES "Discard changes to selected box\nDiscard changes"
+    ID_EDIT_ROTATE_CCW      "Rotate selected box counterclockwise\nRotate counterclockwise"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_EDIT_ROTATE_CW       "Rotate selected box clockwise\nRotate clockwise"
+END
+
+STRINGTABLE 
+BEGIN
+IDD_ABOUTBOX  "Standard"
+IDR_EDIT_TOOLBAR  "Edit"
+IDS_UNNAMED_LEVEL "Unnamed level"
+IDS_DOES_NOT_EXIST "Doesn't exist"
+IDS_ERROR_OCCURED "Error occured"
+IDS_LEVEL_NAME "Level name"
+IDS_NUMBER "No."
+IDS_SIZE "Size"
+IDS_RECORD "Record"
+IDS_CHECKSUM "Checksum"
+IDS_PLAYER_NAME "Player name"
+IDS_CONFIRM_DELETE "Do you want to delete?"
+IDS_CONFIRM_SAVE "Do you want to save changes? Please backup old level database first."
+IDS_UPDATE_DATABASE_COMPLETED "Finished. Now there are %d levels in the database."
+IDS_FIND_RECORD_COMPLETED "Finished. Found %d levels with best record."
+IDS_AVIStreamSetFormat_FAILED "AVIStreamSetFormat failed"
+IDS_AVIMakeCompressedStream_FAILED "AVIMakeCompressedStream failed"
+IDS_AVIFileCreateStream_FAILED "AVIFileCreateStream failed"
+IDS_AVIFileOpen_FAILED "AVIFileOpen failed"
+IDS_ICCompressQuery_FAILED "ICCompressQuery failed. Please try changing video resolution and/or codec."
+IDS_COMPLETED "Finished."
+IDS_BEST_RECORD_NUM "Best record: %d"
+IDS_BEST_RECORD_DOES_NOT_EXIST "Best record doesn't exist"
+IDS_UNNAMED_LEVEL_PACK "Unnamed level pack"
+IDS_LEVEL_FINISHED "Congratulations! You finished this level!"
+IDS_LEVEL_FINISHED_2 "Congratulations! You finished this level! Go to next level"
+IDS_LEVEL_FINISHED_3 "Congratulations! You finished this level! Return to first level"
+IDS_LEVEL_FINISHED_4 "\nSteps: %d - Best record: "
+IDS_LEVEL_FINISHED_5 "\nCongratulations, new best record!"
+IDS_IMPORT_LEVEL_COMPLETED "Finished. Now there are %d levels."
+IDS_IMPORT_DATABASE_COMPLETED "Finished. Added %d levels and %d best records."
+IDS_FILE_FORMAT_TXT "All supported format (*.txt;*.dat;*.sok;*.map)|*.txt;*.dat;*.sok;*.map||"
+IDS_FILE_FORMAT_DAT "Level database file (*.dat)|*.dat||"
+IDS_FILE_FORMAT_AVI "AVI file (*.avi)|*.avi||"
+IDS_EDIT_MODE " (Edit mode)"
+IDS_LEVEL_INFO "Level %d - %s (%dx%d) - Total %d"
+IDS_LEVEL_INFO_2 " - Steps: %d"
+IDS_LEVEL_INDO_3 " - Record: %d"
+IDS_ABOUT "About"
+IDS_GAME_INFO "Game info"
+IDS_LEVEL_EDIT_INFO "Level edit info"
+END
+
+#endif    // 英语(美国) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

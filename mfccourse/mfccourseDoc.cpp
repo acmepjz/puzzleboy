@@ -46,7 +46,7 @@ BOOL CmfccourseDoc::OnNewDocument()
 	if (!CDocument::OnNewDocument())
 		return FALSE;
 
-	m_sLevelPackName=_T("未命名关卡包");
+	m_sLevelPackName.LoadString(IDS_UNNAMED_LEVEL_PACK);
 	for(int i=0;i<m_objLevels.GetSize();i++) delete m_objLevels[i];
 	m_objLevels.RemoveAll();
 	m_objLevels.Add(new CLevel);
@@ -115,7 +115,7 @@ bool CmfccourseDoc::LoadSokobanLevel(const CString& fileName,bool bClear){
 	std::map<std::string,std::string> names;
 
 	if(bClear){
-		m_sLevelPackName=_T("未命名关卡包");
+		m_sLevelPackName.LoadString(IDS_UNNAMED_LEVEL_PACK);
 		for(int i=0;i<m_objLevels.GetSize();i++) delete m_objLevels[i];
 		m_objLevels.RemoveAll();
 		SetModifiedFlag();

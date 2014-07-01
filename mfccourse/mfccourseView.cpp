@@ -173,18 +173,18 @@ void CmfccourseView::OnDraw(CDC* pDC)
 
 	CString s=pDoc->m_sLevelPackName;
 	if(m_objPrintInfo==NULL && m_bEditMode){
-		s+=_T(" (编辑模式)");
+		s.AppendFormat(IDS_EDIT_MODE);
 	}
 
 	RECT r1={r.left,r.top,r.right,r.top+nFontHeight};
 	pDC->DrawText(s,-1,&r1,DT_CENTER|DT_VCENTER|DT_SINGLELINE|DT_NOCLIP);
 
-	s.Format(_T("第%d关 - %s (%dx%d) - 共%d关"),
+	s.Format(IDS_LEVEL_INFO,
 		idx,lev->m_sLevelName,lev->m_nWidth,lev->m_nHeight,pDoc->m_objLevels.GetSize());
 	if(m_objPrintInfo==NULL && !m_bEditMode){
-		if(lev->m_nMoves>0) s.AppendFormat(_T(" - 步数: %d"),lev->m_nMoves);
+		if(lev->m_nMoves>0) s.AppendFormat(IDS_LEVEL_INFO_2,lev->m_nMoves);
 		if(m_nCurrentBestStep>0){
-			s.AppendFormat(_T(" - 纪录: %d"),m_nCurrentBestStep);
+			s.AppendFormat(IDS_LEVEL_INDO_3,m_nCurrentBestStep);
 			if(!m_sCurrentBestStepOwner.IsEmpty()) s.AppendFormat(_T(" (%s)"),(LPCTSTR)m_sCurrentBestStepOwner);
 		}
 	}
@@ -906,25 +906,25 @@ void CmfccourseView::FinishGame()
 	if(pDoc) m=pDoc->m_objLevels.GetSize();
 
 	if (m_bEditMode || !pDoc || m_nCurrentLevel<0 || m_nCurrentLevel>=m) {
-		AfxMessageBox(_T("恭喜你完成本关卡!"),MB_ICONINFORMATION);
+		AfxMessageBox(IDS_LEVEL_FINISHED,MB_ICONINFORMATION);
 		return;
 	}
 
 	CLevelFinished frm;
 
 	if(m_nCurrentLevel>=0 && m_nCurrentLevel<m-1){
-		frm.m_sInfo=_T("恭喜你完成本关卡! 进入下一关");
+		frm.m_sInfo.LoadString(IDS_LEVEL_FINISHED_2);
 	}else{
-		frm.m_sInfo=_T("恭喜你完成本关卡! 回到第一关");
+		frm.m_sInfo.LoadString(IDS_LEVEL_FINISHED_3);
 	}
 
-	frm.m_sInfo.AppendFormat(_T("\n步数: %d - 最佳纪录: "),m_objPlayingLevel->m_nMoves);
+	frm.m_sInfo.AppendFormat(IDS_LEVEL_FINISHED_4,m_objPlayingLevel->m_nMoves);
 
 	if(m_nCurrentBestStep>0) frm.m_sInfo.AppendFormat(_T("%d"),m_nCurrentBestStep);
-	else frm.m_sInfo+=_T("不存在");
+	else frm.m_sInfo.AppendFormat(IDS_DOES_NOT_EXIST);
 
 	if(m_nCurrentBestStep<=0 || m_nCurrentBestStep>m_objPlayingLevel->m_nMoves){
-		frm.m_sInfo+=_T("\n恭喜你打破最佳纪录!");
+		frm.m_sInfo.AppendFormat(IDS_LEVEL_FINISHED_5);
 	}
 
 	frm.m_objCurrentLevel=pDoc->GetLevel(m_nCurrentLevel);
@@ -1330,7 +1330,7 @@ void CmfccourseView::OnEditRemoveLevel()
 	if(idx>=pDoc->m_objLevels.GetSize()) idx=pDoc->m_objLevels.GetSize()-1;
 	if(idx<0) idx=0;
 
-	if(AfxMessageBox(_T("你确定要删除当前关卡?"),MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2)==IDYES){
+	if(AfxMessageBox(IDS_CONFIRM_DELETE,MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2)==IDYES){
 		if(pDoc->m_objLevels.GetSize()==1){
 			pDoc->GetLevel(0)->CreateDefault();
 			idx=0;
@@ -1367,7 +1367,7 @@ void CmfccourseView::OnEditUndo()
 			}
 			Invalidate();
 		}else{
-			AfxMessageBox(_T("出现错误"));
+			AfxMessageBox(IDS_ERROR_OCCURED);
 		}
 	}
 }
@@ -1388,7 +1388,7 @@ void CmfccourseView::OnEditRedo()
 			}
 			Invalidate();
 		}else{
-			AfxMessageBox(_T("出现错误"));
+			AfxMessageBox(IDS_ERROR_OCCURED);
 		}
 	}
 }
@@ -1630,7 +1630,7 @@ void CmfccourseView::OnGameRecord()
 					SetHourglassCursor();
 					if(!lev->ApplyRecord(frm.m_sRecord)){
 						delete lev;
-						AfxMessageBox(_T("出现错误"));
+						AfxMessageBox(IDS_ERROR_OCCURED);
 						return;
 					}
 
@@ -1821,18 +1821,19 @@ void CmfccourseView::OnToolsImportSokoban()
 	if (!pDoc) return;
 
 	//choose open file name
+	CString s;
+	s.LoadString(IDS_FILE_FORMAT_TXT);
 	CFileDialog cd(TRUE,NULL,NULL,
 		OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER,
-		_T("支持的格式(*.txt;*.dat;*.sok;*.map)|*.txt;*.dat;*.sok;*.map||"),this);
+		s,this);
 	if(cd.DoModal()!=IDOK) return;
 
 	//load file
 	if(!pDoc->LoadSokobanLevel(cd.GetPathName(),pDoc->m_objLevels.GetSize()<=1)){
-		MessageBox(_T("出现错误"),NULL,MB_ICONEXCLAMATION);
+		AfxMessageBox(IDS_ERROR_OCCURED,MB_ICONEXCLAMATION);
 	}else{
-		CString s;
-		s.Format(_T("完成。目前共有 %d 关卡。"),pDoc->m_objLevels.GetSize());
-		MessageBox(s,NULL,MB_ICONINFORMATION);
+		s.Format(IDS_IMPORT_LEVEL_COMPLETED,pDoc->m_objLevels.GetSize());
+		AfxMessageBox(s,MB_ICONINFORMATION);
 	}
 
 	if(m_nCurrentLevel>=pDoc->m_objLevels.GetSize()) m_nCurrentLevel=pDoc->m_objLevels.GetSize()-1;

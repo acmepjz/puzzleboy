@@ -67,11 +67,17 @@ BOOL CLevelList::OnInitDialog()
 
 	m_lstLevels.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 
-	m_lstLevels.InsertColumn(0,_T("关卡名称"),LVCFMT_LEFT,192);
-	m_lstLevels.InsertColumn(1,_T("编号"),LVCFMT_LEFT,48);
-	m_lstLevels.InsertColumn(2,_T("大小"),LVCFMT_LEFT,48);
-	//m_lstLevels.InsertColumn(3,_T("校验和"),LVCFMT_LEFT,288);
-	m_lstLevels.InsertColumn(3,_T("纪录"),LVCFMT_LEFT,128);
+	CString s;
+	s.LoadString(IDS_LEVEL_NAME);
+	m_lstLevels.InsertColumn(0,s,LVCFMT_LEFT,192);
+	s.LoadString(IDS_NUMBER);
+	m_lstLevels.InsertColumn(1,s,LVCFMT_LEFT,48);
+	s.LoadString(IDS_SIZE);
+	m_lstLevels.InsertColumn(2,s,LVCFMT_LEFT,48);
+	//s.LoadString(IDS_CHECKSUM);
+	//m_lstLevels.InsertColumn(3,s,LVCFMT_LEFT,288);
+	s.LoadString(IDS_RECORD);
+	m_lstLevels.InsertColumn(3,s,LVCFMT_LEFT,128);
 
 	ShowLevel();
 
@@ -161,7 +167,7 @@ void CLevelList::OnBnClickedYes()
 	}
 
 	CString s;
-	s.Format(_T("完成。当前数据库共有 %d 关卡。"),theApp.m_objRecordMgr.GetLevelCount());
+	s.Format(IDS_UPDATE_DATABASE_COMPLETED,theApp.m_objRecordMgr.GetLevelCount());
 
 	MessageBox(s,NULL,MB_ICONINFORMATION);
 }
@@ -185,12 +191,12 @@ void CLevelList::OnBnClickedNo()
 			s.Format(_T("%d (%s)"),st,(LPCTSTR)returnName);
 			nCount++;
 		}else{
-			s=_T("不存在");
+			s.LoadString(IDS_DOES_NOT_EXIST);
 		}
 		m_lstLevels.SetItemText(i,3,s);
 	}
 
-	s.Format(_T("完成。共找到 %d 关卡有最佳纪录。"),nCount);
+	s.Format(IDS_FIND_RECORD_COMPLETED,nCount);
 
 	MessageBox(s,NULL,MB_ICONINFORMATION);
 }

@@ -35,6 +35,7 @@ CmfccourseApp::CmfccourseApp()
 {
 	m_nAnimationSpeed=0;
 	m_bShowGrid=false;
+	m_nLanguage=0;
 }
 
 
@@ -66,11 +67,16 @@ BOOL CmfccourseApp::InitInstance()
 	// 更改用于存储设置的注册表项
 	// TODO: 应适当修改该字符串，
 	// 例如修改为公司或组织名
-	SetRegistryKey(_T("应用程序向导生成的本地应用程序"));
+	SetRegistryKey(_T("VB and VBA Program Settings")); //lol
 	LoadStdProfileSettings(8);  // 加载标准 INI 文件选项(包括 MRU)
 	m_sPlayerName=GetProfileString(_T("Settings"),_T("PlayerName"));
 	m_nAnimationSpeed=GetProfileInt(_T("Settings"),_T("AnimationSpeed"),0);
 	m_bShowGrid=GetProfileInt(_T("Settings"),_T("ShowGrid"),0)!=0;
+
+	m_nLanguage=GetThreadLocale();
+	m_nLanguage=((m_nLanguage&0xFF)==0x04)?2052:1033;
+	m_nLanguage=GetProfileInt(_T("Settings"),_T("Language"),m_nLanguage);
+	SetThreadLocale(m_nLanguage);
 
 	// 注册应用程序的文档模板。文档模板
 	// 将用作文档、框架窗口和视图之间的连接
@@ -271,13 +277,13 @@ BOOL CAboutDlg::OnInitDialog()
 		_T("This program is distributed in the hope that it will be useful,\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU General Public License for more details.\n\n")
 		_T("You should have received a copy of the GNU General Public License\nalong with this program. If not, see <<a>http://www.gnu.org/licenses/</a>>."));
 
-	GetDlgItem(IDC_EDIT_INFO)->SetWindowText(_T("在添加各种箱子时, 点击已有箱子可以编辑它们。")
-		_T("编辑箱子时, 方向键移动箱子, Enter 键应用修改, Esc 键放弃修改, Del 键删除当前箱子。")
-		_T(""));
-
-	m_objTab.InsertItem(0,_T("关于"));
-	m_objTab.InsertItem(1,_T("游戏说明"));
-	m_objTab.InsertItem(2,_T("地图编辑说明"));
+	CString s;
+	s.LoadString(IDS_ABOUT);
+	m_objTab.InsertItem(0,s);
+	s.LoadString(IDS_GAME_INFO);
+	m_objTab.InsertItem(1,s);
+	s.LoadString(IDS_LEVEL_EDIT_INFO);
+	m_objTab.InsertItem(2,s);
 
 	OnTcnSelchangeTab1(NULL,NULL);
 

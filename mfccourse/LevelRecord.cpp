@@ -65,9 +65,11 @@ void CLevelRecord::OnBnClickedGameRecord()
 	if(m_pView==NULL || !UpdateData() || m_sRecord.IsEmpty()) return;
 
 	//choose save file name
+	CString s;
+	s.LoadString(IDS_FILE_FORMAT_AVI);
 	CFileDialog cd(FALSE,_T("avi"),NULL,
 		OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_EXPLORER,
-		_T("视频剪辑(*.avi)|*.avi||"),this);
+		s,this);
 	if(cd.DoModal()!=IDOK) return;
 
 	//choose video compressor
@@ -163,28 +165,28 @@ void CLevelRecord::OnBnClickedGameRecord()
 
 						ret=true;
 					}else{
-						MessageBox(_T("AVIStreamSetFormat 失败"));
+						AfxMessageBox(IDS_AVIStreamSetFormat_FAILED);
 					}
 					AVIStreamRelease(streamCompressed);
 				}else{
-					MessageBox(_T("AVIMakeCompressedStream 失败"));
+					AfxMessageBox(IDS_AVIMakeCompressedStream_FAILED);
 				}
 				AVIStreamRelease(stream);
 			}else{
-				MessageBox(_T("AVIFileCreateStream 失败"));
+				AfxMessageBox(IDS_AVIFileCreateStream_FAILED);
 			}
 			AVIFileRelease(file);
 		}else{
-			MessageBox(_T("AVIFileOpen 失败"));
+			AfxMessageBox(IDS_AVIFileOpen_FAILED);
 		}
 		AVIFileExit();
 	}else{
-		MessageBox(_T("ICCompressQuery 失败。请尝试修改视频分辨率或者编码器。"));
+		AfxMessageBox(IDS_ICCompressQuery_FAILED);
 	}
 
 	//over
 	ICCompressorFree(&cv);
-	if(ret) MessageBox(_T("完成。"),NULL,MB_ICONINFORMATION);
+	if(ret) AfxMessageBox(IDS_COMPLETED,MB_ICONINFORMATION);
 }
 
 void CLevelRecord::OnBnClickedViewRecord()
@@ -216,8 +218,11 @@ BOOL CLevelRecord::OnInitDialog()
 
 	m_lstRecord.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 
-	m_lstRecord.InsertColumn(0,_T("玩家名称"),LVCFMT_LEFT,80);
-	m_lstRecord.InsertColumn(1,_T("纪录"),LVCFMT_LEFT,48);
+	CString s;
+	s.LoadString(IDS_PLAYER_NAME);
+	m_lstRecord.InsertColumn(0,s,LVCFMT_LEFT,80);
+	s.LoadString(IDS_RECORD);
+	m_lstRecord.InsertColumn(1,s,LVCFMT_LEFT,48);
 
 	if(m_pView!=NULL){
 		std::vector<RecordItem>& records=m_pView->m_tCurrentBestRecord;
@@ -225,18 +230,17 @@ BOOL CLevelRecord::OnInitDialog()
 		for(int i=0,m=records.size();i<m;i++){
 			m_lstRecord.InsertItem(i,records[i].sPlayerName);
 
-			CString s;
 			s.Format(_T("%d"),records[i].nStep);
 			m_lstRecord.SetItemText(i,1,s);
 		}
 	}
 
 	if(m_pView!=NULL && m_pView->m_nCurrentBestStep>0){
-		CString s;
-		s.Format(_T("最佳纪录: %d"),m_pView->m_nCurrentBestStep);
+		s.Format(IDS_BEST_RECORD_NUM,m_pView->m_nCurrentBestStep);
 		m_lblBestRecord.SetWindowText(s);
 	}else{
-		m_lblBestRecord.SetWindowText(_T("最佳纪录不存在"));
+		s.LoadString(IDS_BEST_RECORD_DOES_NOT_EXIST);
+		m_lblBestRecord.SetWindowText(s);
 		m_cmdViewRecord.EnableWindow(FALSE);
 	}
 
@@ -275,7 +279,7 @@ void CLevelRecord::OnBnClickedOptimize()
 	delete lev;
 	UpdateData(0);
 
-	MessageBox(_T("完成。"),NULL,MB_ICONINFORMATION);
+	AfxMessageBox(IDS_COMPLETED,MB_ICONINFORMATION);
 }
 
 void CLevelRecord::OnBnClickedSolveIt()

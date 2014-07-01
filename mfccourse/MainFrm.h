@@ -41,6 +41,8 @@ public:
 	afx_msg void OnUpdateEditToolbar(CCmdUI *pCmdUI);
 	afx_msg void OnEditToolbar();
 	afx_msg void OnToolbarDropdown(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnLanguage(UINT);
+	afx_msg void OnUpdateLanguage(CCmdUI *pCmdUI);
 };
 
 

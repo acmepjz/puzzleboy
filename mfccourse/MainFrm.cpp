@@ -20,6 +20,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	ON_UPDATE_COMMAND_UI(IDR_EDIT_TOOLBAR, &CMainFrame::OnUpdateEditToolbar)
 	ON_COMMAND(IDR_EDIT_TOOLBAR, &CMainFrame::OnEditToolbar)
 	ON_NOTIFY(TBN_DROPDOWN, AFX_IDW_TOOLBAR, &CMainFrame::OnToolbarDropdown)
+	ON_COMMAND_RANGE(ID_LANGUAGE_1,ID_LANGUAGE_99,&CMainFrame::OnLanguage)
+	ON_UPDATE_COMMAND_UI_RANGE(ID_LANGUAGE_1,ID_LANGUAGE_99,&CMainFrame::OnUpdateLanguage)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -27,6 +29,9 @@ static UINT indicators[] =
 	0,           // 状态行指示器
 };
 
+static int languages[ID_LANGUAGE_99-ID_LANGUAGE_1+1]={
+	1033,2052,
+};
 
 // CMainFrame 构造/析构
 
@@ -45,10 +50,13 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CMDIFrameWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
+	CString s;
+
 	m_wndToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP
 		| CBRS_GRIPPER | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC);
 	m_wndToolBar.LoadToolBar(IDR_MAINFRAME);
-	m_wndToolBar.SetWindowText(_T("标准"));
+	s.LoadString(IDD_ABOUTBOX);
+	m_wndToolBar.SetWindowText(s);
 
 	//add some drop-down menus
 	{
@@ -68,7 +76,8 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_wndEditToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | CBRS_TOP
 		| CBRS_GRIPPER | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC);
 	m_wndEditToolBar.LoadToolBar(IDR_EDIT_TOOLBAR);
-	m_wndEditToolBar.SetWindowText(_T("编辑"));
+	s.LoadString(IDR_EDIT_TOOLBAR);
+	m_wndEditToolBar.SetWindowText(s);
 
 	m_wndStatusBar.Create(this);
 	m_wndStatusBar.SetIndicators(indicators,
@@ -154,4 +163,19 @@ void CMainFrame::OnToolbarDropdown(NMHDR *pNMHDR, LRESULT *pResult)
 	wnd->SendMessage(TB_GETRECT,pnmtb->iItem,(LPARAM)&rc);
 	wnd->ClientToScreen(&rc);
 	popup->TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_VERTICAL, rc.left,rc.bottom,this,&rc);
+}
+
+void CMainFrame::OnUpdateLanguage(CCmdUI *pCmdUI)
+{
+	//pCmdUI->Enable(m_bEditMode);
+	pCmdUI->SetCheck(languages[pCmdUI->m_nID-ID_LANGUAGE_1]==theApp.m_nLanguage);
+}
+
+
+void CMainFrame::OnLanguage(UINT nID)
+{
+	AfxMessageBox(_T("You need to restart the program to change the language."));
+	theApp.m_nLanguage=languages[nID-ID_LANGUAGE_1];
+	theApp.WriteProfileInt(_T("Settings"),_T("Language"),theApp.m_nLanguage);
+	SetThreadLocale(theApp.m_nLanguage);
 }
