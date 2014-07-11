@@ -20,6 +20,13 @@ PuzzleBoyApp *theApp=NULL;
 
 extern SDL_Event event;
 
+//test
+#ifdef ANDROID
+#define TOUCHSCREEN_DEFAULT_VALUE true
+#else
+#define TOUCHSCREEN_DEFAULT_VALUE false
+#endif
+
 PuzzleBoyApp::PuzzleBoyApp()
 :m_nAnimationSpeed(0)
 ,m_bShowGrid(false)
@@ -33,6 +40,8 @@ PuzzleBoyApp::PuzzleBoyApp()
 ,m_nMyResizeTime(-1)
 ,m_nToolTipTime(0)
 ,m_bToolTipIsExit(false)
+,m_bTouchscreen(TOUCHSCREEN_DEFAULT_VALUE)
+,m_nTouchConfig(2)
 {
 }
 
@@ -213,6 +222,9 @@ void PuzzleBoyApp::LoadConfig(const u8string& fileName){
 	m_fMenuTextScale=m_nMenuTextSize/32.0f;
 	m_nMenuHeightFactor=GetConfig(cfg,"MenuHeightFactor",4);
 	m_nMenuHeight=(m_nMenuTextSize*m_nMenuHeightFactor)>>2;
+
+	m_nTouchConfig=GetConfig(cfg,"IsTouchscreen",2);
+	if(m_nTouchConfig<0 || m_nTouchConfig>2) m_nTouchConfig=2;
 }
 
 void PuzzleBoyApp::SaveConfig(const u8string& fileName){
@@ -248,6 +260,8 @@ void PuzzleBoyApp::SaveConfig(const u8string& fileName){
 	PutConfig(cfg,"ButtonSize",m_nButtonSize);
 	PutConfig(cfg,"MenuTextSize",m_nMenuTextSize);
 	PutConfig(cfg,"MenuHeightFactor",m_nMenuHeightFactor);
+
+	PutConfig(cfg,"IsTouchscreen",m_nTouchConfig);
 
 	u8file *f=u8fopen(fileName.c_str(),"wb");
 	if(f){

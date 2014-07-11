@@ -23,6 +23,7 @@ enum ConfigType{
 	ConfigButtonSize,
 	ConfigMenuTextSize,
 	ConfigMenuHeightFactor,
+	ConfigTouchscreen,
 	ConfigEmpty_1,
 	ConfigPlayerName, //player2,empty,title
 	ConfigKey=ConfigPlayerName+4,
@@ -64,7 +65,7 @@ void ConfigScreen::OnDirty(){
 		u8string s;
 
 		if(theApp->m_nThreadCount>0) s=str(MyFormat("%d")<<theApp->m_nThreadCount);
-		else s=str(MyFormat(_("Automatic (%d)"))<<SDL_GetCPUCount());
+		else s=str(MyFormat(_("Automatic")+" (%d)")<<SDL_GetCPUCount());
 
 		AddItem(_("Thread Count")+": "+s);
 	}
@@ -97,12 +98,22 @@ void ConfigScreen::OnDirty(){
 	//menu height
 	AddItem(str(MyFormat(_("Menu Height")+": %d%%")<<(theApp->m_nMenuHeightFactor*25)));
 
+	//touchscreen mode
+	{
+		u8string s;
+
+		if(theApp->m_nTouchConfig==0 || theApp->m_nTouchConfig==1) s=yesno[theApp->m_nTouchConfig];
+		else s=str(MyFormat(_("Automatic")+" (%s)")<<yesno[theApp->IsTouchscreen()?1:0]);
+
+		AddItem(_("Touchscreen Mode")+": "+s);
+	}
+
 	//empty line
 	AddEmptyItem();
 
 	//player name
 	for(int i=0;i<2;i++){
-		AddItem(str(MyFormat(_("Name of Player %d: "))<<(i+1))+toUTF8(theApp->m_sPlayerName[i]));
+		AddItem(str(MyFormat(_("Name of Player %d")+": ")<<(i+1))+toUTF8(theApp->m_sPlayerName[i]));
 	}
 
 	//keys
@@ -250,7 +261,7 @@ int ConfigScreen::OnClick(int index){
 			//init list box
 			SimpleStaticListScreen screen;
 
-			screen.m_sList.push_back(str(MyFormat(_("Automatic (%d)"))<<SDL_GetCPUCount()));
+			screen.m_sList.push_back(str(MyFormat(_("Automatic")+" (%d)")<<SDL_GetCPUCount()));
 			for(int i=1;i<=8;i++){
 				screen.m_sList.push_back(str(MyFormat("%d")<<i));
 			}
@@ -345,6 +356,26 @@ int ConfigScreen::OnClick(int index){
 			if(ret>0){
 				theApp->m_nMenuHeightFactor=(ret+3);
 				theApp->m_nMenuHeight=(theApp->m_nMenuTextSize*theApp->m_nMenuHeightFactor)>>2;
+				m_bConfigDirty=true;
+				m_bDirty=true;
+			}
+		}
+		break;
+	case ConfigTouchscreen:
+		{
+			//init list box
+			SimpleStaticListScreen screen;
+
+			screen.m_sList.push_back(_("No"));
+			screen.m_sList.push_back(_("Yes"));
+			screen.m_sList.push_back(_("Automatic"));
+
+			screen.m_sTitle=_("Touchscreen Mode");
+
+			//show and get result
+			int ret=screen.DoModal();
+			if(ret>0 && ret-1!=theApp->m_nTouchConfig){
+				theApp->m_nTouchConfig=ret-1;
 				m_bConfigDirty=true;
 				m_bDirty=true;
 			}

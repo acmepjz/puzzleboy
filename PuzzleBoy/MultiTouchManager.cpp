@@ -1,4 +1,5 @@
 #include "MultiTouchManager.h"
+#include "PuzzleBoyApp.h"
 #include "main.h"
 
 #include <math.h>
@@ -6,7 +7,6 @@
 #include "include_sdl.h"
 
 extern SDL_Event event;
-extern bool m_bTouchscreen;
 
 void MultiTouchView::OnMultiGesture(float fx,float fy,float dx,float dy,float zoom){
 }
@@ -82,8 +82,8 @@ bool MultiTouchManager::OnEvent(){
 
 	switch(event.type){
 	case SDL_MOUSEMOTION:
-		m_bTouchscreen=(event.motion.which==SDL_TOUCH_MOUSEID);
-		if(!m_bTouchscreen){
+		theApp->SetTouchscreen(event.motion.which==SDL_TOUCH_MOUSEID);
+		if(event.motion.which!=SDL_TOUCH_MOUSEID){
 			float fx=float(event.motion.x)/float(screenHeight);
 			float fy=float(event.motion.y)/float(screenHeight);
 
@@ -122,8 +122,8 @@ bool MultiTouchManager::OnEvent(){
 		}
 		break;
 	case SDL_MOUSEBUTTONDOWN:
-		m_bTouchscreen=(event.button.which==SDL_TOUCH_MOUSEID);
-		if(!m_bTouchscreen){
+		theApp->SetTouchscreen(event.button.which==SDL_TOUCH_MOUSEID);
+		if(event.motion.which!=SDL_TOUCH_MOUSEID){
 			float fx=float(event.button.x)/float(screenHeight);
 			float fy=float(event.button.y)/float(screenHeight);
 
@@ -154,8 +154,8 @@ bool MultiTouchManager::OnEvent(){
 		}
 		break;
 	case SDL_MOUSEBUTTONUP:
-		m_bTouchscreen=(event.button.which==SDL_TOUCH_MOUSEID);
-		if(!m_bTouchscreen){
+		theApp->SetTouchscreen(event.button.which==SDL_TOUCH_MOUSEID);
+		if(event.motion.which!=SDL_TOUCH_MOUSEID){
 			bool ret=false;
 
 			if(m_nDraggingIndex>=0 && m_nDraggingIndex<(int)views.size()
@@ -185,8 +185,8 @@ bool MultiTouchManager::OnEvent(){
 		}
 		break;
 	case SDL_MOUSEWHEEL:
-		m_bTouchscreen=(event.wheel.which==SDL_TOUCH_MOUSEID);
-		if(!m_bTouchscreen){
+		theApp->SetTouchscreen(event.wheel.which==SDL_TOUCH_MOUSEID);
+		if(event.motion.which!=SDL_TOUCH_MOUSEID){
 			int idx=m_nDraggingIndex;
 			int x,y;
 			SDL_GetMouseState(&x,&y);
@@ -219,7 +219,7 @@ bool MultiTouchManager::OnEvent(){
 		}
 		break;
 	case SDL_FINGERDOWN:
-		m_bTouchscreen=true;
+		theApp->SetTouchscreen(true);
 		{
 			//run hit test for newly-added finger
 			float fx=event.tfinger.x*screenAspectRatio;
@@ -287,7 +287,7 @@ bool MultiTouchManager::OnEvent(){
 		}
 		break;
 	case SDL_FINGERMOTION:
-		m_bTouchscreen=true;
+		theApp->SetTouchscreen(true);
 		{
 			int m=views.size();
 			int numFingers=SDL_GetNumTouchFingers(event.tfinger.touchId);
@@ -384,7 +384,7 @@ bool MultiTouchManager::OnEvent(){
 		}
 		break;
 	case SDL_FINGERUP:
-		m_bTouchscreen=true;
+		theApp->SetTouchscreen(true);
 		{
 			//check if the finger is registered
 			std::map<long long,int>::iterator it=fingers.find(event.tfinger.fingerId);
