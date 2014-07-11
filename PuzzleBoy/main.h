@@ -17,7 +17,7 @@ void OnVideoResize(int width, int height);
 
 //draw FPS and other various overlay
 //lpIdleTime: optional variable, if the overlay is dirty then it set idle time to 0
-void ShowScreen(int* lpIdleTime=NULL);
+void ShowScreen(int* lpIdleTime=0);
 
 void AddScreenKeyboard(float x,float y,float w,float h,int index,std::vector<float>& v,std::vector<unsigned short>& idx);
 void DrawScreenKeyboard(const std::vector<float>& v,const std::vector<unsigned short>& idx);
@@ -35,6 +35,7 @@ const int SCREEN_KEYBOARD_NO=0x201;
 const int SCREEN_KEYBOARD_OPEN=0x202;
 const int SCREEN_KEYBOARD_SEARCH=0x203;
 const int SCREEN_KEYBOARD_MORE=0x300;
+const int SCREEN_KEYBOARD_FAST_FORWARD=0x301;
 
 const int SCREEN_KEYBOARD_EMPTY=0x303;
 
@@ -44,7 +45,6 @@ extern int m_nResizeTime;
 extern float screenAspectRatio;
 
 extern bool m_bRun;
-extern bool m_bTouchscreen;
 
 class SimpleFontFile;
 class SimpleBaseFont;
@@ -54,3 +54,4 @@ extern SimpleBaseFont *mainFont;
 extern SimpleBaseFont *titleFont;
 
 void WaitForNextFrame();
+

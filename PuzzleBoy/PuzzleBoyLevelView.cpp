@@ -13,6 +13,7 @@
 #include "include_gl.h"
 
 //ad-hoc!!
+extern bool m_bKeyDownProcessed;
 extern GLuint adhoc_screenkb_tex;
 
 static const int m_nDefaultKey[8]={
@@ -27,12 +28,13 @@ static const int m_nDefaultKey[8]={
 };
 
 PuzzleBoyLevelView::PuzzleBoyLevelView()
-:m_bShowYesNoScreenKeyboard(false)
+:m_nScreenKeyboardType(0)
 ,m_nScreenKeyboardPressedIndex(-1)
 ,m_pDocument(NULL)
 ,m_nCurrentLevel(0)
 ,m_bEditMode(false)
 ,m_bPlayFromRecord(false)
+,m_bSkipRecord(false)
 ,m_nCurrentTool(-1)
 ,m_nEditingBlockIndex(-1)
 ,m_objBackupBlock(NULL)
@@ -48,7 +50,7 @@ PuzzleBoyLevelView::~PuzzleBoyLevelView(){
 }
 
 void PuzzleBoyLevelView::Draw(){
-	m_bShowYesNoScreenKeyboard=false;
+	m_nScreenKeyboardType=0;
 
 	if(m_objPlayingLevel){
 		//draw level
@@ -96,8 +98,8 @@ void PuzzleBoyLevelView::Draw(){
 
 				DrawScreenKeyboard(v,idx);
 			}else{
-				//enable screen keyboard
-				if(m_bTouchscreen) m_bShowYesNoScreenKeyboard=true;
+				//enable yes/no screen keyboard
+				if(theApp->IsTouchscreen()) m_nScreenKeyboardType=1;
 
 				//draw floating normal blocks
 				glTranslatef(float(m_nEditingBlockX-objBlock->m_x),
@@ -128,6 +130,9 @@ void PuzzleBoyLevelView::Draw(){
 			}
 		}
 
+		//enable fast forward/no screen kwyboard
+		if(!m_sRecord.empty() && theApp->IsTouchscreen()) m_nScreenKeyboardType=2;
+
 		//draw scroll bar
 		m_scrollView.DrawScrollBar();
 
@@ -144,14 +149,26 @@ void PuzzleBoyLevelView::Draw(){
 				float(x1-4*theApp->m_nButtonSize),float(y1+2*theApp->m_nButtonSize),0.0f,0.5f,
 
 				float(x1-7*theApp->m_nButtonSize),float(y1+theApp->m_nButtonSize),0.0f,0.5f,
+				float(x1-6*theApp->m_nButtonSize),float(y1+theApp->m_nButtonSize),0.25f,0.5f,
+				float(x1-6*theApp->m_nButtonSize),float(y1+2*theApp->m_nButtonSize),0.25f,0.75f,
+				float(x1-7*theApp->m_nButtonSize),float(y1+2*theApp->m_nButtonSize),0.0f,0.75f,
+
+				float(x1-6*theApp->m_nButtonSize),float(y1+theApp->m_nButtonSize),0.25f,0.5f,
 				float(x1-5*theApp->m_nButtonSize),float(y1+theApp->m_nButtonSize),0.5f,0.5f,
 				float(x1-5*theApp->m_nButtonSize),float(y1+2*theApp->m_nButtonSize),0.5f,0.75f,
-				float(x1-7*theApp->m_nButtonSize),float(y1+2*theApp->m_nButtonSize),0.0f,0.75f,
+				float(x1-6*theApp->m_nButtonSize),float(y1+2*theApp->m_nButtonSize),0.25f,0.75f,
 			};
+
+			if(m_nScreenKeyboardType==2){
+				for(int i=4;i<8;i++){
+					v[i*4+2]+=0.25f;
+					v[i*4+3]+=0.25f;
+				}
+			}
 
 			switch(m_scrollView.m_nOrientation){
 			case 2:
-				for(int i=0;i<8;i++){
+				for(int i=0;i<12;i++){
 					v[i*4]=float(m_scrollView.m_screen.x*2+m_scrollView.m_screen.w)-v[i*4];
 					v[i*4+1]=float(m_scrollView.m_screen.y*2+m_scrollView.m_screen.h)-v[i*4+1];
 				}
@@ -161,6 +178,7 @@ void PuzzleBoyLevelView::Draw(){
 			const unsigned short i[]={
 				0,1,2,0,2,3,
 				4,5,6,4,6,7,
+				8,9,10,8,10,11,
 			};
 
 			glDisable(GL_LIGHTING);
@@ -173,7 +191,7 @@ void PuzzleBoyLevelView::Draw(){
 			glVertexPointer(2,GL_FLOAT,4*sizeof(float),v);
 			glTexCoordPointer(2,GL_FLOAT,4*sizeof(float),v+2);
 
-			glDrawElements(GL_TRIANGLES,m_bShowYesNoScreenKeyboard?12:6,GL_UNSIGNED_SHORT,i);
+			glDrawElements(GL_TRIANGLES,m_nScreenKeyboardType!=0?18:6,GL_UNSIGNED_SHORT,i);
 
 			glDisableClientState(GL_VERTEX_ARRAY);
 			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -191,6 +209,7 @@ bool PuzzleBoyLevelView::StartGame(){
 	}
 
 	m_bPlayFromRecord=false;
+	m_bSkipRecord=false;
 	m_sRecord.clear();
 	m_nRecordIndex=-1;
 
@@ -359,7 +378,7 @@ bool PuzzleBoyLevelView::OnTimer(){
 					MultiTouchViewStruct *viewStruct=theApp->touchMgr.FindView(this);
 
 					//check right button
-					if(!b && !m_bTouchscreen
+					if(!b && !theApp->IsTouchscreen()
 						&& viewStruct && viewStruct->m_nDraggingState
 						&& (SDL_GetMouseState(NULL,NULL) & SDL_BUTTON_RMASK)!=0)
 					{
@@ -393,10 +412,11 @@ bool PuzzleBoyLevelView::OnTimer(){
 				//play from record
 				if(m_nRecordIndex<0) m_nRecordIndex=0;
 				int m=m_sRecord.size();
-				//TODO: skip record
-				bool bSkip=false; /*(GetAsyncKeyState(VK_SHIFT) & 0x8000)!=0;
 
-				if(bSkip) SetHourglassCursor();*/
+				bool bSkip=m_bSkipRecord || (SDL_GetModState() & KMOD_SHIFT)!=0;
+
+				//TODO: SetHourglassCursor()
+				//if(bSkip) SetHourglassCursor();*/
 
 				for(;m_nRecordIndex<m;){
 					switch(m_sRecord[m_nRecordIndex]){
@@ -464,6 +484,8 @@ bool PuzzleBoyLevelView::OnTimer(){
 					m_sRecord.clear();
 					m_nRecordIndex=-1;
 				}
+
+				m_bSkipRecord=false;
 
 				m_nEditingBlockIndex=-1;
 				bDirty=true;
@@ -636,8 +658,15 @@ bool PuzzleBoyLevelView::InternalKeyDown(int keyIndex){
 			}
 		}else{
 			switch(keyIndex){
+			case 64:
+				//fast forward
+				if(!m_sRecord.empty()){
+					m_bSkipRecord=true;
+					return true;
+				}
+				break;
 			case 65:
-				//skip demo
+				//cancel demo
 				m_bPlayFromRecord=false;
 				m_sRecord.clear();
 				m_nRecordIndex=-1;
@@ -728,7 +757,7 @@ void PuzzleBoyLevelView::OnMouseEvent(int which,int state,int xMouse,int yMouse,
 			case 0x101: keyIndex=6; break;
 			}
 
-			if(m_bShowYesNoScreenKeyboard){
+			if(m_nScreenKeyboardType==1 || m_nScreenKeyboardType==2){
 				switch(idx){
 				case 0x107: keyIndex=64; break;
 				case 0x106: keyIndex=65; break;
@@ -797,7 +826,7 @@ void PuzzleBoyLevelView::OnMouseEvent(int which,int state,int xMouse,int yMouse,
 					OnMouseEvent(0,0,xMouse,yMouse,0,SDL_MOUSEMOTION);
 
 					//move a moveable block to new position
-					if(!m_bTouchscreen
+					if(!theApp->IsTouchscreen()
 						|| m_objPlayingLevel->m_objBlocks[m_nEditingBlockIndex]->m_nType==ROTATE_BLOCK)
 					{
 						InternalKeyDown(64);

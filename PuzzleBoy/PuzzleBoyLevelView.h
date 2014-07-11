@@ -34,7 +34,9 @@ public:
 public:
 	SimpleScrollView m_scrollView;
 
-	bool m_bShowYesNoScreenKeyboard;
+	//0=default, 1=with yes/no, 2=with fast forward/no
+	int m_nScreenKeyboardType;
+
 	int m_nScreenKeyboardPressedIndex;
 
 	u16string m_sPlayerName;
@@ -58,6 +60,7 @@ private:
 public:
 	int m_nCurrentLevel;
 	bool m_bEditMode,m_bPlayFromRecord;
+	bool m_bSkipRecord;
 	int m_nCurrentTool;
 
 	int m_nEditingBlockIndex;

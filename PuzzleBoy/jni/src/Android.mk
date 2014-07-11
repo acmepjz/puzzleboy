@@ -46,6 +46,9 @@ LOCAL_SRC_FILES := \
 ../../VertexList.cpp \
 $(SDL_PATH)/src/main/android/SDL_android_main.c
 
+# If the GCC version of NDK is >=4.7 then comment next line
+LOCAL_CFLAGS += -Doverride= 
+
 LOCAL_SHARED_LIBRARIES := SDL2 freetype
 
 LOCAL_LDLIBS := -lGLESv1_CM -llog

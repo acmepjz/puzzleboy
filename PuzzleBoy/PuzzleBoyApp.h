@@ -35,6 +35,9 @@ public:
 	bool OnKeyDown(int nChar,int nFlags);
 	void OnKeyUp(int nChar,int nFlags);
 
+	bool IsTouchscreen() const{return m_nTouchConfig==2?m_bTouchscreen:m_nTouchConfig!=0;}
+	void SetTouchscreen(bool b){m_bTouchscreen=b;}
+
 	void ShowToolTip(const u8string& text,bool isExit=false);
 public:
 	GNUGetText m_objGetText;
@@ -78,6 +81,9 @@ public:
 	//the actual menu item height, in pixels
 	int m_nMenuHeight;
 
+	//0=false, 1=true, 2=automatic
+	int m_nTouchConfig;
+
 	//input keys
 	int m_nKey[24];
 
@@ -100,6 +106,8 @@ public:
 	u8string m_sToolTipText;
 	int m_nToolTipTime;
 	bool m_bToolTipIsExit;
+private:
+	bool m_bTouchscreen;
 };
 
 extern PuzzleBoyApp *theApp;

@@ -36,15 +36,6 @@ SDL_Event event;
 bool m_bRun=true;
 bool m_bKeyDownProcessed=false;
 
-//================touchscreen and multi-touch event
-
-//test
-#ifdef ANDROID
-bool m_bTouchscreen=true;
-#else
-bool m_bTouchscreen=false;
-#endif
-
 //================
 
 //FIXME: ad-hoc
@@ -201,7 +192,11 @@ void ShowScreen(int* lpIdleTime){
 			mainFont->EndDraw();
 		}
 
-		if((--(theApp->m_nToolTipTime))==0) theApp->m_bToolTipIsExit=false;
+		theApp->m_nToolTipTime-=2;
+		if(theApp->m_nToolTipTime<=0){
+			theApp->m_nToolTipTime=0;
+			theApp->m_bToolTipIsExit=false;
+		}
 	}
 
 	SDL_GL_SwapWindow(mainWindow);
@@ -397,6 +392,8 @@ public:
 };
 
 static bool OnKeyDown(int nChar,int nFlags){
+	if(theApp->OnKeyDown(nChar,nFlags)) return true;
+
 	//ad-hoc menu experiment
 	if(nChar==SDLK_MENU || nChar==SDLK_APPLICATION
 #ifndef ANDROID
@@ -413,7 +410,6 @@ static bool OnKeyDown(int nChar,int nFlags){
 		return false;
 	}
 
-	if(theApp->OnKeyDown(nChar,nFlags)) return true;
 	return false;
 }
 
