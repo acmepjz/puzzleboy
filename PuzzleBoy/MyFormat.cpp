@@ -28,7 +28,7 @@ MyFormat::MyFormat(const u8string& fmt)
 	appendFormat(fmt);
 }
 
-void MyFormat::append(int n,bool bSigned){
+void MyFormat::append(int32_t n,bool bSigned){
 	int m=m_Placeholder.size();
 	if(m_nIndex>=m) return;
 
@@ -69,7 +69,7 @@ void MyFormat::append(int n,bool bSigned){
 	}
 }
 
-void MyFormat::append(long long n,bool bSigned){
+void MyFormat::append(int64_t n,bool bSigned){
 	int m=m_Placeholder.size();
 	if(m_nIndex>=m) return;
 
@@ -188,6 +188,16 @@ void MyFormat::append(const u8string& s){
 
 		m_nIndex=idx;
 	}
+}
+
+void MyFormat::append(const void* lp){
+#if SIZEOF_VOIDP==4
+	append((int32_t)(intptr_t)lp);
+#elif SIZEOF_VOIDP==8
+	append((int64_t)(intptr_t)lp);
+#else
+#error Unknown pointer size!
+#endif
 }
 
 void MyFormat::append(const char* lp){
@@ -488,12 +498,12 @@ void MyFormat::appendIntegerByPosition(int index,T n,bool bSigned){
 	}
 }
 
-void MyFormat::appendByPosition(int index,int n,bool bSigned){
-	appendIntegerByPosition<int,unsigned int>(index,n,bSigned);
+void MyFormat::appendByPosition(int index,int32_t n,bool bSigned){
+	appendIntegerByPosition<int32_t,uint32_t>(index,n,bSigned);
 }
 
-void MyFormat::appendByPosition(int index,long long n,bool bSigned){
-	appendIntegerByPosition<long long,unsigned long long>(index,n,bSigned);
+void MyFormat::appendByPosition(int index,int64_t n,bool bSigned){
+	appendIntegerByPosition<int64_t,uint64_t>(index,n,bSigned);
 }
 
 void MyFormat::appendByPosition(int index,double n){
@@ -626,11 +636,23 @@ void MyFormat::appendByPosition(int index,const char* lp){
 	case 'd': case 'i':
 	case 'x': case 'X': case 'o': case 'p':
 	case 'c':
-		appendByPosition(index,(intptr_t)lp,true);
+#if SIZEOF_VOIDP==4
+		appendByPosition(index,(int32_t)(intptr_t)lp,true);
+#elif SIZEOF_VOIDP==8
+		appendByPosition(index,(int64_t)(intptr_t)lp,true);
+#else
+#error Unknown pointer size!
+#endif
 		return;
 		break;
 	case 'u':
-		appendByPosition(index,(intptr_t)lp,false);
+#if SIZEOF_VOIDP==4
+		appendByPosition(index,(int32_t)(intptr_t)lp,false);
+#elif SIZEOF_VOIDP==8
+		appendByPosition(index,(int64_t)(intptr_t)lp,false);
+#else
+#error Unknown pointer size!
+#endif
 		return;
 		break;
 	case 'e': case 'E': case 'f': case 'F': case 'g': case 'G': case 'a': case 'A':

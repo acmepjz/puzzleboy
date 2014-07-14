@@ -15,6 +15,9 @@ supported format:
 #include "UTF8-16.h"
 #include <vector>
 
+//for int*_t, etc. and SIZEOF_VOIDP
+#include <SDL_stdinc.h>
+
 namespace MyFormatFlags{
 	const int HasPlus=1;
 	const int HasSpace=2;
@@ -39,25 +42,24 @@ public:
 	MyFormat();
 	MyFormat(const u8string& fmt);
 
-	void append(char n){append((int)n,true);}
-	void append(unsigned char n){append((int)n,false);}
-	void append(short n){append((int)n,true);}
-	void append(unsigned short n){append((int)n,false);}
-	void append(int n){append((int)n,true);}
-	void append(unsigned int n){append((int)n,false);}
-	void append(long long n){append((long long)n,true);}
-	void append(unsigned long long n){append((long long)n,false);}
+	void append(int8_t n){append((int32_t)n,true);}
+	void append(uint8_t n){append((int32_t)n,false);}
+	void append(int16_t n){append((int32_t)n,true);}
+	void append(uint16_t n){append((int32_t)n,false);}
+	void append(int32_t n){append((int32_t)n,true);}
+	void append(uint32_t n){append((int32_t)n,false);}
+	void append(int64_t n){append((int64_t)n,true);}
+	void append(uint64_t n){append((int64_t)n,false);}
 
-	void append(int n,bool bSigned);
-	void append(long long n,bool bSigned);
+	void append(int32_t n,bool bSigned);
+	void append(int64_t n,bool bSigned);
 
 	void append(double n);
 
 	void append(const u8string& s);
 
-	void append(const void* lp){
-		append((intptr_t)lp);
-	}
+	void append(const void* lp);
+
 	void append(const char* lp);
 
 	const u8string& str() const;
@@ -89,8 +91,8 @@ private:
 	MyFormatPlaceholder m_tCurrent;
 	mutable bool m_bDirty;
 
-	void appendByPosition(int index,int n,bool bSigned);
-	void appendByPosition(int index,long long n,bool bSigned);
+	void appendByPosition(int index,int32_t n,bool bSigned);
+	void appendByPosition(int index,int64_t n,bool bSigned);
 	void appendByPosition(int index,double n);
 	void appendByPosition(int index,const u8string& s);
 	void appendByPosition(int index,const char* lp);
