@@ -101,7 +101,7 @@ static int TestRandomLevelThreadFunc(void* userData){
 		if(t->mutex) SDL_LockMutex(t->mutex);
 
 		if(t->nCount>1){
-			level->m_sLevelName=toUTF16(str(MyFormat(_("Random Level %d"))<<(t->doc->m_objLevels.size()+1)));
+			level->m_sLevelName=toUTF16(str(MyFormat(_("Random Level %d"))<<int(t->doc->m_objLevels.size()+1)));
 		}else{
 			level->m_sLevelName=toUTF16(_("Random Level"));
 		}
