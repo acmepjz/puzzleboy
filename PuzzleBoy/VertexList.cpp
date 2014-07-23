@@ -1,5 +1,6 @@
 #include "VertexList.h"
 
+#include <stdlib.h>
 #include <math.h>
 
 #include "include_gl.h"
