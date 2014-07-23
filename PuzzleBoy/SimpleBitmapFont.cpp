@@ -4,20 +4,20 @@
 #include "include_gl.h"
 
 SimpleBitmapFont::SimpleBitmapFont(SDL_Surface* surf){
-	//FIXME: Android doesn't support GL_BGRA
+	//FIXME: OpenGL ES doesn't support GL_BGRA (?)
 	int internalformat,format;
 	switch(surf->format->BitsPerPixel){
 	case 32:
 		internalformat=GL_RGBA;
 		format=GL_RGBA;
-#ifndef ANDROID
+#ifndef USE_OPENGLES
 		if(surf->format->Rmask!=0xFF) format=GL_BGRA;
 #endif
 		break;
 	case 24:
 		internalformat=GL_RGB;
 		format=GL_RGB;
-#ifndef ANDROID
+#ifndef USE_OPENGLES
 		if(surf->format->Rmask!=0xFF) format=GL_BGR;
 #endif
 		break;
@@ -36,7 +36,7 @@ SimpleBitmapFont::SimpleBitmapFont(SDL_Surface* surf){
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-#ifndef ANDROID
+#ifndef USE_OPENGLES
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 #endif

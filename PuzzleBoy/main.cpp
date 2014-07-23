@@ -432,6 +432,7 @@ static int HandleAppEvents(void *userdata, SDL_Event *event){
 		OnAutoSave();
 		break;
 	case SDL_APP_LOWMEMORY:
+		printf("[main] Fatal Error: Program received SDL_APP_LOWMEMORY! Program will abort\n");
 		OnAutoSave();
 		abort();
 		break;
@@ -445,10 +446,20 @@ int main(int argc,char** argv){
 	initPaths();
 
 	//init SDL
-	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK)==-1) abort();
+	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER)<0){
+		printf("[main] Fatal Error: Can't initialize SDL video or timer!\n");
+		abort();
+	}
+
+	if(SDL_InitSubSystem(SDL_INIT_JOYSTICK)>0){
+		printf("[main] Error: Can't initialize SDL joystick!\n");
+	}
 
 	//init freetype
-	if(!FreeType_Init()) abort();
+	if(!FreeType_Init()){
+		printf("[main] Fatal Error: Can't initialize FreeType!\n");
+		abort();
+	}
 
 	//create main object
 	theApp=new PuzzleBoyApp;
@@ -505,17 +516,27 @@ int main(int argc,char** argv){
 	{
 		SDL_DisplayMode mode;
 
-		if(SDL_GetDesktopDisplayMode(0,&mode)<0) abort();
-		screenWidth=mode.w;
-		screenHeight=mode.h;
+		if(SDL_GetDesktopDisplayMode(0,&mode)<0){
+			printf("[main] Error: Can't get Android screen resolution!\n");
+			//fallback
+			screenWidth=800;
+			screenHeight=480;
+		}else{
+			screenWidth=mode.w;
+			screenHeight=mode.h;
+		}
 	}
-	SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 5 );
-	SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 6 );
-	SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 5 );
 #else
 	int windowFlags=SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
 	screenWidth=800;
 	screenHeight=480;
+#endif
+
+#ifdef USE_OPENGLES
+	SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 5 );
+	SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 6 );
+	SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 5 );
+#else
 	SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 8 );
 	SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 8 );
 	SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 8 );
@@ -532,14 +553,26 @@ int main(int argc,char** argv){
 
 	if((mainWindow=SDL_CreateWindow(_("Puzzle Boy").c_str(),
 		SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,
-		screenWidth,screenHeight,windowFlags))==NULL) abort();
+		screenWidth,screenHeight,windowFlags))==NULL)
+	{
+		printf("[main] Fatal Error: Can't create SDL window!\n");
+		abort();
+	}
 
 	glContext=SDL_GL_CreateContext(mainWindow);
-	if(glContext==NULL) abort();
+	if(glContext==NULL){
+		printf("[main] Fatal Error: Can't create OpenGL context!\n");
+		abort();
+	}
 
 	//FIXME: ad-hoc screen keypad
 	{
 		SDL_Surface *tmp=SDL_LoadBMP("data/gfx/adhoc.bmp");
+
+		if(tmp==NULL){
+			printf("[main] Fatal Error: Can't find necessary data! Make sure the working directory is correct!\n");
+			abort();
+		}
 
 		glGenTextures(1,&adhoc_screenkb_tex);
 		glBindTexture(GL_TEXTURE_2D, adhoc_screenkb_tex);
@@ -548,23 +581,23 @@ int main(int argc,char** argv){
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-#ifndef ANDROID
+#ifndef USE_OPENGLES
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 #endif
 
-		//FIXME: Android doesn't support GL_BGRA
+		//FIXME: OpenGL ES doesn't support GL_BGRA (?)
 		int internalformat,format;
 		if(tmp->format->BitsPerPixel==32){
 			internalformat=GL_RGBA;
 			format=GL_RGBA;
-#ifndef ANDROID
+#ifndef USE_OPENGLES
 			if(tmp->format->Rmask!=0xFF) format=GL_BGRA;
 #endif
 		}else{
 			internalformat=GL_RGB;
 			format=GL_RGB;
-#ifndef ANDROID
+#ifndef USE_OPENGLES
 			if(tmp->format->Rmask!=0xFF) format=GL_BGR;
 #endif
 		}

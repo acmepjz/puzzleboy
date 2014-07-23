@@ -196,7 +196,12 @@ void MyFormat::append(const void* lp){
 #elif SIZEOF_VOIDP==8
 	append((int64_t)(intptr_t)lp);
 #else
-#error Unknown pointer size!
+	//FIXME: Unknown pointer size! e.g. Raspberry Pi (?)
+	if((intptr_t)(void*)(-1)==(intptr_t)(void*)(0xFFFFFFFFUL)){
+		append((int32_t)(intptr_t)lp);
+	}else{
+		append((int64_t)(intptr_t)lp);
+	}
 #endif
 }
 
@@ -641,7 +646,12 @@ void MyFormat::appendByPosition(int index,const char* lp){
 #elif SIZEOF_VOIDP==8
 		appendByPosition(index,(int64_t)(intptr_t)lp,true);
 #else
-#error Unknown pointer size!
+		//FIXME: Unknown pointer size! e.g. Raspberry Pi (?)
+		if((intptr_t)(void*)(-1)==(intptr_t)(void*)(0xFFFFFFFFUL)){
+			appendByPosition(index,(int32_t)(intptr_t)lp,true);
+		}else{
+			appendByPosition(index,(int64_t)(intptr_t)lp,true);
+		}
 #endif
 		return;
 		break;
@@ -651,7 +661,12 @@ void MyFormat::appendByPosition(int index,const char* lp){
 #elif SIZEOF_VOIDP==8
 		appendByPosition(index,(int64_t)(intptr_t)lp,false);
 #else
-#error Unknown pointer size!
+		//FIXME: Unknown pointer size! e.g. Raspberry Pi (?)
+		if((intptr_t)(void*)(-1)==(intptr_t)(void*)(0xFFFFFFFFUL)){
+			appendByPosition(index,(int32_t)(intptr_t)lp,false);
+		}else{
+			appendByPosition(index,(int64_t)(intptr_t)lp,false);
+		}
 #endif
 		return;
 		break;
