@@ -16,7 +16,12 @@ void ChooseLevelFileScreen::OnDirty(){
 
 	for(int i=0;i<count;i++){
 		AddItem(m_fileDisplayName[i]);
+
+		//update selection
+		if(m_files[i]==theApp->m_sLastFile) m_nListIndex=ListCount()-1;
 	}
+
+	EnsureVisible();
 }
 
 int ChooseLevelFileScreen::OnClick(int index){
@@ -93,7 +98,12 @@ void ChooseLevelScreen::OnDirty(){
 		if(st>0) sprintf(s,"%d",st);
 		else strcpy(s,"---");
 		AddItem(s,false,float(screenWidth),0,DrawTextFlags::Right);
+
+		//update selection
+		if(i==theApp->m_nCurrentLevel) m_nListIndex=ListCount()-1;
 	}
+
+	EnsureVisible();
 }
 
 int ChooseLevelScreen::OnClick(int index){

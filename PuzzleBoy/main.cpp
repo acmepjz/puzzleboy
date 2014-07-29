@@ -697,6 +697,32 @@ int main(int argc,char** argv){
 		}
 
 		while(SDL_PollEvent(&event)){
+			//check if clicked main menu button
+			switch(event.type){
+			case SDL_MOUSEBUTTONDOWN:
+			case SDL_MOUSEBUTTONUP:
+				if(theApp->m_bShowMainMenuButton
+					&& event.button.x>=screenWidth-theApp->m_nButtonSize
+					&& event.button.x<screenWidth
+					&& event.button.y>=0
+					&& event.button.y<theApp->m_nButtonSize)
+				{
+					if(event.type==SDL_MOUSEBUTTONUP){
+						SDL_Event evt2=event;
+						evt2.type=SDL_KEYDOWN;
+						evt2.key.state=SDL_PRESSED;
+						evt2.key.repeat=0;
+						evt2.key.keysym.scancode=SDL_SCANCODE_MENU;
+						evt2.key.keysym.sym=SDLK_MENU;
+						evt2.key.keysym.mod=0;
+						SDL_PushEvent(&evt2);
+					}
+					continue;
+				}
+				break;
+			}
+
+			//check multi-touch event
 			if(theApp->touchMgr.OnEvent()){
 				nIdleTime=0;
 				continue;
