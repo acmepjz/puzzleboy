@@ -17,12 +17,11 @@ SimpleListScreen::SimpleListScreen()
 :m_txtTitle(NULL)
 ,m_txtList(NULL)
 ,m_nListCount(0)
+,m_nListIndex(-1)
 ,m_nReturnValue(0)
 ,m_bDirty(true)
 ,m_bDirtyOnResize(false)
-,m_nMyResizeTime(m_nResizeTime)
-,m_nDraggingState(0)
-,m_fOldY(0.0f)
+,m_y0(0)
 {
 }
 
@@ -47,6 +46,7 @@ void SimpleListScreen::ResetList(){
 	else m_txtList=new SimpleText;
 
 	m_nListCount=0;
+	m_nListIndex=-1;
 }
 
 void SimpleListScreen::AddEmptyItem(){
@@ -64,6 +64,16 @@ void SimpleListScreen::AddItem(const u8string& str,bool newIndex,float x,float w
 		x,float((m_nListCount-1)*theApp->m_nMenuHeight),
 		w,float(theApp->m_nMenuHeight),theApp->m_fMenuTextScale,
 		DrawTextFlags::VCenter | extraFlags);
+}
+
+void SimpleListScreen::EnsureVisible(int index){
+	if(index<0 || index>=m_nListCount) return;
+
+	if(m_y0>index*theApp->m_nMenuHeight
+		|| m_y0<(index+1)*theApp->m_nMenuHeight-screenHeight+theApp->m_nButtonSize)
+	{
+		m_y0=index*theApp->m_nMenuHeight-(screenHeight-theApp->m_nButtonSize-theApp->m_nMenuHeight)/2;
+	}
 }
 
 void SimpleListScreen::CreateTitleBarText(const u8string& title){
@@ -115,16 +125,23 @@ void SimpleListScreen::CreateTitleBarButtons(){
 	m_idx.insert(m_idx.end(),ii,ii+18);
 }
 
+const unsigned short i013032[]={0,1,3,0,3,2};
+
 int SimpleListScreen::DoModal(){
 	bool b=true;
 
 	CreateTitleBarButtons();
 
 	m_bDirty=true;
-	m_nDraggingState=0;
 	m_nReturnValue=0;
 
-	int y0=0,y02=0,ym=0;
+	int m_nMyResizeTime=m_nResizeTime;
+
+	//0=not dragging or failed,1=mouse down,2=dragging,3=dragging scrollbar or failed
+	int m_nDraggingState=0;
+	float m_fOldY=0.0f;
+
+	int y02=m_y0,ym=0;
 	int scrollBarIdleTime=0;
 	int selected0=-1,selected2=-1;
 	int selectedTime=0;
@@ -149,22 +166,22 @@ int SimpleListScreen::DoModal(){
 
 		if(m_nDraggingState==0){
 			dy*=0.95f;
-			y0-=int(floor(dy*float(screenHeight)+0.5f));
+			m_y0-=int(floor(dy*float(screenHeight)+0.5f));
 		}
 
-		if(y0>ym) y0=ym;
-		if(y0<0) y0=0;
+		if(m_y0>ym) m_y0=ym;
+		if(m_y0<0) m_y0=0;
 
-		if(m_nDraggingState==3 || y0<y02-1 || y0>y02+1){
+		if(m_nDraggingState==3 || m_y0<y02-1 || m_y0>y02+1){
 			if(scrollBarIdleTime>0) scrollBarIdleTime-=4;
 			nIdleTime=0;
-			y02=(y0+y02)>>1;
+			y02=(m_y0+y02)>>1;
 		}else{
 			if(scrollBarIdleTime<32){
 				scrollBarIdleTime++;
 				nIdleTime=0;
 			}
-			y02=y0;
+			y02=m_y0;
 		}
 
 		if(selected0>=0){
@@ -189,6 +206,25 @@ int SimpleListScreen::DoModal(){
 
 			glDisable(GL_LIGHTING);
 
+			//draw list index
+			if(m_nListIndex>=0 && m_nListIndex<m_nListCount){
+				int y1=theApp->m_nButtonSize-y02+m_nListIndex*theApp->m_nMenuHeight;
+				int y2=y1+theApp->m_nMenuHeight;
+
+				float v[]={
+					0.0f,float(y1),
+					float(screenWidth),float(y1),
+					0.0f,float(y2),
+					float(screenWidth),float(y2),
+				};
+
+				glColor4f(1.0f,1.0f,1.0f,0.25f);
+				glEnableClientState(GL_VERTEX_ARRAY);
+				glVertexPointer(2,GL_FLOAT,0,v);
+				glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,i013032);
+				glDisableClientState(GL_VERTEX_ARRAY);
+			}
+
 			//draw selected
 			if(selected2>=0 && selectedTime>0){
 				int y1=theApp->m_nButtonSize-y02+selected2*theApp->m_nMenuHeight;
@@ -201,15 +237,13 @@ int SimpleListScreen::DoModal(){
 					float(screenWidth),float(y2),
 				};
 
-				const unsigned short i[]={0,1,3,0,3,2};
+				float transparency=float(selectedTime)/16.0f;
+				if(transparency>0.5f) transparency=0.5f;
 
-				float transparency=float(selectedTime)/8.0f;
-				if(transparency>1.0f) transparency=1.0f;
-
-				glColor4f(0.5f,0.5f,0.5f,transparency);
+				glColor4f(1.0f,1.0f,1.0f,transparency);
 				glEnableClientState(GL_VERTEX_ARRAY);
 				glVertexPointer(2,GL_FLOAT,0,v);
-				glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,i);
+				glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,i013032);
 				glDisableClientState(GL_VERTEX_ARRAY);
 			}
 
@@ -254,11 +288,9 @@ int SimpleListScreen::DoModal(){
 					float(x2),float(theApp->m_nButtonSize)+float(y02+largeChange)*ratio,
 				};
 
-				const unsigned short i[]={0,1,3,0,3,2};
-
 				glEnableClientState(GL_VERTEX_ARRAY);
 				glVertexPointer(2,GL_FLOAT,0,v);
-				glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,i);
+				glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,i013032);
 				glDisableClientState(GL_VERTEX_ARRAY);
 			}
 
@@ -297,13 +329,13 @@ int SimpleListScreen::DoModal(){
 								m_fOldY=y;
 								lastSwipeTime=SDL_GetTicks();
 
-								y0-=int(floor(dy*float(screenHeight)+0.5f));
+								m_y0-=int(floor(dy*float(screenHeight)+0.5f));
 							}
 						}
 						break;
 					case 3:
 						//dragging scrollbar
-						y0=int(float(event.motion.y-64)*float(ym+largeChange)/float(largeChange)+0.5f)-largeChange/2;
+						m_y0=int(float(event.motion.y-64)*float(ym+largeChange)/float(largeChange)+0.5f)-largeChange/2;
 						break;
 					}
 				}
@@ -316,7 +348,7 @@ int SimpleListScreen::DoModal(){
 					if(event.button.x>=screenWidth-64 && event.button.y>=theApp->m_nButtonSize){
 						//dragging scrollbar
 						m_nDraggingState=3;
-						y0=int(float(event.button.y-theApp->m_nButtonSize)*float(ym+largeChange)/float(largeChange)+0.5f)-largeChange/2;
+						m_y0=int(float(event.button.y-theApp->m_nButtonSize)*float(ym+largeChange)/float(largeChange)+0.5f)-largeChange/2;
 					}else{
 						m_nDraggingState=1;
 						dy=0.0f;
@@ -383,8 +415,8 @@ int SimpleListScreen::DoModal(){
 			case SDL_MOUSEWHEEL:
 				if(event.wheel.y){
 					nIdleTime=0;
-					if(event.wheel.y>0) y0-=theApp->m_nMenuHeight*4;
-					else y0+=theApp->m_nMenuHeight*4;
+					if(event.wheel.y>0) m_y0-=theApp->m_nMenuHeight*4;
+					else m_y0+=theApp->m_nMenuHeight*4;
 				}
 				break;
 			case SDL_WINDOWEVENT:
@@ -415,22 +447,22 @@ int SimpleListScreen::DoModal(){
 					}
 					break;
 				case SDLK_UP:
-					y0-=theApp->m_nMenuHeight;
+					m_y0-=theApp->m_nMenuHeight;
 					break;
 				case SDLK_DOWN:
-					y0+=theApp->m_nMenuHeight;
+					m_y0+=theApp->m_nMenuHeight;
 					break;
 				case SDLK_HOME:
-					y0=0;
+					m_y0=0;
 					break;
 				case SDLK_END:
-					y0=ym;
+					m_y0=ym;
 					break;
 				case SDLK_PAGEUP:
-					y0-=largeChange;
+					m_y0-=largeChange;
 					break;
 				case SDLK_PAGEDOWN:
-					y0+=largeChange;
+					m_y0+=largeChange;
 					break;
 				}
 				break;
@@ -451,12 +483,16 @@ int SimpleListScreen::DoModal(){
 }
 
 void SimpleStaticListScreen::OnDirty(){
+	int tmp=m_nListIndex;
 	ResetList();
+	m_nListIndex=tmp;
 
 	for(int i=0,m=m_sList.size();i<m;i++){
 		if(m_sList[i].empty()) AddEmptyItem();
 		else AddItem(m_sList[i]);
 	}
+
+	EnsureVisible();
 }
 
 int SimpleStaticListScreen::OnClick(int index){

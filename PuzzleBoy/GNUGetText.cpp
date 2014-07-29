@@ -12,7 +12,12 @@
 #include <windows.h>
 #endif
 
-bool GNUGetText::GetSystemLocale(char* buf,int size){
+#ifdef ANDROID
+#include <SDL_system.h>
+#include <jni.h>
+#endif
+
+static bool GetSystemLocale0(char* buf,int size){
 	char *s;
 
 	s=getenv("LC_ALL");
@@ -49,11 +54,45 @@ bool GNUGetText::GetSystemLocale(char* buf,int size){
 	}
 #endif
 
+#ifdef ANDROID
+	JNIEnv* env=(JNIEnv*)SDL_AndroidGetJNIEnv();
+
+	env->PushLocalFrame(16);
+
+	//call Locale.getDefault().toString()
+	jclass cls=env->FindClass("java/util/Locale");
+	jobject obj=env->CallStaticObjectMethod(cls,
+		env->GetStaticMethodID(cls,"getDefault","()Ljava/util/Locale;")
+		);
+	jstring str=(jstring)env->CallObjectMethod(obj,
+		env->GetMethodID(cls,"toString","()Ljava/lang/String;")
+		);
+
+	//get content of string
+	const char* lp=env->GetStringUTFChars(str,NULL);
+	strncpy(buf,lp,size);
+	env->ReleaseStringUTFChars(str,lp);
+
+	env->PopLocalFrame(NULL);
+
+	return true;
+#endif
+
 	//shouldn't goes here
 	printf("[GNUGetText] Error: GetSystemLocale() failed!\n");
 
 	buf[0]=0;
 	return false;
+}
+
+bool GNUGetText::GetSystemLocale(char* buf,int size){
+	if(!GetSystemLocale0(buf,size)) return false;
+
+	// Copied from Anura engine: hack to make it work on iOS
+	if(strcmp(buf,"zh-Hans")==0) strncpy(buf,"zh_CN",size);
+	if(strcmp(buf,"zh-Hant")==0) strncpy(buf,"zh_TW",size);
+
+	return true;
 }
 
 bool GNUGetText::LoadFileWithAutoLocale(const u8string& sFileName){
@@ -188,6 +227,8 @@ void GNUGetText::Close(){
 }
 
 u8string GNUGetText::GetText(const u8string& s) const{
+	if(s.empty()) return s;
+
 	std::map<u8string,u8string>::const_iterator it=m_objString.find(s);
 
 	if(it==m_objString.end()) return s;

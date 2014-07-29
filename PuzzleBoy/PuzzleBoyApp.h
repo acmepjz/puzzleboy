@@ -53,6 +53,7 @@ public:
 	bool m_bAutoSave;
 	bool m_bContinuousKey;
 	bool m_bShowFPS;
+	bool m_bShowMainMenuButton;
 	u16string m_sPlayerName[2];
 
 	//for saved progress

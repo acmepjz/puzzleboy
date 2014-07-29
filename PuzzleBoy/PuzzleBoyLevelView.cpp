@@ -130,56 +130,81 @@ void PuzzleBoyLevelView::Draw(){
 			}
 		}
 
-		//enable fast forward/no screen kwyboard
-		if(!m_sRecord.empty() && theApp->IsTouchscreen()) m_nScreenKeyboardType=2;
+		//enable fast forward/no screen kwyboard regardless of touchscreen mode
+		if(!m_sRecord.empty()) m_nScreenKeyboardType=2;
 
 		//draw scroll bar
 		m_scrollView.DrawScrollBar();
 
-		//FIXME: ad-hoc: draw screen keypad
+		//draw screen keypad
 		SetProjectionMatrix(1);
 		{
 			int x1=m_scrollView.m_screen.x+m_scrollView.m_screen.w;
 			int y1=m_scrollView.m_screen.y+m_scrollView.m_screen.h;
 
-			float v[]={
+			std::vector<float> v;
+			std::vector<unsigned short> i;
+			v.reserve(64);
+			i.reserve(64);
+
+			//add default screen keyboard
+			float v0[16]={
 				float(x1-4*theApp->m_nButtonSize),float(y1),0.0f,0.0f,
 				float(x1),float(y1),1.0f,0.0f,
 				float(x1),float(y1+2*theApp->m_nButtonSize),1.0f,0.5f,
 				float(x1-4*theApp->m_nButtonSize),float(y1+2*theApp->m_nButtonSize),0.0f,0.5f,
-
-				float(x1-7*theApp->m_nButtonSize),float(y1+theApp->m_nButtonSize),0.0f,0.5f,
-				float(x1-6*theApp->m_nButtonSize),float(y1+theApp->m_nButtonSize),0.25f,0.5f,
-				float(x1-6*theApp->m_nButtonSize),float(y1+2*theApp->m_nButtonSize),0.25f,0.75f,
-				float(x1-7*theApp->m_nButtonSize),float(y1+2*theApp->m_nButtonSize),0.0f,0.75f,
-
-				float(x1-6*theApp->m_nButtonSize),float(y1+theApp->m_nButtonSize),0.25f,0.5f,
-				float(x1-5*theApp->m_nButtonSize),float(y1+theApp->m_nButtonSize),0.5f,0.5f,
-				float(x1-5*theApp->m_nButtonSize),float(y1+2*theApp->m_nButtonSize),0.5f,0.75f,
-				float(x1-6*theApp->m_nButtonSize),float(y1+2*theApp->m_nButtonSize),0.25f,0.75f,
 			};
 
-			if(m_nScreenKeyboardType==2){
-				for(int i=4;i<8;i++){
-					v[i*4+2]+=0.25f;
-					v[i*4+3]+=0.25f;
-				}
+			const unsigned short i0[6]={
+				0,1,2,0,2,3,
+			};
+
+			v.insert(v.end(),v0,v0+16);
+			i.insert(i.end(),i0,i0+6);
+
+			//determine the position of additional screen keyboard
+			int xxx=m_scrollView.m_screen.w/theApp->m_nButtonSize;
+			if(xxx>=6){
+				xxx=m_scrollView.m_screen.w-7*theApp->m_nButtonSize;
+				if(xxx<0) xxx=0;
+				m_nScreenKeyboardPos[0]=xxx;
+				m_nScreenKeyboardPos[1]=m_scrollView.m_screen.h+theApp->m_nButtonSize;
+				m_nScreenKeyboardPos[2]=xxx+theApp->m_nButtonSize;
+				m_nScreenKeyboardPos[3]=m_nScreenKeyboardPos[1];
+			}else{
+				xxx=m_scrollView.m_screen.w-5*theApp->m_nButtonSize;
+				if(xxx>0) xxx=0;
+				m_nScreenKeyboardPos[0]=xxx;
+				m_nScreenKeyboardPos[1]=m_scrollView.m_screen.h;
+				m_nScreenKeyboardPos[2]=xxx;
+				m_nScreenKeyboardPos[3]=m_scrollView.m_screen.h+theApp->m_nButtonSize;
+			}
+
+			//add additional screen keyboard
+			switch(m_nScreenKeyboardType){
+			case 1: //yes/no
+			case 2: //fast forward/no
+				AddScreenKeyboard(float(m_scrollView.m_screen.x+m_nScreenKeyboardPos[0]),
+					float(m_scrollView.m_screen.y+m_nScreenKeyboardPos[1]),
+					float(theApp->m_nButtonSize),
+					float(theApp->m_nButtonSize),
+					m_nScreenKeyboardType==2?SCREEN_KEYBOARD_FAST_FORWARD:SCREEN_KEYBOARD_YES,v,i);
+				AddScreenKeyboard(float(m_scrollView.m_screen.x+m_nScreenKeyboardPos[2]),
+					float(m_scrollView.m_screen.y+m_nScreenKeyboardPos[3]),
+					float(theApp->m_nButtonSize),
+					float(theApp->m_nButtonSize),
+					SCREEN_KEYBOARD_NO,v,i);
+				break;
 			}
 
 			switch(m_scrollView.m_nOrientation){
 			case 2:
-				for(int i=0;i<12;i++){
-					v[i*4]=float(m_scrollView.m_screen.x*2+m_scrollView.m_screen.w)-v[i*4];
-					v[i*4+1]=float(m_scrollView.m_screen.y*2+m_scrollView.m_screen.h)-v[i*4+1];
+				for(int i=0,m=v.size();i<m;i+=4){
+					v[i]=float(m_scrollView.m_screen.x*2+m_scrollView.m_screen.w)-v[i];
+					v[i+1]=float(m_scrollView.m_screen.y*2+m_scrollView.m_screen.h)-v[i+1];
 				}
 				break;
 			}
-
-			const unsigned short i[]={
-				0,1,2,0,2,3,
-				4,5,6,4,6,7,
-				8,9,10,8,10,11,
-			};
 
 			glDisable(GL_LIGHTING);
 			glEnable(GL_TEXTURE_2D);
@@ -188,10 +213,10 @@ void PuzzleBoyLevelView::Draw(){
 			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 			glEnableClientState(GL_VERTEX_ARRAY);
 			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-			glVertexPointer(2,GL_FLOAT,4*sizeof(float),v);
-			glTexCoordPointer(2,GL_FLOAT,4*sizeof(float),v+2);
+			glVertexPointer(2,GL_FLOAT,4*sizeof(float),&(v[0]));
+			glTexCoordPointer(2,GL_FLOAT,4*sizeof(float),&(v[2]));
 
-			glDrawElements(GL_TRIANGLES,m_nScreenKeyboardType!=0?18:6,GL_UNSIGNED_SHORT,i);
+			glDrawElements(GL_TRIANGLES,i.size(),GL_UNSIGNED_SHORT,&(i[0]));
 
 			glDisableClientState(GL_VERTEX_ARRAY);
 			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -316,6 +341,11 @@ void PuzzleBoyLevelView::FinishGame(){
 		m_nCurrentLevel=0;
 	}
 
+	//update theApp->m_nCurrentLevel
+	if(!theApp->m_view.empty() && theApp->m_view[0]==this){
+		theApp->m_nCurrentLevel=m_nCurrentLevel;
+	}
+
 	StartGame();
 }
 
@@ -378,7 +408,7 @@ bool PuzzleBoyLevelView::OnTimer(){
 					MultiTouchViewStruct *viewStruct=theApp->touchMgr.FindView(this);
 
 					//check right button
-					if(!b && !theApp->IsTouchscreen()
+					if(!b && m_nEditingBlockIndex<0
 						&& viewStruct && viewStruct->m_nDraggingState
 						&& (SDL_GetMouseState(NULL,NULL) & SDL_BUTTON_RMASK)!=0)
 					{
@@ -692,7 +722,10 @@ void PuzzleBoyLevelView::OnMultiGesture(float fx,float fy,float dx,float dy,floa
 
 void PuzzleBoyLevelView::OnMouseEvent(int which,int state,int xMouse,int yMouse,int nFlags,int nType){
 	//process mouse move event
-	if(nType==SDL_MOUSEMOTION && (state&(SDL_BUTTON_LMASK|SDL_BUTTON_RMASK))==0){
+	if(nType==SDL_MOUSEMOTION &&
+		(state==-42 ||
+		((state&(SDL_BUTTON_LMASK|SDL_BUTTON_RMASK))==0 && !theApp->IsTouchscreen())))
+	{
 		if(!m_bEditMode && m_objPlayingLevel
 			&& m_nEditingBlockIndex>=0 && m_nEditingBlockIndex<(int)m_objPlayingLevel->m_objBlocks.size())
 		{
@@ -717,33 +750,19 @@ void PuzzleBoyLevelView::OnMouseEvent(int which,int state,int xMouse,int yMouse,
 		if(nType==SDL_MOUSEBUTTONDOWN && state==SDL_BUTTON_LMASK){
 			bool b=false;
 			int idx=0,keyIndex=-1;
-			int tmp;
+			int x,y,tmp;
 
-			switch(m_scrollView.m_nOrientation){
-			case 2:
-				tmp=m_scrollView.m_screen.y-2*theApp->m_nButtonSize;
-				if(yMouse>=tmp){
-					int i=1+((yMouse-tmp)/theApp->m_nButtonSize);
-					idx=i<<8;
-				}
-				tmp=m_scrollView.m_screen.x;
-				if(xMouse>=tmp){
-					int i=1+((xMouse-tmp)/theApp->m_nButtonSize);
-					idx|=i;
-				}
-				break;
-			default:
-				tmp=m_scrollView.m_screen.y+m_scrollView.m_screen.h+2*theApp->m_nButtonSize;
-				if(yMouse<tmp){
-					int i=1+((tmp-yMouse-1)/theApp->m_nButtonSize);
-					idx=i<<8;
-				}
-				tmp=m_scrollView.m_screen.x+m_scrollView.m_screen.w;
-				if(xMouse<tmp){
-					int i=1+((tmp-xMouse-1)/theApp->m_nButtonSize);
-					idx|=i;
-				}
-				break;
+			m_scrollView.TranslateScreenCoordinateToClient(xMouse,yMouse,x,y);
+
+			tmp=m_scrollView.m_screen.h+2*theApp->m_nButtonSize;
+			if(y<tmp){
+				int i=1+((tmp-y-1)/theApp->m_nButtonSize);
+				idx=i<<8;
+			}
+			tmp=m_scrollView.m_screen.w;
+			if(x<tmp){
+				int i=1+((tmp-x-1)/theApp->m_nButtonSize);
+				idx|=i;
 			}
 
 			switch(idx){
@@ -757,11 +776,19 @@ void PuzzleBoyLevelView::OnMouseEvent(int which,int state,int xMouse,int yMouse,
 			case 0x101: keyIndex=6; break;
 			}
 
-			if(m_nScreenKeyboardType==1 || m_nScreenKeyboardType==2){
-				switch(idx){
-				case 0x107: keyIndex=64; break;
-				case 0x106: keyIndex=65; break;
+			switch(m_nScreenKeyboardType){
+			case 1:
+			case 2:
+				if(x>=m_nScreenKeyboardPos[0] && y>=m_nScreenKeyboardPos[1] &&
+					x<m_nScreenKeyboardPos[0]+theApp->m_nButtonSize && y<m_nScreenKeyboardPos[1]+theApp->m_nButtonSize)
+				{
+					keyIndex=64;
+				}else if(x>=m_nScreenKeyboardPos[2] && y>=m_nScreenKeyboardPos[3] &&
+					x<m_nScreenKeyboardPos[2]+theApp->m_nButtonSize && y<m_nScreenKeyboardPos[3]+theApp->m_nButtonSize)
+				{
+					keyIndex=65;
 				}
+				break;
 			}
 
 			if(keyIndex>=0){
@@ -779,8 +806,8 @@ void PuzzleBoyLevelView::OnMouseEvent(int which,int state,int xMouse,int yMouse,
 		}
 
 		//process in-game mouse events
-		//mouse down for right key
-		if(nType==SDL_MOUSEBUTTONDOWN && (state & SDL_BUTTON_RMASK)!=0
+		//mouse up for right key
+		if(nType==SDL_MOUSEBUTTONUP && (state & SDL_BUTTON_RMASK)!=0
 			&& m_objPlayingLevel)
 		{
 			if(m_nEditingBlockIndex>=0){
@@ -791,19 +818,6 @@ void PuzzleBoyLevelView::OnMouseEvent(int which,int state,int xMouse,int yMouse,
 				m_bPlayFromRecord=false;
 				m_sRecord.clear();
 				m_nRecordIndex=-1;
-			}else if(!m_objPlayingLevel->IsAnimating()){
-				//undo or redo
-				if(nFlags & KMOD_SHIFT){
-					if(m_objPlayingLevel->CanRedo()) Redo();
-					else{
-						theApp->ShowToolTip(_("Can't redo"));
-					}
-				}else{
-					if(m_objPlayingLevel->CanUndo()) Undo();
-					else{
-						theApp->ShowToolTip(_("Can't undo"));
-					}
-				}
 			}
 		}
 
@@ -823,7 +837,7 @@ void PuzzleBoyLevelView::OnMouseEvent(int which,int state,int xMouse,int yMouse,
 					//do nothing in SDL version
 				}else if(m_nEditingBlockIndex>=0 && m_nEditingBlockIndex<(int)m_objPlayingLevel->m_objBlocks.size()){
 					//workaround on Android and other devices without mouse move event
-					OnMouseEvent(0,0,xMouse,yMouse,0,SDL_MOUSEMOTION);
+					OnMouseEvent(0,-42,xMouse,yMouse,0,SDL_MOUSEMOTION);
 
 					//move a moveable block to new position
 					if(!theApp->IsTouchscreen()
@@ -850,6 +864,10 @@ void PuzzleBoyLevelView::OnMouseEvent(int which,int state,int xMouse,int yMouse,
 						m_nEditingBlockY=objBlock->m_y;
 						m_nEditingBlockDX=m_nEditingBlockX-x;
 						m_nEditingBlockDY=m_nEditingBlockY-y;
+						//show a notification
+						if(theApp->IsTouchscreen()){
+							theApp->ShowToolTip(_("Start moving box"));
+						}
 					}else if(nType==ROTATE_BLOCK && (x!=objBlock->m_x || y!=objBlock->m_y)){
 						//clicked a rotate block
 						m_nEditingBlockIndex=idx;

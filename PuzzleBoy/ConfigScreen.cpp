@@ -24,6 +24,9 @@ enum ConfigType{
 	ConfigMenuTextSize,
 	ConfigMenuHeightFactor,
 	ConfigTouchscreen,
+#ifndef __IPHONEOS__
+	ConfigShowMainMenuButton,
+#endif
 	ConfigEmpty_1,
 	ConfigPlayerName, //player2,empty,title
 	ConfigKey=ConfigPlayerName+4,
@@ -108,6 +111,11 @@ void ConfigScreen::OnDirty(){
 		AddItem(_("Touchscreen Mode")+": "+s);
 	}
 
+#ifndef __IPHONEOS__
+	//show main menu button
+	AddItem(_("Show Main Menu Button: ")+yesno[theApp->m_bShowMainMenuButton?1:0]);
+#endif
+
 	//empty line
 	AddEmptyItem();
 
@@ -161,6 +169,7 @@ int ConfigScreen::OnClick(int index){
 			for(int i=0;i<4;i++){
 				screen.m_sList.push_back(str(MyFormat("%d%%")<<(100<<i)));
 			}
+			screen.m_nListIndex=theApp->m_nAnimationSpeed;
 
 			screen.m_sTitle=_("Animation Speed");
 
@@ -199,6 +208,7 @@ int ConfigScreen::OnClick(int index){
 
 			for(int i=4;i<=16;i++){
 				screen.m_sList.push_back(str(MyFormat("%d%%")<<(i*25)));
+				if(i<<4==theApp->m_nButtonSize) screen.m_nListIndex=i-4;
 			}
 
 			screen.m_sTitle=_("Button Size");
@@ -206,7 +216,7 @@ int ConfigScreen::OnClick(int index){
 			//show and get result
 			int ret=screen.DoModal();
 			if(ret>0){
-				theApp->m_nButtonSize=(ret+3)*16;
+				theApp->m_nButtonSize=(ret+3)<<4;
 				m_bConfigDirty=true;
 				m_bDirty=true;
 				//recreate header
@@ -223,12 +233,18 @@ int ConfigScreen::OnClick(int index){
 			availableLocale.push_back("?");
 			availableLocale.push_back("");
 
+			int listIndex=-1;
+
 			std::vector<u8string> fs=enumAllFiles("data/locale/","mo");
 			for(unsigned int i=0;i<fs.size();i++){
 				u8string::size_type lps=fs[i].find_last_of('.');
 				if(lps!=u8string::npos) availableLocale.push_back(fs[i].substr(0,lps));
 				else availableLocale.push_back(fs[i]);
+
+				if(theApp->m_sLocale==availableLocale[availableLocale.size()-1]) listIndex=availableLocale.size()-1;
 			}
+			if(theApp->m_sLocale.empty()) listIndex=1;
+			else if(theApp->m_sLocale.find_first_of('?')!=u8string::npos) listIndex=0;
 
 			//init list box
 			SimpleStaticListScreen screen;
@@ -242,6 +258,8 @@ int ConfigScreen::OnClick(int index){
 			for(unsigned int i=2;i<availableLocale.size();i++){
 				screen.m_sList.push_back(availableLocale[i]);
 			}
+
+			screen.m_nListIndex=listIndex;
 
 			screen.m_sTitle=_("Language");
 
@@ -265,6 +283,7 @@ int ConfigScreen::OnClick(int index){
 			for(int i=1;i<=8;i++){
 				screen.m_sList.push_back(str(MyFormat("%d")<<i));
 			}
+			screen.m_nListIndex=theApp->m_nThreadCount;
 
 			screen.m_sTitle=_("Thread Count");
 
@@ -286,6 +305,7 @@ int ConfigScreen::OnClick(int index){
 			screen.m_sList.push_back(_("Normal"));
 			screen.m_sList.push_back(_("Horizontal Up-Down"));
 			screen.m_sList.push_back(_("Vertical Up-Down"));
+			screen.m_nListIndex=theApp->m_nOrientation;
 
 			screen.m_sTitle=_("Multiplayer Orientation");
 
@@ -324,6 +344,7 @@ int ConfigScreen::OnClick(int index){
 
 			for(int i=4;i<=16;i++){
 				screen.m_sList.push_back(str(MyFormat("%d%%")<<(i*25)));
+				if(i<<3==theApp->m_nMenuTextSize) screen.m_nListIndex=i-4;
 			}
 
 			screen.m_sTitle=_("Menu Text Size");
@@ -348,6 +369,7 @@ int ConfigScreen::OnClick(int index){
 			for(int i=4;i<=16;i++){
 				screen.m_sList.push_back(str(MyFormat("%d%%")<<(i*25)));
 			}
+			screen.m_nListIndex=theApp->m_nMenuHeightFactor-4;
 
 			screen.m_sTitle=_("Menu Height");
 
@@ -369,6 +391,7 @@ int ConfigScreen::OnClick(int index){
 			screen.m_sList.push_back(_("No"));
 			screen.m_sList.push_back(_("Yes"));
 			screen.m_sList.push_back(_("Automatic"));
+			screen.m_nListIndex=theApp->m_nTouchConfig;
 
 			screen.m_sTitle=_("Touchscreen Mode");
 
@@ -381,6 +404,14 @@ int ConfigScreen::OnClick(int index){
 			}
 		}
 		break;
+#ifndef __IPHONEOS__
+	case ConfigShowMainMenuButton:
+		//show main menu button
+		theApp->m_bShowMainMenuButton=!theApp->m_bShowMainMenuButton;
+		m_bConfigDirty=true;
+		m_bDirty=true;
+		break;
+#endif
 	case ConfigPlayerName:
 	case ConfigPlayerName+1:
 		//player name

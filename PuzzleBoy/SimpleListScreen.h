@@ -15,6 +15,9 @@ public:
 	virtual int OnTitleBarButtonClick(int index);
 	virtual int DoModal();
 
+	void EnsureVisible(int index);
+	void EnsureVisible(){EnsureVisible(m_nListIndex);}
+
 	int ListCount() const {return m_nListCount;}
 
 protected:
@@ -30,6 +33,7 @@ private:
 	SimpleText *m_txtList;
 	int m_nListCount;
 public:
+	int m_nListIndex; //0-based
 	int m_nReturnValue;
 
 	bool m_bDirty;
@@ -42,11 +46,8 @@ protected:
 	std::vector<float> m_v;
 	std::vector<unsigned short> m_idx;
 
-	int m_nMyResizeTime;
-
-	//0=not dragging or failed,1=mouse down,2=dragging,3=dragging scrollbar or failed
-	int m_nDraggingState;
-	float m_fOldY;
+private:
+	int m_y0;
 };
 
 class SimpleStaticListScreen:public SimpleListScreen{

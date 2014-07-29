@@ -18,7 +18,9 @@
 
 PuzzleBoyApp *theApp=NULL;
 
+//ad-hoc!!
 extern SDL_Event event;
+extern GLuint adhoc_screenkb_tex;
 
 //test
 #ifdef ANDROID
@@ -35,6 +37,7 @@ PuzzleBoyApp::PuzzleBoyApp()
 ,m_bAutoSave(true)
 ,m_bContinuousKey(true)
 ,m_bShowFPS(false)
+,m_bShowMainMenuButton(true)
 ,m_pDocument(NULL)
 ,m_nCurrentLevel(0)
 ,m_nMyResizeTime(-1)
@@ -216,6 +219,11 @@ void PuzzleBoyApp::LoadConfig(const u8string& fileName){
 
 	m_bContinuousKey=GetConfig(cfg,"ContinuousKey",1)!=0;
 	m_bShowFPS=GetConfig(cfg,"ShowFPS",0)!=0;
+#ifdef __IPHONEOS__
+	m_bShowMainMenuButton=true;
+#else
+	m_bShowMainMenuButton=GetConfig(cfg,"ShowMainMenuButton",1)!=0;
+#endif
 
 	m_nButtonSize=GetConfig(cfg,"ButtonSize",64);
 	m_nMenuTextSize=GetConfig(cfg,"MenuTextSize",32);
@@ -256,6 +264,7 @@ void PuzzleBoyApp::SaveConfig(const u8string& fileName){
 
 	PutConfig(cfg,"ContinuousKey",m_bContinuousKey?1:0);
 	PutConfig(cfg,"ShowFPS",m_bShowFPS?1:0);
+	PutConfig(cfg,"ShowMainMenuButton",m_bShowMainMenuButton?1:0);
 
 	PutConfig(cfg,"ButtonSize",m_nButtonSize);
 	PutConfig(cfg,"MenuTextSize",m_nMenuTextSize);
@@ -305,6 +314,35 @@ void PuzzleBoyApp::Draw(){
 		m_view[i]->Draw();
 	}
 	SimpleScrollView::DisableScissorRect();
+
+	if(m_bShowMainMenuButton){
+		std::vector<float> v;
+		std::vector<unsigned short> i;
+		AddScreenKeyboard(float(screenWidth-m_nButtonSize),
+			0.0f,
+			float(m_nButtonSize),
+			float(m_nButtonSize),
+			SCREEN_KEYBOARD_MORE,v,i);
+
+		SetProjectionMatrix(1);
+
+		glDisable(GL_LIGHTING);
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, adhoc_screenkb_tex);
+
+		glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glVertexPointer(2,GL_FLOAT,4*sizeof(float),&(v[0]));
+		glTexCoordPointer(2,GL_FLOAT,4*sizeof(float),&(v[2]));
+
+		glDrawElements(GL_TRIANGLES,i.size(),GL_UNSIGNED_SHORT,&(i[0]));
+
+		glDisableClientState(GL_VERTEX_ARRAY);
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glDisable(GL_TEXTURE_2D);
+	}
 }
 
 void PuzzleBoyApp::DestroyGame(){

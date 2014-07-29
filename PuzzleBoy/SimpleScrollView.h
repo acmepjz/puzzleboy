@@ -19,7 +19,11 @@ public:
 	//zoom: relative zoom factor
 	void OnMultiGesture(float fx,float fy,float dx,float dy,float zoom);
 
+	//translate screen coordinate to world
 	void TranslateCoordinate(int x,int y,int& out_x,int& out_y);
+	void TranslateCoordinate(float x,float y,float& out_x,float& out_y);
+
+	void TranslateScreenCoordinateToClient(int x,int y,int& out_x,int& out_y);
 
 	void CenterView(int x=0,int y=0,int w=-1,int h=-1);
 	void EnsureVisible(int x,int y,int w=0,int h=0);

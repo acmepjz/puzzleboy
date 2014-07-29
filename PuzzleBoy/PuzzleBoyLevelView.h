@@ -34,11 +34,17 @@ public:
 public:
 	SimpleScrollView m_scrollView;
 
+private:
 	//0=default, 1=with yes/no, 2=with fast forward/no
 	int m_nScreenKeyboardType;
 
 	int m_nScreenKeyboardPressedIndex;
 
+	//position of additional screen keyboard (in client space)
+	//0,1-yes 2,3-no
+	int m_nScreenKeyboardPos[4];
+
+public:
 	u16string m_sPlayerName;
 
 	//level file object. Warning: weak reference!!! don't delete!!!

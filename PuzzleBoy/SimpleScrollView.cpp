@@ -231,6 +231,32 @@ void SimpleScrollView::TranslateCoordinate(int x,int y,int& out_x,int& out_y){
 	}
 }
 
+void SimpleScrollView::TranslateCoordinate(float x,float y,float& out_x,float& out_y){
+	switch(m_nOrientation){
+	case 2:
+		out_x=(float(m_screen.x*2+m_screen.w)-x)*m_zoom2+m_x2;
+		out_y=(float(m_screen.y*2+m_screen.h)-y)*m_zoom2+m_y2;
+		break;
+	default:
+		out_x=x*m_zoom2+m_x2;
+		out_y=y*m_zoom2+m_y2;
+		break;
+	}
+}
+
+void SimpleScrollView::TranslateScreenCoordinateToClient(int x,int y,int& out_x,int& out_y){
+	switch(m_nOrientation){
+	case 2:
+		out_x=m_screen.x+m_screen.w-x;
+		out_y=m_screen.y+m_screen.h-y;
+		break;
+	default:
+		out_x=x-m_screen.x;
+		out_y=y-m_screen.y;
+		break;
+	}
+}
+
 void SimpleScrollView::CenterView(int x,int y,int w,int h){
 	if(w<0 || h<0){
 		x=m_virtual.x;
