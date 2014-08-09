@@ -73,11 +73,8 @@ namespace DrawTextFlags{
 	const int AutoSize=512; //currently only horizontal autosize supported, and is buggy
 }
 
-class SimpleInputScreen;
-
 //experimental
 class SimpleText{
-	friend class SimpleInputScreen;
 public:
 	SimpleText();
 

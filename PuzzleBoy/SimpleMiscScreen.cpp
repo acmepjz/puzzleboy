@@ -67,27 +67,7 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 
 			AddScreenKeyboard(float(right),0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_YES,m_v,m_idx);
 
-			float vv[32]={
-				float(left),0,0.75f,0.75f,
-				float(left+buttonSize/2),0,0.875f,0.75f,
-				float(right-buttonSize/2),0,0.875f,0.75f,
-				float(right),0,1.0f,0.75f,
-				float(left),float(buttonSize),0.75f,1.0f,
-				float(left+buttonSize/2),float(buttonSize),0.875f,1.0f,
-				float(right-buttonSize/2),float(buttonSize),0.875f,1.0f,
-				float(right),float(buttonSize),1.0f,1.0f,
-			};
-
-			unsigned short idxs=(unsigned short)(m_v.size()>>2);
-
-			unsigned short ii[18]={
-				idxs,idxs+1,idxs+5,idxs,idxs+5,idxs+4,
-				idxs+1,idxs+2,idxs+6,idxs+1,idxs+6,idxs+5,
-				idxs+2,idxs+3,idxs+7,idxs+2,idxs+7,idxs+6,
-			};
-
-			m_v.insert(m_v.end(),vv,vv+32);
-			m_idx.insert(m_idx.end(),ii,ii+18);
+			AddEmptyHorizontalButton(float(left),0,float(right),float(buttonSize),m_v,m_idx);
 		}
 
 		//clear and draw
@@ -193,7 +173,7 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 
 				unsigned short ii[6]={0,1,3,0,3,2};
 
-				glColor4f(0.25f, 0.25f, 0.25f, 1.0f);
+				glColor4f(1.0f, 1.0f, 1.0f, 0.25f);
 
 				glEnableClientState(GL_VERTEX_ARRAY);
 				glVertexPointer(2,GL_FLOAT,0,vv);
@@ -439,27 +419,7 @@ int SimpleConfigKeyScreen(int key){
 
 			AddScreenKeyboard(float(r.x+r.w),float(r.y),64,64,SCREEN_KEYBOARD_NO,m_v,m_idx);
 
-			float vv[32]={
-				float(left),0,0.75f,0.75f,
-				float(left+buttonSize/2),0,0.875f,0.75f,
-				float(right-buttonSize/2),0,0.875f,0.75f,
-				float(right),0,1.0f,0.75f,
-				float(left),float(buttonSize),0.75f,1.0f,
-				float(left+buttonSize/2),float(buttonSize),0.875f,1.0f,
-				float(right-buttonSize/2),float(buttonSize),0.875f,1.0f,
-				float(right),float(buttonSize),1.0f,1.0f,
-			};
-
-			unsigned short idxs=(unsigned short)(m_v.size()>>2);
-
-			unsigned short ii[18]={
-				idxs,idxs+1,idxs+5,idxs,idxs+5,idxs+4,
-				idxs+1,idxs+2,idxs+6,idxs+1,idxs+6,idxs+5,
-				idxs+2,idxs+3,idxs+7,idxs+2,idxs+7,idxs+6,
-			};
-
-			m_v.insert(m_v.end(),vv,vv+32);
-			m_idx.insert(m_idx.end(),ii,ii+18);
+			AddEmptyHorizontalButton(float(left),0,float(right),float(buttonSize),m_v,m_idx);
 		}
 
 		//update idle time

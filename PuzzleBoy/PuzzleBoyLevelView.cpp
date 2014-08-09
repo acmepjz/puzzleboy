@@ -134,7 +134,7 @@ void PuzzleBoyLevelView::Draw(){
 		if(!m_sRecord.empty()) m_nScreenKeyboardType=2;
 
 		//draw scroll bar
-		m_scrollView.DrawScrollBar();
+		m_scrollView.Draw();
 
 		//draw screen keypad
 		SetProjectionMatrix(1);
@@ -150,9 +150,9 @@ void PuzzleBoyLevelView::Draw(){
 			//add default screen keyboard
 			float v0[16]={
 				float(x1-4*theApp->m_nButtonSize),float(y1),0.0f,0.0f,
-				float(x1),float(y1),1.0f,0.0f,
-				float(x1),float(y1+2*theApp->m_nButtonSize),1.0f,0.5f,
-				float(x1-4*theApp->m_nButtonSize),float(y1+2*theApp->m_nButtonSize),0.0f,0.5f,
+				float(x1),float(y1),SCREENKB_W*4.0f,0.0f,
+				float(x1),float(y1+2*theApp->m_nButtonSize),SCREENKB_W*4.0f,SCREENKB_H*2.0f,
+				float(x1-4*theApp->m_nButtonSize),float(y1+2*theApp->m_nButtonSize),0.0f,SCREENKB_H*2.0f,
 			};
 
 			const unsigned short i0[6]={
@@ -637,12 +637,32 @@ bool PuzzleBoyLevelView::InternalKeyDown(int keyIndex){
 
 						if(objBlock->m_nType==ROTATE_BLOCK){
 							int dx=0,dy=0;
+							m_nEditingBlockX;m_nEditingBlockY;
 							if(m_nEditingBlockDX==objBlock->m_x){
-								if(m_nEditingBlockX<objBlock->m_x) dx=-1;
-								else if(m_nEditingBlockX>objBlock->m_x) dx=1;
+								if(m_nEditingBlockY==m_nEditingBlockDY){
+									switch(m_nEditingBlockX-objBlock->m_x){
+									case -1: dx=-1; break;
+									case 0: dx=-42; break;
+									case 1: dx=1; break;
+									}
+								}
 							}else{
-								if(m_nEditingBlockY<objBlock->m_y) dy=-1;
-								else if(m_nEditingBlockY>objBlock->m_y) dy=1;
+								if(m_nEditingBlockX==m_nEditingBlockDX){
+									switch(m_nEditingBlockY-objBlock->m_y){
+									case -1: dy=-1; break;
+									case 0: dx=-42; break;
+									case 1: dy=1; break;
+									}
+								}
+							}
+
+							if(dx==0 && dy==0){
+								//clicked the wrong position
+								m_nEditingBlockIndex=idx;
+								return true;
+							}else if(dx==-42){
+								//cancelled
+								return true;
 							}
 
 							int xx=m_nEditingBlockDX-dx;

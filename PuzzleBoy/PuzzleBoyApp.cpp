@@ -57,49 +57,58 @@ PuzzleBoyApp::~PuzzleBoyApp(){
 
 //TODO: load new file format
 bool PuzzleBoyApp::LoadFile(const u8string& fileName){
+	bool ret=false;
 	u8file *f=u8fopen(fileName.c_str(),"rb");
-	if(f==NULL) return false;
+	if(f){
+		MFCSerializer ar;
+		ar.SetFile(f,false,4096);
 
-	MFCSerializer ar;
-	ar.SetFile(f,false,4096);
+		PuzzleBoyLevelFile* pDoc=new PuzzleBoyLevelFile;
+		if(pDoc->MFCSerialize(ar)){
+			delete m_pDocument;
+			m_pDocument=pDoc;
+		}else{
+			delete pDoc;
+			pDoc=NULL;
+		}
 
-	PuzzleBoyLevelFile* pDoc=new PuzzleBoyLevelFile;
-	if(pDoc->MFCSerialize(ar)){
-		delete m_pDocument;
-		m_pDocument=pDoc;
-	}else{
-		delete pDoc;
-		pDoc=NULL;
+		u8fclose(f);
+
+		if(pDoc){
+			DestroyGame();
+			m_nCurrentLevel=0;
+			m_sLastFile=fileName;
+			ret=true;
+		}
 	}
 
-	u8fclose(f);
+	if(!ret){
+		printf("[PuzzleBoyApp] Error: Failed to load file %s\n",fileName.c_str());
+	}
 
-	if(pDoc==NULL) return false;
-
-	DestroyGame();
-
-	m_nCurrentLevel=0;
-
-	m_sLastFile=fileName;
-
-	return true;
+	return ret;
 }
 
 bool PuzzleBoyApp::SaveFile(const u8string& fileName){
 	if(m_pDocument==NULL) return false;
 
+	bool ret=false;
 	u8file *f=u8fopen(fileName.c_str(),"wb");
-	if(f==NULL) return false;
+	if(f){
+		MFCSerializer ar;
+		ar.SetFile(f,true,4096);
 
-	MFCSerializer ar;
-	ar.SetFile(f,true,4096);
+		ret=m_pDocument->MFCSerialize(ar);
+		ar.FileFlush();
 
-	bool ret=m_pDocument->MFCSerialize(ar);
-	ar.FileFlush();
+		u8fclose(f);
 
-	u8fclose(f);
+		m_sLastFile=fileName;
+	}
 
-	m_sLastFile=fileName;
+	if(!ret){
+		printf("[PuzzleBoyApp] Error: Failed to save file %s\n",fileName.c_str());
+	}
 
 	return ret;
 }
@@ -364,7 +373,7 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount){
 
 		view->m_sPlayerName=m_sPlayerName[0];
 		view->m_nKey=m_nKey+8;
-		view->m_scrollView.m_bAutoResize=true;
+		view->m_scrollView.m_flags|=SimpleScrollViewFlags::AutoResize;
 		switch(m_nOrientation){
 		case 0:
 			//normal
@@ -410,7 +419,7 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount){
 
 		view->m_sPlayerName=m_sPlayerName[1];
 		view->m_nKey=m_nKey+16;
-		view->m_scrollView.m_bAutoResize=true;
+		view->m_scrollView.m_flags|=SimpleScrollViewFlags::AutoResize;
 		view->m_scrollView.m_fAutoResizeScale[2]=1.0f;
 		view->m_scrollView.m_fAutoResizeScale[3]=1.0f;
 		view->m_scrollView.m_nAutoResizeOffset[3]=-2*m_nButtonSize;
@@ -443,7 +452,7 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount){
 
 		view->m_sPlayerName=m_sPlayerName[0];
 		view->m_nKey=m_nKey;
-		view->m_scrollView.m_bAutoResize=true;
+		view->m_scrollView.m_flags|=SimpleScrollViewFlags::AutoResize;
 		view->m_scrollView.m_fAutoResizeScale[2]=1.0f;
 		view->m_scrollView.m_fAutoResizeScale[3]=1.0f;
 		view->m_scrollView.m_nAutoResizeOffset[3]=-2*m_nButtonSize;

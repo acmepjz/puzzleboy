@@ -7,276 +7,281 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PuzzleBoy 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-07-07 21:54+0800\n"
-"PO-Revision-Date: 2014-07-07 21:54+0800\n"
+"POT-Creation-Date: 2014-08-01 14:33+0800\n"
+"PO-Revision-Date: 2014-08-01 14:34+0800\n"
 "Last-Translator: acme_pjz <acme_pjz@hotmail.com>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
 "X-Poedit-Language: Chinese\n"
 "X-Poedit-Country: CHINA\n"
 
-#: ChooseLevelScreen.cpp:47
+#: ChooseLevelScreen.cpp:30
+#, c-format
+msgid "Failed to load file %s"
+msgstr "打开文件 %s 失败"
+
+#: ChooseLevelScreen.cpp:53
 msgid "User level: "
 msgstr "用户关卡: "
 
-#: ChooseLevelScreen.cpp:53
-#: main.cpp:267
+#: ChooseLevelScreen.cpp:59
+#: main.cpp:396
 msgid "Choose Level File"
 msgstr "选择关卡文件"
 
-#: ChooseLevelScreen.cpp:70
-#: main.cpp:266
+#: ChooseLevelScreen.cpp:76
+#: main.cpp:395
 msgid "Choose Level"
 msgstr "选择关卡"
 
-#: ChooseLevelScreen.cpp:73
+#: ChooseLevelScreen.cpp:79
 msgid "Search Result"
 msgstr "搜索结果"
 
-#: ChooseLevelScreen.cpp:126
+#: ChooseLevelScreen.cpp:137
 msgid "Search Level"
 msgstr "搜索关卡"
 
-#: ChooseLevelScreen.cpp:127
+#: ChooseLevelScreen.cpp:138
 msgid "Please input the keyword"
 msgstr "请输入关键字"
 
-#: ConfigScreen.cpp:38
-#: ConfigScreen.cpp:369
+#: ConfigScreen.cpp:41
+#: ConfigScreen.cpp:391
 msgid "No"
 msgstr "否"
 
-#: ConfigScreen.cpp:39
-#: ConfigScreen.cpp:370
+#: ConfigScreen.cpp:42
+#: ConfigScreen.cpp:392
 msgid "Yes"
 msgstr "是"
 
-#: ConfigScreen.cpp:42
-#: ConfigScreen.cpp:165
+#: ConfigScreen.cpp:45
+#: ConfigScreen.cpp:174
 msgid "Animation Speed"
 msgstr "动画速度"
 
-#: ConfigScreen.cpp:45
+#: ConfigScreen.cpp:48
 msgid "Show Grid: "
 msgstr "显示网格: "
 
-#: ConfigScreen.cpp:48
+#: ConfigScreen.cpp:51
 msgid "Show Lines: "
 msgstr "显示线条: "
 
-#: ConfigScreen.cpp:51
+#: ConfigScreen.cpp:54
 #, c-format
 msgid "International Font: %s (requires restart)"
 msgstr "国际化字体: %s (需要重新启动)"
 
-#: ConfigScreen.cpp:57
-#: ConfigScreen.cpp:240
+#: ConfigScreen.cpp:60
+#: ConfigScreen.cpp:256
 #, c-format
 msgid "Use system language (%s)"
 msgstr "使用系统语言 (%s)"
 
-#: ConfigScreen.cpp:58
-#: ConfigScreen.cpp:236
+#: ConfigScreen.cpp:61
+#: ConfigScreen.cpp:252
 msgid "Disabled"
 msgstr "禁用"
 
-#: ConfigScreen.cpp:60
-#: ConfigScreen.cpp:246
+#: ConfigScreen.cpp:63
+#: ConfigScreen.cpp:264
 msgid "Language"
 msgstr "语言"
 
-#: ConfigScreen.cpp:68
-#: ConfigScreen.cpp:106
-#: ConfigScreen.cpp:264
-#: ConfigScreen.cpp:371
+#: ConfigScreen.cpp:71
+#: ConfigScreen.cpp:109
+#: ConfigScreen.cpp:282
+#: ConfigScreen.cpp:393
 msgid "Automatic"
 msgstr "自动"
 
-#: ConfigScreen.cpp:70
-#: ConfigScreen.cpp:269
+#: ConfigScreen.cpp:73
+#: ConfigScreen.cpp:288
 msgid "Thread Count"
 msgstr "线程数"
 
-#: ConfigScreen.cpp:76
-#: ConfigScreen.cpp:286
+#: ConfigScreen.cpp:79
+#: ConfigScreen.cpp:305
 msgid "Normal"
 msgstr "正常"
 
-#: ConfigScreen.cpp:77
-#: ConfigScreen.cpp:287
+#: ConfigScreen.cpp:80
+#: ConfigScreen.cpp:306
 msgid "Horizontal Up-Down"
 msgstr "水平 上-下"
 
-#: ConfigScreen.cpp:78
-#: ConfigScreen.cpp:288
+#: ConfigScreen.cpp:81
+#: ConfigScreen.cpp:307
 msgid "Vertical Up-Down"
 msgstr "垂直 上-下"
 
-#: ConfigScreen.cpp:80
-#: ConfigScreen.cpp:290
+#: ConfigScreen.cpp:83
+#: ConfigScreen.cpp:310
 msgid "Multiplayer Orientation"
 msgstr "多人游戏显示方向"
 
-#: ConfigScreen.cpp:84
+#: ConfigScreen.cpp:87
 msgid "Save Progress At Exit: "
 msgstr "退出时保存进度: "
 
-#: ConfigScreen.cpp:87
+#: ConfigScreen.cpp:90
 msgid "Continuous Key Event: "
 msgstr "连续按键事件: "
 
-#: ConfigScreen.cpp:90
+#: ConfigScreen.cpp:93
 msgid "Show FPS: "
 msgstr "显示帧速率: "
 
-#: ConfigScreen.cpp:93
-#: ConfigScreen.cpp:204
+#: ConfigScreen.cpp:96
+#: ConfigScreen.cpp:214
 msgid "Button Size"
 msgstr "按钮大小"
 
-#: ConfigScreen.cpp:96
-#: ConfigScreen.cpp:329
+#: ConfigScreen.cpp:99
+#: ConfigScreen.cpp:350
 msgid "Menu Text Size"
 msgstr "菜单文字大小"
 
-#: ConfigScreen.cpp:99
-#: ConfigScreen.cpp:352
+#: ConfigScreen.cpp:102
+#: ConfigScreen.cpp:374
 msgid "Menu Height"
 msgstr "菜单高度"
 
-#: ConfigScreen.cpp:108
-#: ConfigScreen.cpp:373
+#: ConfigScreen.cpp:111
+#: ConfigScreen.cpp:396
 msgid "Touchscreen Mode"
 msgstr "触屏模式"
 
 #: ConfigScreen.cpp:116
-#: ConfigScreen.cpp:392
+msgid "Show Main Menu Button: "
+msgstr "显示主菜单按钮: "
+
+#: ConfigScreen.cpp:124
+#: ConfigScreen.cpp:423
 #, c-format
 msgid "Name of Player %d"
 msgstr "玩家 %d 名字"
 
-#: ConfigScreen.cpp:122
+#: ConfigScreen.cpp:130
 msgid "Single Player Keys:"
 msgstr "单人游戏按键:"
 
-#: ConfigScreen.cpp:123
+#: ConfigScreen.cpp:131
 msgid "Multiplayer Keys (Player 1):"
 msgstr "多人游戏按键 (玩家 1):"
 
-#: ConfigScreen.cpp:124
+#: ConfigScreen.cpp:132
 msgid "Multiplayer Keys (Player 2):"
 msgstr "多人游戏按键 (玩家 2):"
 
-#: ConfigScreen.cpp:125
-#: SimpleMiscScreen.cpp:518
+#: ConfigScreen.cpp:133
+#: SimpleMiscScreen.cpp:478
 msgid "(None)"
 msgstr "(无)"
 
-#: ConfigScreen.cpp:126
+#: ConfigScreen.cpp:134
 msgid "Up: "
 msgstr "上: "
 
-#: ConfigScreen.cpp:127
+#: ConfigScreen.cpp:135
 msgid "Down: "
 msgstr "下: "
 
-#: ConfigScreen.cpp:128
+#: ConfigScreen.cpp:136
 msgid "Left: "
 msgstr "左: "
 
-#: ConfigScreen.cpp:129
+#: ConfigScreen.cpp:137
 msgid "Right: "
 msgstr "右: "
 
-#: ConfigScreen.cpp:130
+#: ConfigScreen.cpp:138
 msgid "Undo: "
 msgstr "撤消: "
 
-#: ConfigScreen.cpp:131
+#: ConfigScreen.cpp:139
 msgid "Redo: "
 msgstr "重做: "
 
-#: ConfigScreen.cpp:132
+#: ConfigScreen.cpp:140
 msgid "Switch: "
 msgstr "切换: "
 
-#: ConfigScreen.cpp:133
+#: ConfigScreen.cpp:141
 msgid "Restart: "
 msgstr "重新开始: "
 
-#: ConfigScreen.cpp:213
-#: ConfigScreen.cpp:427
-#: main.cpp:268
+#: ConfigScreen.cpp:223
+#: ConfigScreen.cpp:458
+#: main.cpp:397
 msgid "Config"
 msgstr "设置"
 
-#: ConfigScreen.cpp:393
+#: ConfigScreen.cpp:424
 #, c-format
 msgid "Please input the new name of player %d"
 msgstr "请输入玩家 %d 的新名字"
 
-#: main.cpp:269
+#: main.cpp:398
 msgid "Exit Game"
 msgstr "退出游戏"
 
-#: main.cpp:275
+#: main.cpp:404
 #: RandomMapScreen.cpp:29
 msgid "Random Map"
 msgstr "随机地图"
 
-#: main.cpp:277
+#: main.cpp:406
 msgid "Save Temp Level File"
 msgstr "保存临时关卡文件"
 
-#: main.cpp:278
+#: main.cpp:407
 msgid "Start Multiplayer"
 msgstr "开始多人游戏"
 
-#: main.cpp:299
-#: main.cpp:389
+#: main.cpp:428
+#: main.cpp:511
 msgid "Main Menu"
 msgstr "主菜单"
 
-#: main.cpp:373
-#, c-format
-msgid "File saved to %s"
-msgstr "文件已保存到 %s"
-
-#: main.cpp:532
+#: main.cpp:676
 msgid "Puzzle Boy"
 msgstr "Puzzle Boy"
 
-#: main.cpp:635
+#: main.cpp:757
 #, c-format
 msgid "Pack: %s"
 msgstr "关卡包: %s"
 
-#: main.cpp:643
+#: main.cpp:765
 #, c-format
 msgid "Level %d: %s"
 msgstr "第 %d 关: %s"
 
-#: main.cpp:643
+#: main.cpp:765
 #, c-format
 msgid "Moves: %d"
 msgstr "步数: %d"
 
-#: main.cpp:648
+#: main.cpp:770
 #, c-format
 msgid "Best: %d (%s)"
 msgstr "最佳纪录: %d (%s)"
 
-#: main.cpp:705
+#: main.cpp:853
 msgid "Press again to exit"
 msgstr "再按一次退出"
 
-#: PuzzleBoyApp.cpp:167
+#: PuzzleBoyApp.cpp:179
 msgid "Player"
 msgstr "玩家"
 
-#: PuzzleBoyApp.cpp:168
+#: PuzzleBoyApp.cpp:180
 msgid "Player2"
 msgstr "玩家2"
 
@@ -289,28 +294,30 @@ msgstr "未命名关卡"
 msgid "Unnamed level pack"
 msgstr "未命名关卡包"
 
-#: PuzzleBoyLevelView.cpp:308
-#: PuzzleBoyLevelView.cpp:776
+#: PuzzleBoyLevelView.cpp:357
 msgid "Can't undo"
 msgstr "无法撤消"
 
-#: PuzzleBoyLevelView.cpp:312
+#: PuzzleBoyLevelView.cpp:361
 msgid "Failed to undo"
 msgstr "撤消失败"
 
-#: PuzzleBoyLevelView.cpp:322
-#: PuzzleBoyLevelView.cpp:771
+#: PuzzleBoyLevelView.cpp:371
 msgid "Can't redo"
 msgstr "无法重做"
 
-#: PuzzleBoyLevelView.cpp:326
+#: PuzzleBoyLevelView.cpp:375
 msgid "Failed to redo"
 msgstr "重做失败"
 
-#: PuzzleBoyLevelView.cpp:613
-#: PuzzleBoyLevelView.cpp:848
+#: PuzzleBoyLevelView.cpp:664
+#: PuzzleBoyLevelView.cpp:894
 msgid "Can't move to specified location"
 msgstr "无法移动到指定位置"
+
+#: PuzzleBoyLevelView.cpp:869
+msgid "Start moving box"
+msgstr "开始移动箱子"
 
 #: RandomMapScreen.cpp:15
 msgid "Rotate block only 6x6"
@@ -338,13 +345,16 @@ msgstr "随机关卡 %d"
 msgid "Random Level"
 msgstr "随机关卡"
 
-#: SimpleMiscScreen.cpp:411
+#: SimpleMiscScreen.cpp:391
 msgid "Config Key"
 msgstr "设置按键"
 
-#: SimpleMiscScreen.cpp:413
+#: SimpleMiscScreen.cpp:393
 msgid "Press any key..."
 msgstr "请按任意键..."
+
+#~ msgid "File saved to %s"
+#~ msgstr "文件已保存到 %s"
 
 #~ msgid "Name of Player %d: "
 #~ msgstr "玩家 %d 名字: "

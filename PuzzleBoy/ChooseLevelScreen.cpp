@@ -5,6 +5,7 @@
 #include "FileSystem.h"
 #include "PuzzleBoyLevelFile.h"
 #include "SimpleMiscScreen.h"
+#include "MyFormat.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -26,7 +27,7 @@ void ChooseLevelFileScreen::OnDirty(){
 
 int ChooseLevelFileScreen::OnClick(int index){
 	if(!theApp->LoadFile(m_files[index])){
-		printf("[ChooseLevelFileScreen] Failed to load file %s\n",m_files[index].c_str());
+		theApp->ShowToolTip(str(MyFormat(_("Failed to load file %s"))<<m_files[index]));
 		return -1;
 	}
 	return 1;
