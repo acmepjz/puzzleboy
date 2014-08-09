@@ -2,6 +2,8 @@
 
 #include <vector>
 
+struct SDL_Surface;
+
 const float SQRT_1_2=0.707106781f;
 
 const float m_fBorderSize=0.125f;
@@ -19,8 +21,14 @@ void OnVideoResize(int width, int height);
 //lpIdleTime: optional variable, if the overlay is dirty then it set idle time to 0
 void ShowScreen(int* lpIdleTime=0);
 
+unsigned int CreateGLTexture(int width,int height,int desiredFormat,int wrap,int minFilter,int magFilter,const char* srcBMPFile,SDL_Surface* srcSurface,const void* srcData);
+
 void AddScreenKeyboard(float x,float y,float w,float h,int index,std::vector<float>& v,std::vector<unsigned short>& idx);
+void AddEmptyHorizontalButton(float left,float top,float right,float bottom,std::vector<float>& v,std::vector<unsigned short>& idx);
 void DrawScreenKeyboard(const std::vector<float>& v,const std::vector<unsigned short>& idx);
+
+const float SCREENKB_W=1.0f/8.0f;
+const float SCREENKB_H=1.0f/4.0f;
 
 const int SCREEN_KEYBOARD_UP=0x1;
 const int SCREEN_KEYBOARD_DOWN=0x101;

@@ -2,13 +2,22 @@
 
 #include <SDL_rect.h>
 
+namespace SimpleScrollViewFlags{
+	const int Horizontal=0x1;
+	const int Vertical=0x2;
+	const int Both=Horizontal|Vertical;
+	const int Zoom=0x4;
+	const int BothAndZoom=Both|Zoom;
+	const int DrawScrollBar=0x8;
+	const int AutoResize=0x10;
+}
+
 class SimpleScrollView{
 public:
 	SimpleScrollView();
 
 	bool OnTimer();
 
-	//0=down 1=right 2=up 3=left
 	void SetProjectionMatrix();
 
 	void EnableScissorRect();
@@ -30,14 +39,14 @@ public:
 
 	void ConstraintView(bool zoom);
 
-	void DrawScrollBar();
+	void Draw();
 public:
 	//virtual area
 	SDL_Rect m_virtual;
 	//screen area
 	SDL_Rect m_screen;
-	//auto resize?
-	bool m_bAutoResize;
+	//flags
+	int m_flags;
 	float m_fAutoResizeScale[4];
 	int m_nAutoResizeOffset[4];
 	//minimal zoom factor (maximal zoom in)

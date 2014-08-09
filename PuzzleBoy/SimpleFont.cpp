@@ -1,5 +1,6 @@
 #include "SimpleFont.h"
 #include "FileSystem.h"
+#include "main.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -145,23 +146,10 @@ void SimpleFont::UpdateTexture(){
 		if(m_Tex){
 			glBindTexture(GL_TEXTURE_2D, m_Tex);
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, bmWidth, bmHeight, GL_ALPHA, GL_UNSIGNED_BYTE, bitmap);
+			glBindTexture(GL_TEXTURE_2D, 0);
 		}else{
-			glGenTextures(1,&m_Tex);
-			glBindTexture(GL_TEXTURE_2D, m_Tex);
-
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-#ifndef USE_OPENGLES
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-#endif
-
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, bmWidth, bmHeight, 0, GL_ALPHA, GL_UNSIGNED_BYTE, bitmap);
+			m_Tex=CreateGLTexture(bmWidth,bmHeight,GL_ALPHA,GL_CLAMP_TO_EDGE,GL_LINEAR,GL_LINEAR,NULL,NULL,bitmap);
 		}
-
-		glBindTexture(GL_TEXTURE_2D, 0);
 
 		bitmapDirty=false;
 	}

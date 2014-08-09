@@ -6,10 +6,11 @@
 #include "include_gl.h"
 
 SimpleScrollView::SimpleScrollView()
-:m_bAutoResize(false),m_fMinZoomPerScreen(1.0f)
+:m_flags(SimpleScrollViewFlags::BothAndZoom|SimpleScrollViewFlags::DrawScrollBar)
+,m_fMinZoomPerScreen(1.0f)
 ,m_nOrientation(0)
-,m_zoom(1.0f/48.0f),m_x(0.0f),m_y(0.0f)
-,m_zoom2(1.0f/48.0f),m_x2(0.0f),m_y2(0.0f)
+,m_zoom(1.0f),m_x(0.0f),m_y(0.0f)
+,m_zoom2(1.0f),m_x2(0.0f),m_y2(0.0f)
 ,m_nMyResizeTime(-1)
 ,m_nScrollBarIdleTime(0)
 {
@@ -43,7 +44,7 @@ bool SimpleScrollView::OnTimer(){
 	bool bDirty=false;
 
 	//check screen resize
-	if(m_bAutoResize){
+	if(m_flags & SimpleScrollViewFlags::AutoResize){
 		if(m_nMyResizeTime!=m_nResizeTime){
 			m_nMyResizeTime=m_nResizeTime;
 
@@ -71,7 +72,11 @@ bool SimpleScrollView::OnTimer(){
 	}
 
 	//fake animation
-	m_zoom2=(m_zoom+m_zoom2)*0.5f;
+	if(m_flags & SimpleScrollViewFlags::Zoom){
+		m_zoom2=(m_zoom+m_zoom2)*0.5f;
+	}else{
+		m_zoom=m_zoom2=1.0f;
+	}
 	m_x2=(m_x+m_x2)*0.5f;
 	m_y2=(m_y+m_y2)*0.5f;
 
@@ -90,6 +95,10 @@ bool SimpleScrollView::OnTimer(){
 }
 
 void SimpleScrollView::OnMultiGesture(float fx,float fy,float dx,float dy,float zoom){
+	if((m_flags & SimpleScrollViewFlags::Horizontal)==0) dx=0.0f;
+	if((m_flags & SimpleScrollViewFlags::Vertical)==0) dy=0.0f;
+	if((m_flags & SimpleScrollViewFlags::Zoom)==0) zoom=1.0f;
+
 	//translate coordinate if orientation is set
 	switch(m_nOrientation){
 	case 2:
@@ -138,7 +147,7 @@ void SimpleScrollView::ConstraintView(bool zoom){
 	float f;
 
 	//reset zoom if necessary
-	if(zoom){
+	if(zoom && (m_flags & SimpleScrollViewFlags::Zoom)!=0){
 		float new_zoom=m_zoom;
 
 		//check minimal zoom factor (maximal zoom in)
@@ -296,9 +305,12 @@ void SimpleScrollView::EnsureVisible(int x,int y,int w,int h){
 	}
 }
 
-void SimpleScrollView::DrawScrollBar(){
+void SimpleScrollView::Draw(){
 	//draw scrollbar (experimental)
-	if(m_nScrollBarIdleTime<32 && m_virtual.w>0 && m_virtual.h>0 && m_screen.w>0 && m_screen.h>0){
+	if(m_nScrollBarIdleTime<32 && m_virtual.w>0 && m_virtual.h>0 && m_screen.w>0 && m_screen.h>0
+		&& (m_flags & SimpleScrollViewFlags::Both)!=0
+		&& (m_flags & SimpleScrollViewFlags::DrawScrollBar)!=0)
+	{
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 
@@ -319,10 +331,12 @@ void SimpleScrollView::DrawScrollBar(){
 		y2+=y;
 
 		float v[16]={
+			//vertical
 			float(m_screen.x+m_screen.w-8),y,
 			float(m_screen.x+m_screen.w),y,
 			float(m_screen.x+m_screen.w-8),y2,
 			float(m_screen.x+m_screen.w),y2,
+			//horizontal
 			x,float(m_screen.y+m_screen.h-8),
 			x2,float(m_screen.y+m_screen.h-8),
 			x,float(m_screen.y+m_screen.h),
@@ -343,10 +357,13 @@ void SimpleScrollView::DrawScrollBar(){
 		float transparency=float(32-m_nScrollBarIdleTime)/16.0f;
 		if(transparency>1.0f) transparency=1.0f;
 
+		int offset=(m_flags & SimpleScrollViewFlags::Both)==SimpleScrollViewFlags::Horizontal?6:0;
+		int count=(m_flags & SimpleScrollViewFlags::Both)==SimpleScrollViewFlags::Both?12:6;
+
 		glColor4f(0.5f,0.5f,0.5f,transparency);
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(2,GL_FLOAT,0,v);
-		glDrawElements(GL_TRIANGLES,12,GL_UNSIGNED_SHORT,i);
+		glDrawElements(GL_TRIANGLES,count,GL_UNSIGNED_SHORT,i+offset);
 		glDisableClientState(GL_VERTEX_ARRAY);
 	}
 }

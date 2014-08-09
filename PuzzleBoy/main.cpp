@@ -162,13 +162,21 @@ void ShowScreen(int* lpIdleTime){
 			//get width of text
 			float ww=txt.ww;
 			float hh=mainFont->GetFontHeight();
+
+			float scale=1.0f;
+			if(ww>float(screenWidth-8)){
+				scale=float(screenWidth-8)/ww;
+				hh*=scale;
+				ww=float(screenWidth-8);
+			}
+
 			float xx=(float(screenWidth)-ww)*0.5f;
 			float yy=float(screenHeight)*0.75f-hh*0.5f;
 
-			txt.AddChar(mainFont,-1,xx,0,1.0f,0);
-			txt.AdjustVerticalPosition(mainFont,0,yy,0,1.0f,0);
+			txt.AddChar(mainFont,-1,xx,float(screenWidth-8),1.0f,DrawTextFlags::AutoSize);
+			txt.AdjustVerticalPosition(mainFont,0,float(screenHeight)*0.75f,0,/*scale*/1.0f,DrawTextFlags::VCenter);
 
-			//xx-=4.0f;ww+=8.0f;
+			xx-=4.0f;ww+=8.0f;
 			//yy-=4.0f;hh+=8.0f;
 
 			//draw background
@@ -204,17 +212,100 @@ void ShowScreen(int* lpIdleTime){
 	if(bDirty && lpIdleTime) *lpIdleTime=0;
 }
 
+unsigned int CreateGLTexture(int width,int height,int desiredFormat,int wrap,int minFilter,int magFilter,const char* srcBMPFile,SDL_Surface* srcSurface,const void* srcData){
+	const int SDL_PIXELFORMAT_RGBA32=
+		(SDL_BYTEORDER==SDL_BIG_ENDIAN)?SDL_PIXELFORMAT_RGBA8888:SDL_PIXELFORMAT_ABGR8888;
+
+	SDL_Surface *tmp=NULL,*tmp2=NULL;
+	int format=0,sdlFormat=0;
+	GLuint tex=0;
+
+	if(srcBMPFile){
+		tmp=SDL_LoadBMP(srcBMPFile);
+		if(tmp==NULL) return 0;
+		srcSurface=tmp;
+	}
+
+	if(srcSurface){
+		width=srcSurface->w;
+		height=srcSurface->h;
+		switch(srcSurface->format->BitsPerPixel){
+		case 32:
+			format=GL_RGBA;
+			sdlFormat=SDL_PIXELFORMAT_RGBA32;
+			break;
+		case 24:
+			format=GL_RGB;
+			sdlFormat=SDL_PIXELFORMAT_RGB24;
+			break;
+		case 8:
+			switch(desiredFormat){
+			case GL_RED:
+			case GL_GREEN:
+			case GL_BLUE:
+			case GL_ALPHA:
+			case GL_LUMINANCE:
+				format=desiredFormat;
+				break;
+			default:
+				format=GL_RGB;
+				sdlFormat=SDL_PIXELFORMAT_RGB24;
+				break;
+			}
+			break;
+		default: //unsupported
+			if(tmp) SDL_FreeSurface(tmp);
+			return 0;
+		}
+		if(sdlFormat){
+			tmp2=SDL_ConvertSurfaceFormat(srcSurface,sdlFormat,0);
+			if(!tmp2){
+				if(tmp) SDL_FreeSurface(tmp);
+				return 0;
+			}
+			srcData=tmp2->pixels;
+		}else{
+			srcData=srcSurface->pixels;
+		}
+	}else{
+		format=desiredFormat;
+	}
+
+	if(srcData){
+		glGenTextures(1,&tex);
+		glBindTexture(GL_TEXTURE_2D, tex);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+#ifndef USE_OPENGLES
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+#endif
+
+		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, srcData);
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+
+	if(tmp) SDL_FreeSurface(tmp);
+	if(tmp2) SDL_FreeSurface(tmp2);
+
+	return tex;
+}
+
 void AddScreenKeyboard(float x,float y,float w,float h,int index,std::vector<float>& v,std::vector<unsigned short>& idx){
 	unsigned short m=(unsigned short)(v.size()>>2);
 
-	float tx=float(index & 0xFF)*0.25f;
-	float ty=float(index>>8)*0.25f;
+	float tx=float(index & 0xFF)*SCREENKB_W;
+	float ty=float(index>>8)*SCREENKB_H;
 
 	float vv[16]={
 		x,y,tx,ty,
-		x+w,y,tx+0.25f,ty,
-		x+w,y+h,tx+0.25f,ty+0.25f,
-		x,y+h,tx,ty+0.25f,
+		x+w,y,tx+SCREENKB_W,ty,
+		x+w,y+h,tx+SCREENKB_W,ty+SCREENKB_H,
+		x,y+h,tx,ty+SCREENKB_H,
 	};
 
 	unsigned short ii[6]={
@@ -223,6 +314,32 @@ void AddScreenKeyboard(float x,float y,float w,float h,int index,std::vector<flo
 
 	v.insert(v.end(),vv,vv+16);
 	idx.insert(idx.end(),ii,ii+6);
+}
+
+void AddEmptyHorizontalButton(float left,float top,float right,float bottom,std::vector<float>& v,std::vector<unsigned short>& idx){
+	unsigned short m=(unsigned short)(v.size()>>2);
+
+	float halfButtonSize=(bottom-top)*0.5f;
+
+	float vv[32]={
+		left,top,SCREENKB_W*3.0f,SCREENKB_H*3.0f,
+		left+halfButtonSize,top,SCREENKB_W*3.5f,SCREENKB_H*3.0f,
+		right-halfButtonSize,top,SCREENKB_W*3.5f,SCREENKB_H*3.0f,
+		right,top,SCREENKB_W*4.0f,SCREENKB_H*3.0f,
+		left,bottom,SCREENKB_W*3.0f,SCREENKB_H*4.0f,
+		left+halfButtonSize,bottom,SCREENKB_W*3.5f,SCREENKB_H*4.0f,
+		right-halfButtonSize,bottom,SCREENKB_W*3.5f,SCREENKB_H*4.0f,
+		right,bottom,SCREENKB_W*4.0f,SCREENKB_H*4.0f,
+	};
+
+	unsigned short ii[18]={
+		m,m+1,m+5,m,m+5,m+4,
+		m+1,m+2,m+6,m+1,m+6,m+5,
+		m+2,m+3,m+7,m+2,m+7,m+6,
+	};
+
+	v.insert(v.end(),vv,vv+32);
+	idx.insert(idx.end(),ii,ii+18);
 }
 
 void DrawScreenKeyboard(const std::vector<float>& v,const std::vector<unsigned short>& idx){
@@ -254,6 +371,18 @@ void OnVideoResize(int width, int height){
 	screenAspectRatio=float(screenWidth)/float(screenHeight);
 
 	glViewport(0,0,screenWidth,screenHeight);
+}
+
+static bool SaveTempFile(const char* format){
+	if(theApp->m_pDocument){
+		time_t t=time(NULL);
+		tm *timeinfo=localtime(&t);
+		char s[256];
+		strftime(s,sizeof(s),format,timeinfo);
+		return theApp->SaveFile(externalStoragePath+s);
+	}
+
+	return false;
 }
 
 class MainMenuScreen:public SimpleListScreen{
@@ -340,7 +469,7 @@ public:
 						delete theApp->m_pDocument;
 						theApp->m_pDocument=doc;
 						theApp->m_nCurrentLevel=0;
-						theApp->m_sLastFile.clear();
+						SaveTempFile("/levels/rnd-%Y%m%d%H%M%S.lev");
 						return 1;
 					}
 				}
@@ -356,7 +485,7 @@ public:
 						delete theApp->m_pDocument;
 						theApp->m_pDocument=doc;
 						theApp->m_nCurrentLevel=0;
-						theApp->m_sLastFile.clear();
+						SaveTempFile("/levels/rnd-%Y%m%d%H%M%S.lev");
 						return 1;
 					}
 				}
@@ -364,14 +493,7 @@ public:
 			break;
 		case TestFeatureStart+3:
 			//save temp file
-			if(theApp->m_pDocument){
-				time_t t=time(NULL);
-				tm *timeinfo=localtime(&t);
-				char s[128];
-				strftime(s,sizeof(s),"/levels/tmp-%Y%m%d%H%M%S.lev",timeinfo);
-				theApp->SaveFile(externalStoragePath+s);
-				theApp->ShowToolTip(str(MyFormat(_("File saved to %s"))<<s));
-			}
+			SaveTempFile("/levels/tmp-%Y%m%d%H%M%S.lev");
 			return 0;
 			break;
 		case TestFeatureStart+4:
@@ -425,8 +547,8 @@ static void OnAutoSave(){
 	}
 }
 
-static int HandleAppEvents(void *userdata, SDL_Event *event){
-	switch(event->type){
+static int MyEventFilter(void *userdata, SDL_Event *evt){
+	switch(evt->type){
 	case SDL_APP_TERMINATING:
 	case SDL_APP_WILLENTERBACKGROUND:
 		OnAutoSave();
@@ -435,6 +557,14 @@ static int HandleAppEvents(void *userdata, SDL_Event *event){
 		printf("[main] Fatal Error: Program received SDL_APP_LOWMEMORY! Program will abort\n");
 		OnAutoSave();
 		abort();
+		break;
+	case SDL_KEYDOWN:
+		//check Alt+F4 or Ctrl+Q exit event (for all platforms)
+		if((evt->key.keysym.sym==SDLK_F4 && (evt->key.keysym.mod & KMOD_ALT)!=0)
+			|| (evt->key.keysym.sym==SDLK_q && (evt->key.keysym.mod & KMOD_CTRL)!=0))
+		{
+			m_bRun=false;
+		}
 		break;
 	}
 
@@ -465,7 +595,7 @@ int main(int argc,char** argv){
 	theApp=new PuzzleBoyApp;
 
 	//register event callback
-	SDL_SetEventFilter(HandleAppEvents,NULL);
+	SDL_SetEventFilter(MyEventFilter,NULL);
 
 	//init random number
 	{
@@ -567,46 +697,12 @@ int main(int argc,char** argv){
 
 	//FIXME: ad-hoc screen keypad
 	{
-		SDL_Surface *tmp=SDL_LoadBMP("data/gfx/adhoc.bmp");
+		adhoc_screenkb_tex=CreateGLTexture(0,0,0,GL_CLAMP_TO_EDGE,GL_LINEAR,GL_LINEAR,"data/gfx/adhoc.bmp",NULL,NULL);
 
-		if(tmp==NULL){
+		if(adhoc_screenkb_tex==0){
 			printf("[main] Fatal Error: Can't find necessary data! Make sure the working directory is correct!\n");
 			abort();
 		}
-
-		glGenTextures(1,&adhoc_screenkb_tex);
-		glBindTexture(GL_TEXTURE_2D, adhoc_screenkb_tex);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-#ifndef USE_OPENGLES
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-#endif
-
-		//FIXME: OpenGL ES doesn't support GL_BGRA (?)
-		int internalformat,format;
-		if(tmp->format->BitsPerPixel==32){
-			internalformat=GL_RGBA;
-			format=GL_RGBA;
-#ifndef USE_OPENGLES
-			if(tmp->format->Rmask!=0xFF) format=GL_BGRA;
-#endif
-		}else{
-			internalformat=GL_RGB;
-			format=GL_RGB;
-#ifndef USE_OPENGLES
-			if(tmp->format->Rmask!=0xFF) format=GL_BGR;
-#endif
-		}
-
-		glTexImage2D(GL_TEXTURE_2D, 0, internalformat, 256, 256, 0, format, GL_UNSIGNED_BYTE, tmp->pixels);
-
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		SDL_FreeSurface(tmp);
 	}
 
 	//try to load FreeType font
@@ -775,13 +871,6 @@ int main(int argc,char** argv){
 				if(OnKeyDown(
 					event.key.keysym.sym,
 					event.key.keysym.mod)) m_bKeyDownProcessed=true;
-
-				//check Alt+F4 exit event (for all platforms)
-				if(!m_bKeyDownProcessed && event.key.keysym.sym==SDLK_F4
-					&& (event.key.keysym.mod & KMOD_ALT)!=0)
-				{
-					m_bRun=false;
-				}
 
 				break;
 			}
