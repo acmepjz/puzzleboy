@@ -10,6 +10,10 @@ namespace SimpleScrollViewFlags{
 	const int BothAndZoom=Both|Zoom;
 	const int DrawScrollBar=0x8;
 	const int AutoResize=0x10;
+	const int FlushLeft=0x100;
+	const int FlushRight=0x200;
+	const int FlushTop=0x400;
+	const int FlushBottom=0x800;
 }
 
 class SimpleScrollView{
@@ -34,8 +38,8 @@ public:
 
 	void TranslateScreenCoordinateToClient(int x,int y,int& out_x,int& out_y);
 
-	void CenterView(int x=0,int y=0,int w=-1,int h=-1);
-	void EnsureVisible(int x,int y,int w=0,int h=0);
+	void CenterView(float x=0.0f,float y=0.0f,float w=-1.0f,float h=-1.0f);
+	void EnsureVisible(float x,float y,float w=0.0f,float h=0.0f);
 
 	void ConstraintView(bool zoom);
 

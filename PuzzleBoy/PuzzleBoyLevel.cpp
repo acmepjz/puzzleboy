@@ -948,7 +948,7 @@ bool PuzzleBoyLevel::SwitchPlayer(int x,int y,bool bSaveUndo)
 			m_nSwitchAnimationTime=GetAnimationTime();
 
 			//ensure visible
-			if(m_view) m_view->m_scrollView.EnsureVisible(x,y,1,1);
+			if(m_view) m_view->m_scrollView.EnsureVisible(float(x),float(y),1,1);
 
 			return true;
 		}
@@ -984,7 +984,7 @@ bool PuzzleBoyLevel::SwitchPlayer(int x,int y,bool bSaveUndo)
 			m_nSwitchAnimationTime=GetAnimationTime();
 
 			//ensure visible
-			if(m_view) m_view->m_scrollView.EnsureVisible(x,y,1,1);
+			if(m_view) m_view->m_scrollView.EnsureVisible(float(x),float(y),1,1);
 
 			return true;
 		}
@@ -1169,7 +1169,7 @@ bool PuzzleBoyLevel::MovePlayer(int dx,int dy,bool bSaveUndo){
 	if(ret) UpdateMoveableData();
 
 	//ensure visible (??)
-	if(m_view) m_view->m_scrollView.EnsureVisible(m_nPlayerX,m_nPlayerY,1,1);
+	if(m_view) m_view->m_scrollView.EnsureVisible(float(m_nPlayerX),float(m_nPlayerY),1,1);
 
 	return ret;
 }
