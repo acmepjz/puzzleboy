@@ -1,6 +1,7 @@
 #include "SimpleMiscScreen.h"
 #include "SimpleText.h"
 #include "PuzzleBoyApp.h"
+#include "SimpleTextBox.h"
 #include "main.h"
 
 #include <string.h>
@@ -31,26 +32,23 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 	std::vector<float> m_v;
 	std::vector<unsigned short> m_idx;
 
-	//break text into Unicode characters
-	std::vector<int> newText;
-	{
-		size_t m=text.size();
+	MultiTouchManager mgr;
+	SimpleTextBox txt;
 
-		U8STRING_FOR_EACH_CHARACTER_DO_BEGIN(text,i,m,c,'?');
-
-		newText.push_back(c);
-
-		U8STRING_FOR_EACH_CHARACTER_DO_END();
-	}
-
-	int caretPos=newText.size();
-	int caretTimer=0; //0-31
-
-	char IMEText[SDL_TEXTEDITINGEVENT_TEXT_SIZE]={};
-	int IMETextCaret=0;
-
-	//enable text input, once is enough!
-	SDL_StartTextInput();
+	txt.m_scrollView.m_flags|=SimpleScrollViewFlags::AutoResize;
+	txt.m_scrollView.m_fAutoResizeScale[2]=1.0f;
+	txt.m_scrollView.m_nAutoResizeOffset[0]=64;
+#ifdef ANDROID
+	txt.m_scrollView.m_nAutoResizeOffset[1]=buttonSize+136;
+#else
+	txt.m_scrollView.m_fAutoResizeScale[1]=0.5f;
+	txt.m_scrollView.m_fAutoResizeScale[3]=0.5f;
+	txt.m_scrollView.m_nAutoResizeOffset[1]=(buttonSize-64)/2;
+#endif
+	txt.m_scrollView.m_nAutoResizeOffset[2]=-64;
+	txt.m_scrollView.m_nAutoResizeOffset[3]=txt.m_scrollView.m_nAutoResizeOffset[1]+40;
+	txt.SetText(text);
+	txt.SetFocus();
 
 	while(m_bRun && b){
 		//create title bar buttons
@@ -69,6 +67,9 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 
 			AddEmptyHorizontalButton(float(left),0,float(right),float(buttonSize),m_v,m_idx);
 		}
+
+		txt.OnTimer();
+		txt.RegisterView(mgr);
 
 		//clear and draw
 		ClearScreen();
@@ -96,147 +97,19 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 			mainFont->EndDraw();
 		}
 
-		//draw textbox border
-#ifdef ANDROID
-		SDL_Rect r={64,buttonSize+136,screenWidth-128,40};
-#else
-		SDL_Rect r={64,(screenHeight+buttonSize-64)/2,screenWidth-128,40};
-#endif
-		{
-			float vv[8]={
-				float(r.x),float(r.y),
-				float(r.x),float(r.y+r.h),
-				float(r.x+r.w),float(r.y+r.h),
-				float(r.x+r.w),float(r.y),
-			};
-
-			unsigned short ii[8]={
-				0,1,1,2,2,3,3,0,
-			};
-
-			glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
-
-			glEnableClientState(GL_VERTEX_ARRAY);
-			glVertexPointer(2,GL_FLOAT,0,vv);
-			glDrawElements(GL_LINES,8,GL_UNSIGNED_SHORT,ii);
-			glDisableClientState(GL_VERTEX_ARRAY);
-		}
-
-		glEnable(GL_SCISSOR_TEST);
-		glScissor(r.x,screenHeight-r.y-r.h,r.w,r.h);
-		{
-			//TODO: horizontal scrolling
-			float caretX=float(r.x+4);
-			float imeX1,imeX2;
-
-			//we need to call some internal functions
-			SimpleText txt;
-			for(int i=0,m=newText.size();;i++){
-				if(i==caretPos){
-					//get caret pos and draw IME text (if any)
-					if(IMEText[0]){
-						int ii=0;
-						imeX1=float(r.x+4)+txt.xx;
-
-						U8STRING_FOR_EACH_CHARACTER_DO_BEGIN(IMEText,iii,(sizeof(IMEText)),c,'?');
-
-						if(c==0) break;
-						if((ii++)==IMETextCaret) caretX+=txt.xx; //< get caret pos
-						txt.AddChar(mainFont,c,0,0,1.0f,0);
-
-						U8STRING_FOR_EACH_CHARACTER_DO_END();
-
-						if(ii==IMETextCaret) caretX+=txt.xx; //< get caret pos (at the end)
-						imeX2=float(r.x+4)+txt.xx;
-					}else{
-						//no IME now, just get current caret pos
-						caretX+=txt.xx;
-					}
-				}
-
-				if(i>=m) break;
-
-				int c=newText[i];
-				txt.AddChar(mainFont,c,0,0,1.0f,0);
-			}
-			txt.AddChar(mainFont,-1,float(r.x+4),0,1.0f,0);
-			txt.AdjustVerticalPosition(mainFont,0,float(r.y),float(r.h),1.0f,DrawTextFlags::VCenter);
-
-			//draw IME area
-			if(IMEText[0]){
-				float vv[8]={
-					imeX1,float(r.y+4),
-					imeX1,float(r.y+r.h-4),
-					imeX2,float(r.y+4),
-					imeX2,float(r.y+r.h-4),
-				};
-
-				unsigned short ii[6]={0,1,3,0,3,2};
-
-				glColor4f(1.0f, 1.0f, 1.0f, 0.25f);
-
-				glEnableClientState(GL_VERTEX_ARRAY);
-				glVertexPointer(2,GL_FLOAT,0,vv);
-				glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,ii);
-				glDisableClientState(GL_VERTEX_ARRAY);
-			}
-
-			//draw text
-			mainFont->BeginDraw();
-			txt.Draw(SDL_MakeColor(255,255,255,255));
-			mainFont->EndDraw();
-
-			//update caret animation
-			caretTimer=(caretTimer+1)&0x1F;
-			int opacity;
-			if(caretTimer & 0x10){
-				opacity=caretTimer-27;
-				if(opacity<0) opacity=0;
-			}else{
-				opacity=16-caretTimer;
-				if(opacity>5) opacity=5;
-			}
-
-			//draw caret
-			if(opacity>0){
-				float vv[8]={
-					caretX-1.0f,float(r.y+4),
-					caretX-1.0f,float(r.y+r.h-4),
-					caretX+1.0f,float(r.y+4),
-					caretX+1.0f,float(r.y+r.h-4),
-				};
-
-				unsigned short ii[6]={0,1,3,0,3,2};
-
-				glColor4f(1.0f, 1.0f, 1.0f, float(opacity)*0.2f);
-
-				glEnableClientState(GL_VERTEX_ARRAY);
-				glVertexPointer(2,GL_FLOAT,0,vv);
-				glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,ii);
-				glDisableClientState(GL_VERTEX_ARRAY);
-			}
-		}
-		glDisable(GL_SCISSOR_TEST);
+		//draw textbox
+		txt.Draw();
 
 		//over
 		ShowScreen();
 
 		while(SDL_PollEvent(&event)){
+			if(mgr.OnEvent()) continue;
+			if(txt.OnEvent()) continue;
+
 			switch(event.type){
 			case SDL_QUIT:
 				m_bRun=false;
-				break;
-			case SDL_MOUSEMOTION:
-				//TODO:
-				break;
-			case SDL_MOUSEBUTTONDOWN:
-				//check if we should re-enable text input
-				if(event.button.x>=r.x && event.button.x<r.x+r.w
-					&& event.button.y>=r.y && event.button.y<r.y+r.h)
-				{
-					SDL_StartTextInput();
-				}
-				//TODO: move caret
 				break;
 			case SDL_MOUSEBUTTONUP:
 				if(event.button.y<buttonSize){
@@ -262,98 +135,15 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 			case SDL_KEYDOWN:
 				switch(event.key.keysym.sym){
 				case SDLK_AC_BACK:
+				case SDLK_ESCAPE:
 					m_bKeyDownProcessed=true;
 					b=false;
 					break;
-				case SDLK_ESCAPE:
-					if(IMEText[0]==0){
-						m_bKeyDownProcessed=true;
-						b=false;
-					}
-					break;
-				case SDLK_LEFT:
-					if(IMEText[0]==0 && caretPos>0){
-						caretPos--;
-						caretTimer=0;
-					}
-					break;
-				case SDLK_RIGHT:
-					if(IMEText[0]==0 && caretPos<(int)newText.size()){
-						caretPos++;
-						caretTimer=0;
-					}
-					break;
-				case SDLK_HOME:
-					if(IMEText[0]==0){
-						caretPos=0;
-						caretTimer=0;
-					}
-					break;
-				case SDLK_END:
-					if(IMEText[0]==0){
-						caretPos=newText.size();
-						caretTimer=0;
-					}
-					break;
-				case SDLK_BACKSPACE:
-					if(IMEText[0]==0 && caretPos>0){
-						newText.erase(newText.begin()+(--caretPos));
-						caretTimer=0;
-					}
-					break;
-				case SDLK_DELETE:
-					if(IMEText[0]==0 && caretPos<(int)newText.size()){
-						newText.erase(newText.begin()+caretPos);
-						caretTimer=0;
-					}
-					break;
 				case SDLK_RETURN:
-					if(IMEText[0]==0){
-						m_bKeyDownProcessed=true;
-						b=false;
-						ret=true;
-					}
+					m_bKeyDownProcessed=true;
+					b=false;
+					ret=true;
 					break;
-				case SDLK_v:
-					if(IMEText[0]==0 && (event.key.keysym.mod & KMOD_CTRL)!=0){
-						//try clipboard
-						char* s=SDL_GetClipboardText();
-						if(s){
-							if(caretPos<0) caretPos=0;
-							else if(caretPos>(int)newText.size()) caretPos=newText.size();
-
-							size_t m=strlen(s)+1;
-
-							U8STRING_FOR_EACH_CHARACTER_DO_BEGIN(s,i,m,c,'?');
-
-							if(c==0) break;
-							newText.insert(newText.begin()+(caretPos++),c);
-							caretTimer=0;
-
-							U8STRING_FOR_EACH_CHARACTER_DO_END();
-
-							SDL_free(s);
-						}
-					}
-					break;
-				}
-				break;
-			case SDL_TEXTEDITING:
-				memcpy(IMEText,event.edit.text,sizeof(IMEText));
-				IMETextCaret=event.edit.start;
-				break;
-			case SDL_TEXTINPUT:
-				{
-					if(caretPos<0) caretPos=0;
-					else if(caretPos>(int)newText.size()) caretPos=newText.size();
-
-					U8STRING_FOR_EACH_CHARACTER_DO_BEGIN(event.text.text,i,(sizeof(event.text.text)),c,'?');
-
-					if(c==0) break;
-					newText.insert(newText.begin()+(caretPos++),c);
-					caretTimer=0;
-
-					U8STRING_FOR_EACH_CHARACTER_DO_END();
 				}
 				break;
 			}
@@ -364,14 +154,7 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 
 	SDL_StopTextInput();
 
-	if(ret){
-		text.clear();
-
-		for(int i=0,m=newText.size();i<m;i++){
-			int c=newText[i];
-			U8_ENCODE(c,text.push_back);
-		}
-	}
+	if(ret) txt.GetText(text);
 
 	delete m_txtTitle;
 	delete m_txtPrompt;

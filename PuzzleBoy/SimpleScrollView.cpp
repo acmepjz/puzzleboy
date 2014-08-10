@@ -120,18 +120,19 @@ void SimpleScrollView::OnMultiGesture(float fx,float fy,float dx,float dy,float 
 	float new_zoom=m_zoom/zoom;
 
 	//ad-hoc range check
+	if(m_flags & SimpleScrollViewFlags::Zoom){
+		//check minimal zoom factor (maximal zoom in)
+		f=m_fMinZoomPerScreen/float(m_screen.w>m_screen.h?m_screen.w:m_screen.h);
+		if(new_zoom<f) new_zoom=f;
 
-	//check minimal zoom factor (maximal zoom in)
-	f=m_fMinZoomPerScreen/float(m_screen.w>m_screen.h?m_screen.w:m_screen.h);
-	if(new_zoom<f) new_zoom=f;
-
-	//check maximal zoom factor (maximal zoom out)
-	if(m_virtual.w*m_screen.h>m_virtual.h*m_screen.w){ // w/h>m_screen.w/m_screen.h
-		f=float(m_virtual.w)/float(m_screen.w);
-	}else{
-		f=float(m_virtual.h)/float(m_screen.h);
+		//check maximal zoom factor (maximal zoom out)
+		if(m_virtual.w*m_screen.h>m_virtual.h*m_screen.w){ // w/h>m_screen.w/m_screen.h
+			f=float(m_virtual.w)/float(m_screen.w);
+		}else{
+			f=float(m_virtual.h)/float(m_screen.h);
+		}
+		if(new_zoom>f) new_zoom=f;
 	}
-	if(new_zoom>f) new_zoom=f;
 
 	//apply zoom
 	f=float(screenHeight)*(m_zoom-new_zoom);
@@ -146,8 +147,10 @@ void SimpleScrollView::OnMultiGesture(float fx,float fy,float dx,float dy,float 
 void SimpleScrollView::ConstraintView(bool zoom){
 	float f;
 
+	if((m_flags & SimpleScrollViewFlags::Zoom)==0) zoom=false;
+
 	//reset zoom if necessary
-	if(zoom && (m_flags & SimpleScrollViewFlags::Zoom)!=0){
+	if(zoom){
 		float new_zoom=m_zoom;
 
 		//check minimal zoom factor (maximal zoom in)
@@ -172,7 +175,10 @@ void SimpleScrollView::ConstraintView(bool zoom){
 
 	//move view if necessary
 	if(float(m_screen.w)*m_zoom>float(m_virtual.w)){
-		m_x=float(m_virtual.x)+float(m_virtual.w)*0.5f-(float(m_screen.x)+float(m_screen.w)*0.5f)*m_zoom;
+		float factor=0.5f;
+		if(m_flags & SimpleScrollViewFlags::FlushLeft) factor=0.0f;
+		else if(m_flags & SimpleScrollViewFlags::FlushRight) factor=1.0f;
+		m_x=float(m_virtual.x)+float(m_virtual.w)*factor-(float(m_screen.x)+float(m_screen.w)*factor)*m_zoom;
 	}else{
 		f=float(m_virtual.x)-float(m_screen.x)*m_zoom;
 		if(m_x<f) m_x=f;
@@ -180,7 +186,10 @@ void SimpleScrollView::ConstraintView(bool zoom){
 		if(m_x>f) m_x=f;
 	}
 	if(float(m_screen.h)*m_zoom>float(m_virtual.h)){
-		m_y=float(m_virtual.y)+float(m_virtual.h)*0.5f-(float(m_screen.y)+float(m_screen.h)*0.5f)*m_zoom;
+		float factor=0.5f;
+		if(m_flags & SimpleScrollViewFlags::FlushTop) factor=0.0f;
+		else if(m_flags & SimpleScrollViewFlags::FlushBottom) factor=1.0f;
+		m_y=float(m_virtual.y)+float(m_virtual.h)*factor-(float(m_screen.y)+float(m_screen.h)*factor)*m_zoom;
 	}else{
 		f=float(m_virtual.y)-float(m_screen.y)*m_zoom;
 		if(m_y<f) m_y=f;
@@ -266,40 +275,40 @@ void SimpleScrollView::TranslateScreenCoordinateToClient(int x,int y,int& out_x,
 	}
 }
 
-void SimpleScrollView::CenterView(int x,int y,int w,int h){
+void SimpleScrollView::CenterView(float x,float y,float w,float h){
 	if(w<0 || h<0){
-		x=m_virtual.x;
-		y=m_virtual.y;
-		w=m_virtual.w;
-		h=m_virtual.h;
+		x=float(m_virtual.x);
+		y=float(m_virtual.y);
+		w=float(m_virtual.w);
+		h=float(m_virtual.h);
 	}
 
 	if(w<0 || h<0) return;
 
 	if(w==0 && h==0){ //centering only
-		m_x=float(x)-float(m_screen.x)*m_zoom;
-		m_y=float(y)-float(m_screen.y)*m_zoom;
+		m_x=(x)-float(m_screen.x)*m_zoom;
+		m_y=(y)-float(m_screen.y)*m_zoom;
 	}else if(w*m_screen.h>h*m_screen.w){ // w/h>m_screen.w/m_screen.h
-		m_zoom=float(w)/float(m_screen.w);
-		m_x=float(x)-float(m_screen.x)*m_zoom;
-		m_y=float(y)+float(h)*0.5f-(float(m_screen.y)+float(m_screen.h)*0.5f)*m_zoom;
+		if(m_flags & SimpleScrollViewFlags::Zoom) m_zoom=(w)/float(m_screen.w);
+		m_x=(x)-float(m_screen.x)*m_zoom;
+		m_y=(y)+(h)*0.5f-(float(m_screen.y)+float(m_screen.h)*0.5f)*m_zoom;
 	}else{
-		m_zoom=float(h)/float(m_screen.h);
-		m_x=float(x)+float(w)*0.5f-(float(m_screen.x)+float(m_screen.w)*0.5f)*m_zoom;
-		m_y=float(y)-float(m_screen.y)*m_zoom;
+		if(m_flags & SimpleScrollViewFlags::Zoom) m_zoom=(h)/float(m_screen.h);
+		m_x=(x)+(w)*0.5f-(float(m_screen.x)+float(m_screen.w)*0.5f)*m_zoom;
+		m_y=(y)-float(m_screen.y)*m_zoom;
 	}
 
 	ConstraintView(true);
 }
 
-void SimpleScrollView::EnsureVisible(int x,int y,int w,int h){
-	if(float(m_screen.x)*m_zoom2+m_x2>float(x)
-		|| float(m_screen.y)*m_zoom2+m_y2>float(y)
-		|| float(m_screen.x+m_screen.w)*m_zoom2+m_x2<float(x+w)
-		|| float(m_screen.y+m_screen.h)*m_zoom2+m_y2<float(y+h))
+void SimpleScrollView::EnsureVisible(float x,float y,float w,float h){
+	if(float(m_screen.x)*m_zoom2+m_x2>(x)
+		|| float(m_screen.y)*m_zoom2+m_y2>(y)
+		|| float(m_screen.x+m_screen.w)*m_zoom2+m_x2<(x+w)
+		|| float(m_screen.y+m_screen.h)*m_zoom2+m_y2<(y+h))
 	{
-		m_x=float(x)+float(w)*0.5f-(float(m_screen.x)+float(m_screen.w)*0.5f)*m_zoom;
-		m_y=float(y)+float(h)*0.5f-(float(m_screen.y)+float(m_screen.h)*0.5f)*m_zoom;
+		m_x=(x)+(w)*0.5f-(float(m_screen.x)+float(m_screen.w)*0.5f)*m_zoom;
+		m_y=(y)+(h)*0.5f-(float(m_screen.y)+float(m_screen.h)*0.5f)*m_zoom;
 
 		ConstraintView(true);
 	}
