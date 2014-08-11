@@ -66,7 +66,7 @@ public:
 	//return value: steps, -1=not found, -2=level unchanged
 	int FindLevelAndRecord(const PuzzleBoyLevelData& lev,const unsigned short* playerName,u8string* rec,unsigned char* lastChecksum=NULL,u16string* returnName=NULL);
 
-	static void ConvertRecordDataToString(std::vector<unsigned char>& bSolution,u8string& rec);
+	static void ConvertRecordDataToString(const std::vector<unsigned char>& bSolution,u8string& rec);
 
 	//return value: best steps, -1=not found, -2=level unchanged
 	int FindAllRecordsOfLevel(const PuzzleBoyLevelData& lev,std::vector<RecordItem>& ret,unsigned char* lastChecksum=NULL);

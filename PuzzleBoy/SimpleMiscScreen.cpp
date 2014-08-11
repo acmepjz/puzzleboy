@@ -59,11 +59,13 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 			m_idx.clear();
 
 			const int left=buttonSize;
-			const int right=screenWidth-buttonSize;
+			const int right=screenWidth-buttonSize*3;
 
 			AddScreenKeyboard(0,0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_LEFT,m_v,m_idx);
 
-			AddScreenKeyboard(float(right),0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_YES,m_v,m_idx);
+			AddScreenKeyboard(float(right),0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_COPY,m_v,m_idx);
+			AddScreenKeyboard(float(right+buttonSize),0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_PASTE,m_v,m_idx);
+			AddScreenKeyboard(float(right+buttonSize*2),0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_YES,m_v,m_idx);
 
 			AddEmptyHorizontalButton(float(left),0,float(right),float(buttonSize),m_v,m_idx);
 		}
@@ -114,9 +116,35 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 			case SDL_MOUSEBUTTONUP:
 				if(event.button.y<buttonSize){
 					//check clicked title bar buttons
-					if(event.button.x>=0 && event.button.x<buttonSize){
+					if(event.button.x<0){
+						//nothing
+					}else if(event.button.x<buttonSize){
+						//cancel
 						b=false;
-					}else if(event.button.x>=screenWidth-buttonSize && event.button.x<screenWidth){
+					}else if(event.button.x<screenWidth-buttonSize*3){
+						//nothing
+					}else if(event.button.x<screenWidth-buttonSize*2){
+						//copy
+						SDL_Event evt=event;
+						evt.type=SDL_KEYDOWN;
+						evt.key.state=SDL_PRESSED;
+						evt.key.repeat=0;
+						evt.key.keysym.scancode=SDL_SCANCODE_C;
+						evt.key.keysym.sym=SDLK_c;
+						evt.key.keysym.mod=KMOD_LCTRL;
+						SDL_PushEvent(&evt);
+					}else if(event.button.x<screenWidth-buttonSize){
+						//paste
+						SDL_Event evt=event;
+						evt.type=SDL_KEYDOWN;
+						evt.key.state=SDL_PRESSED;
+						evt.key.repeat=0;
+						evt.key.keysym.scancode=SDL_SCANCODE_V;
+						evt.key.keysym.sym=SDLK_v;
+						evt.key.keysym.mod=KMOD_LCTRL;
+						SDL_PushEvent(&evt);
+					}else if(event.button.x<screenWidth){
+						//ok
 						b=false;
 						ret=true;
 					}

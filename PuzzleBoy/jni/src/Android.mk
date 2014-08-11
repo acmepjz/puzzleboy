@@ -32,6 +32,7 @@ LOCAL_SRC_FILES := \
 ../../PuzzleBoyLevelUndo.cpp \
 ../../PuzzleBoyLevelView.cpp \
 ../../RandomMapScreen.cpp \
+../../RecordListScreen.cpp \
 ../../RecordManager.cpp \
 ../../SimpleBitmapFont.cpp \
 ../../SimpleFont.cpp \

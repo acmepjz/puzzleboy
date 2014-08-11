@@ -256,6 +256,7 @@ bool SimpleTextBox::OnEvent(){
 			return true;
 			break;
 		case SDLK_BACKSPACE:
+			if(m_bLocked) break;
 			m_caretDirty=true;
 			if(m_IMEText[0]==0 && m_caretPos>0){
 				m_chars.erase(m_chars.begin()+(--m_caretPos));
@@ -264,6 +265,7 @@ bool SimpleTextBox::OnEvent(){
 			return true;
 			break;
 		case SDLK_DELETE:
+			if(m_bLocked) break;
 			m_caretDirty=true;
 			if(m_IMEText[0]==0 && m_caretPos<(int)m_chars.size()){
 				m_chars.erase(m_chars.begin()+m_caretPos);
@@ -277,6 +279,7 @@ bool SimpleTextBox::OnEvent(){
 				m_IMEText[0]=0;
 				return true;
 			}else if(m_scrollView.m_flags & SimpleScrollViewFlags::Vertical){
+				if(m_bLocked) break;
 				m_caretDirty=true;
 
 				if(m_caretPos<0) m_caretPos=0;
@@ -286,6 +289,16 @@ bool SimpleTextBox::OnEvent(){
 				m_chars.insert(m_chars.begin()+(m_caretPos++),ch);
 				m_caretTimer=0;
 
+				return true;
+			}
+			break;
+		case SDLK_c:
+			//FIXME: copy all text to clipboard
+			if(event.key.keysym.mod & KMOD_CTRL){
+				u8string s;
+				GetText(s);
+				SDL_SetClipboardText(s.c_str());
+				theApp->ShowToolTip(_("Copied to clipboard"));
 				return true;
 			}
 			break;
@@ -451,7 +464,7 @@ void SimpleTextBox::Draw(){
 				SimpleFontGlyphMetric metric;
 				mainFont->AddChar(m_chars[i+1].c);
 				mainFont->GetCharMetric(m_chars[i+1].c,metric);
-				if(txt.xx+metric.advanceX>float(m_scrollView.m_screen.w-4)){
+				if(txt.xx+metric.advanceX>float(m_scrollView.m_screen.w-8)){
 					if(txt.xx>xxx) xxx=txt.xx;
 					txt.AddChar(mainFont,'\n',4,0,1.0f,DrawTextFlags::Multiline);
 					row++;

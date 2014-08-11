@@ -39,6 +39,8 @@ public:
 	void SetTouchscreen(bool b){m_bTouchscreen=b;}
 
 	void ShowToolTip(const u8string& text,bool isExit=false);
+
+	void ApplyRecord(const u8string& record,bool animationDemo);
 public:
 	GNUGetText m_objGetText;
 	MT19937 m_objMainRnd;

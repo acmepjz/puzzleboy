@@ -54,9 +54,9 @@ public:
 	unsigned char m_bCurrentChecksum[PuzzleBoyLevelData::ChecksumSize];
 	int m_nCurrentBestStep;
 	u8string m_sCurrentBestStepOwner;
-private:
 	std::vector<RecordItem> m_tCurrentBestRecord;
 
+private:
 	//internal function, only used in game mode
 	//0-7: up,down,left,right,undo,redo,switch,restart
 	//64: apply new position

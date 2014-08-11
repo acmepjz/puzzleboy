@@ -718,7 +718,7 @@ int RecordManager::FindLevelAndRecord(const PuzzleBoyLevelData& lev,const unsign
 	return nStep;
 }
 
-void RecordManager::ConvertRecordDataToString(std::vector<unsigned char>& bSolution,u8string& rec){
+void RecordManager::ConvertRecordDataToString(const std::vector<unsigned char>& bSolution,u8string& rec){
 	rec.clear();
 	if(bSolution.empty()) return;
 
