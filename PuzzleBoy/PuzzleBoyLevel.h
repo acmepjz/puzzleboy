@@ -46,7 +46,9 @@ public:
 	bool IsTargetFinished() const {return m_nTargetCount==m_nTargetFinished;}
 	bool MovePlayer(int dx,int dy,bool bSaveUndo);
 	bool SwitchPlayer(int x,int y,bool bSaveUndo);
-	void OnTimer();
+
+	//animationTime should be 0,1,2,4 or 8
+	void OnTimer(int animationTime=0);
 
 	//find a path for player from one position to another position
 	bool FindPath(u8string& ret,int x1,int y1,int x0=-1,int y0=-1) const;

@@ -3,7 +3,6 @@
 #include "PuzzleBoyApp.h"
 #include "PuzzleBoyLevelFile.h"
 #include "PuzzleBoyLevelView.h"
-#include "VertexList.h"
 #include "SimpleBitmapFont.h"
 #include "SimpleListScreen.h"
 #include "ConfigScreen.h"
@@ -13,6 +12,7 @@
 #include "RandomMapScreen.h"
 #include "SimpleFont.h"
 #include "ChooseLevelScreen.h"
+#include "LevelRecordScreen.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -116,6 +116,8 @@ void ClearScreen(){
 
 void ShowScreen(int* lpIdleTime){
 	bool bDirty=false;
+
+	SetProjectionMatrix(1);
 
 	if(theApp->m_bShowFPS){
 		//update FPS
@@ -387,20 +389,21 @@ static bool SaveTempFile(const char* format){
 
 class MainMenuScreen:public SimpleListScreen{
 public:
-	static const int TestFeatureStart=5;
+	static const int TestFeatureStart=6;
 public:
 	void OnDirty() override{
 		ResetList();
 
 		AddItem(_("Choose Level"));
 		AddItem(_("Choose Level File"));
+		AddItem(_("Level Record"));
 		AddItem(_("Config"));
 		AddItem(_("Exit Game"));
 
 		//test feature
 		AddEmptyItem();
 
-		AddItem("Test Solver");
+		AddItem(_("Level Solver"));
 		AddItem(_("Random Map"));
 		AddItem("Random Map x10");
 		AddItem(_("Save Temp Level File"));
@@ -421,6 +424,21 @@ public:
 			}
 			break;
 		case 2:
+			//level record
+			if(!theApp->m_view.empty()
+				&& theApp->m_view[0]->m_objPlayingLevel)
+			{
+				u8string s=theApp->m_view[0]->m_objPlayingLevel->GetRecord();
+				int ret=LevelRecordScreen(_("Level Record"),
+					_("Copy record here or paste record\nand click 'Apply' button"),
+					s);
+				if(ret>0){
+					theApp->ApplyRecord(s,ret==2);
+					return 0;
+				}
+			}
+			break;
+		case 3:
 			//config
 			ConfigScreen().DoModal();
 			m_bDirty=true;
@@ -430,33 +448,54 @@ public:
 			//resize the game screen in case of button size changed
 			m_nResizeTime++;
 			break;
-		case 3:
+		case 4:
 			//exit game
 			m_bRun=false;
 			return 0;
 			break;
 		case TestFeatureStart:
 			//ad-hoc solver test
+			if(!theApp->m_view.empty()
+				&& theApp->m_view[0]->m_objPlayingLevel)
 			{
 				PuzzleBoyLevelData *dat=theApp->m_pDocument->GetLevel(theApp->m_nCurrentLevel);
 				if(dat){
-					printf("--- Solver Test ---\n");
+					/*printf("--- Solver Test ---\n");
 
-					Uint64 f=SDL_GetPerformanceFrequency(),t=SDL_GetPerformanceCounter();
+					Uint64 f=SDL_GetPerformanceFrequency(),t=SDL_GetPerformanceCounter();*/
 
 					PuzzleBoyLevel *lev=new PuzzleBoyLevel(*dat);
 					lev->StartGame();
 					u8string s;
 					int ret=lev->SolveIt(s,NULL,NULL);
 
-					t=SDL_GetPerformanceCounter()-t;
+					/*t=SDL_GetPerformanceCounter()-t;
 
 					printf("SolveIt() returns %d, Time=%0.2fms\n",ret,double(t)/double(f)*1000.0);
-					if(ret==1) printf("The solution is %s\n",s.c_str());
+					if(ret==1) printf("The solution is %s\n",s.c_str());*/
 
 					delete lev;
+
+					//show solution
+					switch(ret){
+					case 1:
+						ret=LevelRecordScreen(_("Level Solver"),_("The solution is:"),s,true);
+						if(ret>0){
+							theApp->ApplyRecord(s,ret==2);
+							return 0;
+						}
+						break;
+					case 0:
+						theApp->ShowToolTip(_("No solution"));
+						break;
+					case -1:
+						theApp->ShowToolTip(_("Aborted"));
+						break;
+					default:
+						theApp->ShowToolTip(_("Can't solve this level"));
+						break;
+					}
 				}
-				return 0;
 			}
 			break;
 		case TestFeatureStart+1:
@@ -804,14 +843,14 @@ int main(int argc,char** argv){
 					&& event.button.y<theApp->m_nButtonSize)
 				{
 					if(event.type==SDL_MOUSEBUTTONUP){
-						SDL_Event evt2=event;
-						evt2.type=SDL_KEYDOWN;
-						evt2.key.state=SDL_PRESSED;
-						evt2.key.repeat=0;
-						evt2.key.keysym.scancode=SDL_SCANCODE_MENU;
-						evt2.key.keysym.sym=SDLK_MENU;
-						evt2.key.keysym.mod=0;
-						SDL_PushEvent(&evt2);
+						SDL_Event evt=event;
+						evt.type=SDL_KEYDOWN;
+						evt.key.state=SDL_PRESSED;
+						evt.key.repeat=0;
+						evt.key.keysym.scancode=SDL_SCANCODE_MENU;
+						evt.key.keysym.sym=SDLK_MENU;
+						evt.key.keysym.mod=0;
+						SDL_PushEvent(&evt);
 					}
 					continue;
 				}

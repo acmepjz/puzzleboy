@@ -473,6 +473,20 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount){
 	return true;
 }
 
+void PuzzleBoyApp::ApplyRecord(const u8string& record,bool animationDemo){
+	StartGame(1);
+
+	m_view[0]->m_bPlayFromRecord=true;
+	if(animationDemo){
+		m_view[0]->m_sRecord=record;
+		m_view[0]->m_nRecordIndex=0;
+	}else{
+		m_view[0]->m_objPlayingLevel->ApplyRecord(record);
+		m_view[0]->m_sRecord.clear();
+		m_view[0]->m_nRecordIndex=-1;
+	}
+}
+
 bool PuzzleBoyApp::OnTimer(){
 	bool bDirty=false;
 

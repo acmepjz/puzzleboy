@@ -1254,20 +1254,20 @@ void PuzzleBoyLevel::UpdateMoveableData(){
 	}
 }
 
-void PuzzleBoyLevel::OnTimer()
+void PuzzleBoyLevel::OnTimer(int animationTime)
 {
-	int mask=GetAnimationTime();
+	if(animationTime<=0) animationTime=GetAnimationTime();
 
 	if(IsTargetFinished()){
-		m_nExitAnimationTime=(m_nExitAnimationTime+mask)&(-mask);
+		m_nExitAnimationTime=(m_nExitAnimationTime+animationTime)&(-animationTime);
 		if(m_nExitAnimationTime>8) m_nExitAnimationTime=8;
 	}else{
-		m_nExitAnimationTime=(m_nExitAnimationTime-mask)&(-mask);
+		m_nExitAnimationTime=(m_nExitAnimationTime-animationTime)&(-animationTime);
 		if(m_nExitAnimationTime<0) m_nExitAnimationTime=0;
 	}
 
 	if(m_nMoveAnimationTime>0){
-		m_nMoveAnimationTime=(m_nMoveAnimationTime+mask)&(-mask);
+		m_nMoveAnimationTime=(m_nMoveAnimationTime+animationTime)&(-animationTime);
 		if(m_nMoveAnimationTime>=8){
 			m_nMoveAnimationTime=0;
 
@@ -1337,7 +1337,7 @@ void PuzzleBoyLevel::OnTimer()
 	}
 
 	if(m_nSwitchAnimationTime>0){
-		m_nSwitchAnimationTime=(m_nSwitchAnimationTime+mask)&(-mask);
+		m_nSwitchAnimationTime=(m_nSwitchAnimationTime+animationTime)&(-animationTime);
 		if(m_nSwitchAnimationTime>=8) m_nSwitchAnimationTime=0;
 	}
 }
@@ -1416,7 +1416,7 @@ bool PuzzleBoyLevel::ApplyRecord(const u8string& rec)
 			break;
 		}
 
-		while(IsAnimating()) OnTimer();
+		while(IsAnimating()) OnTimer(8);
 
 		if(IsWin()) break;
 	}
