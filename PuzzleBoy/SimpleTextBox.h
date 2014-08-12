@@ -31,6 +31,9 @@ public:
 	void SetFocus();
 	static void ClearFocus();
 
+	void CopyToClipboard() const;
+	void PasteFromClipboard();
+
 	void RegisterView(MultiTouchManager& mgr);
 
 	void OnMultiGesture(float fx,float fy,float dx,float dy,float zoom) override;

@@ -89,6 +89,39 @@ void SimpleTextBox::GetText(u8string& text) const{
 	}
 }
 
+void SimpleTextBox::CopyToClipboard() const{
+	u8string s;
+	GetText(s);
+	SDL_SetClipboardText(s.c_str());
+	theApp->ShowToolTip(_("Copied to clipboard"));
+}
+
+void SimpleTextBox::PasteFromClipboard(){
+	if(m_bLocked) return;
+
+	m_caretDirty=true;
+	char* s=SDL_GetClipboardText();
+	if(s){
+		if(m_caretPos<0) m_caretPos=0;
+		else if(m_caretPos>(int)m_chars.size()) m_caretPos=m_chars.size();
+
+		size_t m=strlen(s)+1;
+
+		U8STRING_FOR_EACH_CHARACTER_DO_BEGIN(s,i,m,c,'?');
+
+		if(c==0) break;
+		if(c!='\r' && (c!='\n' || (m_scrollView.m_flags & SimpleScrollViewFlags::Vertical)!=0)){
+			SimpleTextBoxCharacter ch={c,0,0};
+			m_chars.insert(m_chars.begin()+(m_caretPos++),ch);
+			m_caretTimer=0;
+		}
+
+		U8STRING_FOR_EACH_CHARACTER_DO_END();
+
+		SDL_free(s);
+	}
+}
+
 void SimpleTextBox::RegisterView(MultiTouchManager& mgr){
 	MultiTouchViewStruct *view=mgr.FindView(this);
 	if(view){
@@ -114,10 +147,10 @@ void SimpleTextBox::OnMouseEvent(int which,int state,int xMouse,int yMouse,int n
 
 	switch(nType){
 	case SDL_MOUSEBUTTONUP:
-		if(event.button.x>=m_scrollView.m_screen.x
-			&& event.button.x<m_scrollView.m_screen.x+m_scrollView.m_screen.w
-			&& event.button.y>=m_scrollView.m_screen.y
-			&& event.button.y<m_scrollView.m_screen.y+m_scrollView.m_screen.h)
+		if(xMouse>=m_scrollView.m_screen.x
+			&& xMouse<m_scrollView.m_screen.x+m_scrollView.m_screen.w
+			&& yMouse>=m_scrollView.m_screen.y
+			&& yMouse<m_scrollView.m_screen.y+m_scrollView.m_screen.h)
 		{
 			SetFocus();
 			SDL_StartTextInput();
@@ -128,7 +161,7 @@ void SimpleTextBox::OnMouseEvent(int which,int state,int xMouse,int yMouse,int n
 			fx-=4.0f;
 			if(fx<1E-6f) fx=1E-6f;
 
-			int i=0,j=m_chars.size()-1,k;
+			int i=0,j=m_chars.size()-1,k=0;
 			if(m_scrollView.m_flags & SimpleScrollViewFlags::Vertical){
 				//multiline
 				int yy=(int)floor((fy-4.0f)/mainFont->GetFontHeight());
@@ -184,7 +217,13 @@ void SimpleTextBox::OnMouseEvent(int which,int state,int xMouse,int yMouse,int n
 }
 
 void SimpleTextBox::OnMouseWheel(int which,int x,int y,int dx,int dy,int nFlags){
-	//TODO:
+	if(m_scrollView.m_flags & SimpleScrollViewFlags::Vertical){
+		//vertical scroll
+		m_scrollView.OnMultiGesture(0,0,0,mainFont->GetFontHeight()*(dy>0?4.0f:-4.0f)/float(screenHeight),1.0f);
+	}else{
+		//horizontal scroll
+		m_scrollView.OnMultiGesture(0,0,mainFont->GetFontAdvance()*(dy>0?4.0f:-4.0f)/float(screenHeight),0,1.0f);
+	}
 }
 
 bool SimpleTextBox::OnEvent(){
@@ -295,10 +334,7 @@ bool SimpleTextBox::OnEvent(){
 		case SDLK_c:
 			//FIXME: copy all text to clipboard
 			if(event.key.keysym.mod & KMOD_CTRL){
-				u8string s;
-				GetText(s);
-				SDL_SetClipboardText(s.c_str());
-				theApp->ShowToolTip(_("Copied to clipboard"));
+				CopyToClipboard();
 				return true;
 			}
 			break;
@@ -306,27 +342,7 @@ bool SimpleTextBox::OnEvent(){
 			if(m_bLocked) break;
 			m_caretDirty=true;
 			if(m_IMEText[0]==0 && (event.key.keysym.mod & KMOD_CTRL)!=0){
-				//try clipboard
-				char* s=SDL_GetClipboardText();
-				if(s){
-					if(m_caretPos<0) m_caretPos=0;
-					else if(m_caretPos>(int)m_chars.size()) m_caretPos=m_chars.size();
-
-					size_t m=strlen(s)+1;
-
-					U8STRING_FOR_EACH_CHARACTER_DO_BEGIN(s,i,m,c,'?');
-
-					if(c==0) break;
-					if(c!='\r' && (c!='\n' || (m_scrollView.m_flags & SimpleScrollViewFlags::Vertical)!=0)){
-						SimpleTextBoxCharacter ch={c,0,0};
-						m_chars.insert(m_chars.begin()+(m_caretPos++),ch);
-						m_caretTimer=0;
-					}
-
-					U8STRING_FOR_EACH_CHARACTER_DO_END();
-
-					SDL_free(s);
-				}
+				PasteFromClipboard();
 				return true;
 			}
 			break;

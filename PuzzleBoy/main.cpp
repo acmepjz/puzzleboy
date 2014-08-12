@@ -242,9 +242,11 @@ unsigned int CreateGLTexture(int width,int height,int desiredFormat,int wrap,int
 			break;
 		case 8:
 			switch(desiredFormat){
+#ifndef USE_OPENGLES
 			case GL_RED:
 			case GL_GREEN:
 			case GL_BLUE:
+#endif
 			case GL_ALPHA:
 			case GL_LUMINANCE:
 				format=desiredFormat;

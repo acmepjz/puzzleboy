@@ -18,6 +18,7 @@ LOCAL_SRC_FILES := \
 ../../FileSystem.cpp \
 ../../GNUGetText.cpp \
 ../../Level_PathFinding.cpp \
+../../LevelRecordScreen.cpp \
 ../../main.cpp \
 ../../MFCSerializer.cpp \
 ../../MT19937.cpp \
@@ -32,7 +33,6 @@ LOCAL_SRC_FILES := \
 ../../PuzzleBoyLevelUndo.cpp \
 ../../PuzzleBoyLevelView.cpp \
 ../../RandomMapScreen.cpp \
-../../RecordListScreen.cpp \
 ../../RecordManager.cpp \
 ../../SimpleBitmapFont.cpp \
 ../../SimpleFont.cpp \
