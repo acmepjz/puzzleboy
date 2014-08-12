@@ -125,24 +125,10 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 						//nothing
 					}else if(event.button.x<screenWidth-buttonSize*2){
 						//copy
-						SDL_Event evt=event;
-						evt.type=SDL_KEYDOWN;
-						evt.key.state=SDL_PRESSED;
-						evt.key.repeat=0;
-						evt.key.keysym.scancode=SDL_SCANCODE_C;
-						evt.key.keysym.sym=SDLK_c;
-						evt.key.keysym.mod=KMOD_LCTRL;
-						SDL_PushEvent(&evt);
+						txt.CopyToClipboard();
 					}else if(event.button.x<screenWidth-buttonSize){
 						//paste
-						SDL_Event evt=event;
-						evt.type=SDL_KEYDOWN;
-						evt.key.state=SDL_PRESSED;
-						evt.key.repeat=0;
-						evt.key.keysym.scancode=SDL_SCANCODE_V;
-						evt.key.keysym.sym=SDLK_v;
-						evt.key.keysym.mod=KMOD_LCTRL;
-						SDL_PushEvent(&evt);
+						txt.PasteFromClipboard();
 					}else if(event.button.x<screenWidth){
 						//ok
 						b=false;

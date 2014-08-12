@@ -1,3 +1,6 @@
+0. We need a patched version of SDL2.0.0 to make the clipboard work,
+   which is derived from https://bugzilla.libsdl.org/show_bug.cgi?id=2266.
+   Copy tmp/SDL_android.c to /path/to/SDL2/src/core/android/SDL_android.c.
 1. Follow the instruction in README-android.txt in SDL2
 2. Copy (or symlink) project/jni/freetype/ forder in CommanderGenius (a.k.a. SDL1.2 Android) to here
 3. Edit freetype/include/freetype/config/ftoption.h to disable zlib

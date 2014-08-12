@@ -15,6 +15,7 @@ import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsoluteLayout;
 import android.os.*;
+import android.text.*;
 import android.util.Log;
 import android.graphics.*;
 import android.media.*;
@@ -42,6 +43,10 @@ public class SDLActivity extends Activity {
     // Audio
     protected static Thread mAudioThread;
     protected static AudioTrack mAudioTrack;
+
+    // Clipboard
+    protected static android.content.ClipboardManager mClipMgr;
+    protected static android.text.ClipboardManager mClipMgrOld;
 
     // EGL objects
     protected static EGLContext  mEGLContext;
@@ -76,6 +81,15 @@ public class SDLActivity extends Activity {
 
         mLayout = new AbsoluteLayout(this);
         mLayout.addView(mSurface);
+
+        int apiVersion = android.os.Build.VERSION.SDK_INT;
+        if (apiVersion >= android.os.Build.VERSION_CODES.HONEYCOMB) {
+            mClipMgrOld = null;
+            mClipMgr = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+        } else {
+            mClipMgrOld = (android.text.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+            mClipMgr = null;
+        }
 
         setContentView(mLayout);
     }
@@ -552,6 +566,37 @@ public class SDLActivity extends Activity {
             mAudioTrack = null;
         }
     }
+
+    // Clipboard
+
+    public static boolean clipboardHasText() {
+        if (mClipMgrOld != null) {
+            return mClipMgrOld.hasText();
+        } 
+        return mClipMgr.hasText();
+    }
+
+    public static String clipboardGetText() {
+        CharSequence text;
+        if (mClipMgrOld != null) {
+            text = mClipMgrOld.getText();
+        } else { 
+            text = mClipMgr.getText();
+        }
+        if (text != null) {
+            return text.toString();
+        }
+        return null;
+    }
+
+    public static void clipboardSetText(String string) {
+        if (mClipMgrOld != null) {
+            mClipMgrOld.setText(string);
+            return;
+        }
+        mClipMgr.setText(string);
+    }
+
 }
 
 /**

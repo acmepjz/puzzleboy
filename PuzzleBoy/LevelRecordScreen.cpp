@@ -6,6 +6,7 @@
 #include "PuzzleBoyLevelView.h"
 #include "main.h"
 
+#include <stdio.h>
 #include <string.h>
 #include <math.h>
 
@@ -68,7 +69,6 @@ int LevelRecordScreen(const u8string& title,const u8string& prompt,u8string& rec
 	txt.m_bLocked=readOnly;
 	txt.SetMultiline(true,true);
 	txt.SetText(record);
-	txt.SetFocus();
 
 	while(m_bRun && b){
 		//create title bar buttons
@@ -173,16 +173,10 @@ int LevelRecordScreen(const u8string& title,const u8string& prompt,u8string& rec
 							bCopy=true;
 						}else if(event.button.x<screenWidth-buttonSize){
 							//paste
-							SDL_Event evt=event;
-							evt.type=SDL_KEYDOWN;
-							evt.key.state=SDL_PRESSED;
-							evt.key.repeat=0;
-							evt.key.keysym.scancode=SDL_SCANCODE_V;
-							evt.key.keysym.sym=SDLK_v;
-							evt.key.keysym.mod=KMOD_LCTRL;
-							SDL_PushEvent(&evt);
+							txt.PasteFromClipboard();
 						}else if(event.button.x<screenWidth){
 							//view all records
+							txt.ClearFocus();
 							int ret=RecordListScreen().DoModal();
 							if(ret>0){
 								u8string s;
@@ -192,16 +186,7 @@ int LevelRecordScreen(const u8string& title,const u8string& prompt,u8string& rec
 						}
 					}
 
-					if(bCopy){
-						SDL_Event evt=event;
-						evt.type=SDL_KEYDOWN;
-						evt.key.state=SDL_PRESSED;
-						evt.key.repeat=0;
-						evt.key.keysym.scancode=SDL_SCANCODE_C;
-						evt.key.keysym.sym=SDLK_c;
-						evt.key.keysym.mod=KMOD_LCTRL;
-						SDL_PushEvent(&evt);
-					}
+					if(bCopy) txt.CopyToClipboard();
 				}else if(event.button.x>=screenWidth-224 && event.button.x<screenWidth-64){
 					if(event.button.y>=buttonSize+32 && event.button.y<buttonSize+96){
 						//apply
