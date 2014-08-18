@@ -33,7 +33,7 @@ public:
 	void CreateGraphics();
 	void DestroyGraphics();
 	void UpdateGraphics(int type);
-	void Draw();
+	void Draw(bool bEditMode=false,int nEditingBlockIndex=-1);
 
 	//internal functions
 	//nValue<0 means any non-zero value

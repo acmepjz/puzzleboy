@@ -240,7 +240,7 @@ void PuzzleBoyLevelData::MySerialize(MySerializer& ar){
 	}
 }
 
-void PuzzleBoyLevelData::Create(int nWidth,int nHeight,int bPreserve,int nXOffset,int nYOffset)
+void PuzzleBoyLevelData::Create(int nWidth,int nHeight,bool bPreserve,int nXOffset,int nYOffset)
 {
 	if(nWidth>0 && nHeight>0){
 		int m=nWidth*nHeight;

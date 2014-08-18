@@ -5,6 +5,7 @@
 #include "MultiTouchManager.h"
 #include "UTF8-16.h"
 
+class PuzzleBoyEditToolbar;
 class PuzzleBoyLevel;
 class PuzzleBoyLevelFile;
 class PushableBlock;
@@ -18,6 +19,7 @@ public:
 	void Draw();
 
 	bool StartGame();
+	void SaveEdit();
 	void FinishGame();
 
 	void Undo();
@@ -31,10 +33,18 @@ public:
 
 	//nType: SDL_MOUSEBUTTONDOWN or SDL_MOUSEBUTTONUP or SDL_MOUSEMOTION
 	void OnMouseEvent(int which,int state,int xMouse,int yMouse,int nFlags,int nType) override;
+
+private:
+	void EnterBlockEdit(int nIndex,bool bBackup);
+	void FinishBlockEdit();
+	void CancelBlockEdit();
+
 public:
 	SimpleScrollView m_scrollView;
 
 private:
+	PuzzleBoyEditToolbar *m_toolbar;
+
 	//0=default, 1=with yes/no, 2=with fast forward/no
 	int m_nScreenKeyboardType;
 
@@ -65,9 +75,8 @@ private:
 
 public:
 	int m_nCurrentLevel;
-	bool m_bEditMode,m_bPlayFromRecord;
+	bool m_bEditMode,m_bTestMode,m_bPlayFromRecord;
 	bool m_bSkipRecord;
-	int m_nCurrentTool;
 
 	int m_nEditingBlockIndex;
 	int m_nEditingBlockX,m_nEditingBlockY;

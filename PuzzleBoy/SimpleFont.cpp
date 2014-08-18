@@ -148,7 +148,7 @@ void SimpleFont::UpdateTexture(){
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, bmWidth, bmHeight, GL_ALPHA, GL_UNSIGNED_BYTE, bitmap);
 			glBindTexture(GL_TEXTURE_2D, 0);
 		}else{
-			m_Tex=CreateGLTexture(bmWidth,bmHeight,GL_ALPHA,GL_CLAMP_TO_EDGE,GL_LINEAR,GL_LINEAR,NULL,NULL,bitmap);
+			m_Tex=CreateGLTexture(bmWidth,bmHeight,GL_ALPHA,GL_CLAMP_TO_EDGE,GL_LINEAR,GL_LINEAR,NULL,NULL,bitmap,0);
 		}
 
 		bitmapDirty=false;

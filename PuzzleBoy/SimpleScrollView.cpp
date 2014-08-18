@@ -48,24 +48,24 @@ bool SimpleScrollView::OnTimer(){
 		if(m_nMyResizeTime!=m_nResizeTime){
 			m_nMyResizeTime=m_nResizeTime;
 
-			SDL_Rect oldScreen=m_screen;
+			//SDL_Rect oldScreen=m_screen;
 
 			m_screen.x=int(float(screenWidth)*m_fAutoResizeScale[0]+0.5f)+m_nAutoResizeOffset[0];
 			m_screen.y=int(float(screenHeight)*m_fAutoResizeScale[1]+0.5f)+m_nAutoResizeOffset[1];
 			m_screen.w=int(float(screenWidth)*m_fAutoResizeScale[2]+0.5f)+m_nAutoResizeOffset[2]-m_screen.x;
 			m_screen.h=int(float(screenHeight)*m_fAutoResizeScale[3]+0.5f)+m_nAutoResizeOffset[3]-m_screen.y;
 
-			if(m_virtual.w>0 && m_virtual.h>0 && m_screen.w>0 && m_screen.h>0 && oldScreen.w>0 && oldScreen.h>0){
+			/*if(m_virtual.w>0 && m_virtual.h>0 && m_screen.w>0 && m_screen.h>0 && oldScreen.w>0 && oldScreen.h>0){
 				//TODO: update zoom pos
-			}
-
-			ConstraintView(true);
+			}*/
 
 			bDirty=true;
 		}
 	}else{
 		m_nMyResizeTime=-1;
 	}
+
+	bDirty|=ConstraintView(true);
 
 	if(m_virtual.w>0 && m_virtual.h>0 && m_screen.w>0 && m_screen.h>0){
 		//TODO: update zoom pos
@@ -144,7 +144,8 @@ void SimpleScrollView::OnMultiGesture(float fx,float fy,float dx,float dy,float 
 	ConstraintView(false);
 }
 
-void SimpleScrollView::ConstraintView(bool zoom){
+bool SimpleScrollView::ConstraintView(bool zoom){
+	bool ret=false;
 	float f;
 
 	if((m_flags & SimpleScrollViewFlags::Zoom)==0) zoom=false;
@@ -155,7 +156,10 @@ void SimpleScrollView::ConstraintView(bool zoom){
 
 		//check minimal zoom factor (maximal zoom in)
 		f=m_fMinZoomPerScreen/float(m_screen.w>m_screen.h?m_screen.w:m_screen.h);
-		if(new_zoom<f) new_zoom=f;
+		if(new_zoom<f){
+			new_zoom=f;
+			ret=true;
+		}
 
 		//check maximal zoom factor (maximal zoom out)
 		if(m_virtual.w*m_screen.h>m_virtual.h*m_screen.w){ // w/h>m_screen.w/m_screen.h
@@ -163,7 +167,10 @@ void SimpleScrollView::ConstraintView(bool zoom){
 		}else{
 			f=float(m_virtual.h)/float(m_screen.h);
 		}
-		if(new_zoom>f) new_zoom=f;
+		if(new_zoom>f){
+			new_zoom=f;
+			ret=true;
+		}
 
 		float fx=float(m_screen.x)+float(m_screen.w)*0.5f;
 		float fy=float(m_screen.y)+float(m_screen.h)*0.5f;
@@ -181,9 +188,15 @@ void SimpleScrollView::ConstraintView(bool zoom){
 		m_x=float(m_virtual.x)+float(m_virtual.w)*factor-(float(m_screen.x)+float(m_screen.w)*factor)*m_zoom;
 	}else{
 		f=float(m_virtual.x)-float(m_screen.x)*m_zoom;
-		if(m_x<f) m_x=f;
+		if(m_x<f){
+			m_x=f;
+			ret=true;
+		}
 		f+=float(m_virtual.w)-float(m_screen.w)*m_zoom;
-		if(m_x>f) m_x=f;
+		if(m_x>f){
+			m_x=f;
+			ret=true;
+		}
 	}
 	if(float(m_screen.h)*m_zoom>float(m_virtual.h)){
 		float factor=0.5f;
@@ -192,10 +205,17 @@ void SimpleScrollView::ConstraintView(bool zoom){
 		m_y=float(m_virtual.y)+float(m_virtual.h)*factor-(float(m_screen.y)+float(m_screen.h)*factor)*m_zoom;
 	}else{
 		f=float(m_virtual.y)-float(m_screen.y)*m_zoom;
-		if(m_y<f) m_y=f;
+		if(m_y<f){
+			m_y=f;
+			ret=true;
+		}
 		f+=float(m_virtual.h)-float(m_screen.h)*m_zoom;
-		if(m_y>f) m_y=f;
+		if(m_y>f){
+			m_y=f;
+			ret=true;
+		}
 	}
+	return ret;
 }
 
 void SimpleScrollView::SetProjectionMatrix(){

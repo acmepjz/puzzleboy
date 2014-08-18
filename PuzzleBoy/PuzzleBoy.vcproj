@@ -279,6 +279,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SimpleMessageBox.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SimpleMiscScreen.cpp"
 				>
 			</File>
@@ -426,6 +430,10 @@
 			</File>
 			<File
 				RelativePath=".\SimpleListScreen.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SimpleMessageBox.h"
 				>
 			</File>
 			<File

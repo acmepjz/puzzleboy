@@ -13,6 +13,8 @@
 #include "SimpleFont.h"
 #include "ChooseLevelScreen.h"
 #include "LevelRecordScreen.h"
+#include "SimpleMessageBox.h"
+#include "SimpleMiscScreen.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -38,8 +40,9 @@ bool m_bKeyDownProcessed=false;
 
 //================
 
-//FIXME: ad-hoc
+//ad-hoc textures
 GLuint adhoc_screenkb_tex=0;
+GLuint adhoc3_tex=0;
 
 SimpleFontFile *mainFontFile=NULL;
 SimpleBaseFont *mainFont=NULL;
@@ -50,6 +53,8 @@ SimpleBaseFont *titleFont=NULL;
 float m_FPS=0.0f;
 int m_nFPSLastCount=0;
 unsigned int m_nFPSLastTime=0;
+
+int m_nIdleTime=0;
 
 //================
 
@@ -62,6 +67,9 @@ void SetProjectionMatrix(int idx){
 	glLoadIdentity();
 
 	switch(idx){
+	case 0:
+		glOrtho(0.0f,screenAspectRatio,1.0f,0.0f,-1.0f,1.0f);
+		break;
 	case 1:
 	default:
 		glOrtho(0.0f,float(screenWidth),float(screenHeight),0.0f,-1.0f,1.0f);
@@ -114,7 +122,7 @@ void ClearScreen(){
 	//glEnableClientState(GL_COLOR_ARRAY);*/
 }
 
-void ShowScreen(int* lpIdleTime){
+void ShowScreen(){
 	bool bDirty=false;
 
 	SetProjectionMatrix(1);
@@ -211,10 +219,10 @@ void ShowScreen(int* lpIdleTime){
 
 	SDL_GL_SwapWindow(mainWindow);
 
-	if(bDirty && lpIdleTime) *lpIdleTime=0;
+	if(bDirty) m_nIdleTime=0;
 }
 
-unsigned int CreateGLTexture(int width,int height,int desiredFormat,int wrap,int minFilter,int magFilter,const char* srcBMPFile,SDL_Surface* srcSurface,const void* srcData){
+unsigned int CreateGLTexture(int width,int height,int desiredFormat,int wrap,int minFilter,int magFilter,const char* srcBMPFile,SDL_Surface* srcSurface,const void* srcData,unsigned int colorKey){
 	const int SDL_PIXELFORMAT_RGBA32=
 		(SDL_BYTEORDER==SDL_BIG_ENDIAN)?SDL_PIXELFORMAT_RGBA8888:SDL_PIXELFORMAT_ABGR8888;
 
@@ -237,8 +245,13 @@ unsigned int CreateGLTexture(int width,int height,int desiredFormat,int wrap,int
 			sdlFormat=SDL_PIXELFORMAT_RGBA32;
 			break;
 		case 24:
-			format=GL_RGB;
-			sdlFormat=SDL_PIXELFORMAT_RGB24;
+			if(desiredFormat==GL_RGBA){
+				format=GL_RGBA;
+				sdlFormat=SDL_PIXELFORMAT_RGBA32;
+			}else{
+				format=GL_RGB;
+				sdlFormat=SDL_PIXELFORMAT_RGB24;
+			}
 			break;
 		case 8:
 			switch(desiredFormat){
@@ -250,6 +263,10 @@ unsigned int CreateGLTexture(int width,int height,int desiredFormat,int wrap,int
 			case GL_ALPHA:
 			case GL_LUMINANCE:
 				format=desiredFormat;
+				break;
+			case GL_RGBA:
+				format=GL_RGBA;
+				sdlFormat=SDL_PIXELFORMAT_RGBA32;
 				break;
 			default:
 				format=GL_RGB;
@@ -268,6 +285,21 @@ unsigned int CreateGLTexture(int width,int height,int desiredFormat,int wrap,int
 				return 0;
 			}
 			srcData=tmp2->pixels;
+			if(format==GL_RGBA && colorKey!=0){
+				//new: color key
+				unsigned char r=colorKey,g=colorKey>>8,b=colorKey>>16;
+				for(int i=0,m=width*height;i<m;i++){
+					if(((unsigned char*)srcData)[i*4]==r
+						&& ((unsigned char*)srcData)[i*4+1]==g
+						&& ((unsigned char*)srcData)[i*4+2]==b)
+					{
+						((unsigned char*)srcData)[i*4]=0;
+						((unsigned char*)srcData)[i*4+1]=0;
+						((unsigned char*)srcData)[i*4+2]=0;
+						((unsigned char*)srcData)[i*4+3]=0;
+					}
+				}
+			}
 		}else{
 			srcData=srcSurface->pixels;
 		}
@@ -346,14 +378,14 @@ void AddEmptyHorizontalButton(float left,float top,float right,float bottom,std:
 	idx.insert(idx.end(),ii,ii+18);
 }
 
-void DrawScreenKeyboard(const std::vector<float>& v,const std::vector<unsigned short>& idx){
+void DrawScreenKeyboard(const std::vector<float>& v,const std::vector<unsigned short>& idx,unsigned int color){
 	if(idx.empty()) return;
 
 	glDisable(GL_LIGHTING);
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, adhoc_screenkb_tex);
 
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	glColor4ub(color, color>>8, color>>16, color>>24);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glVertexPointer(2,GL_FLOAT,4*sizeof(float),&(v[0]));
@@ -367,7 +399,7 @@ void DrawScreenKeyboard(const std::vector<float>& v,const std::vector<unsigned s
 	glDisable(GL_TEXTURE_2D);
 }
 
-void OnVideoResize(int width, int height){
+static void OnVideoResize(int width, int height){
 	m_nResizeTime++;
 
 	screenWidth=width;
@@ -377,21 +409,128 @@ void OnVideoResize(int width, int height){
 	glViewport(0,0,screenWidth,screenHeight);
 }
 
-static bool SaveTempFile(const char* format){
+static bool SaveUserLevelFile(const char* format,bool useFormat){
 	if(theApp->m_pDocument){
-		time_t t=time(NULL);
-		tm *timeinfo=localtime(&t);
-		char s[256];
-		strftime(s,sizeof(s),format,timeinfo);
-		return theApp->SaveFile(externalStoragePath+s);
+		char s0[256];
+		const char* lps=NULL;
+
+		if(useFormat){
+			time_t t=time(NULL);
+			tm *timeinfo=localtime(&t);
+			strftime(s0,sizeof(s0),format,timeinfo);
+			lps=s0;
+		}else{
+			lps=format;
+		}
+
+		u8string s;
+		for(;;){
+			char c=*(lps++);
+			if(c==0) break;
+			switch(c){
+			case '\\':
+			case '/':
+			case ':':
+			case '*':
+			case '?':
+			case '\"':
+			case '<':
+			case '>':
+			case '|':
+				continue;
+			default:
+				s.push_back(c);
+				break;
+			}
+		}
+
+		int m=s.size();
+		if(m<4 || SDL_strcasecmp(s.c_str()+(m-4),".lev")) s+=".lev";
+
+		bool ret=theApp->SaveFile(externalStoragePath+"/levels/"+s);
+		if(ret){
+			theApp->ShowToolTip(str(MyFormat(_("File saved to %s"))<<s));
+		}else{
+			theApp->ShowToolTip(str(MyFormat(_("Failed to save file %s"))<<s));
+		}
 	}
 
 	return false;
 }
 
+static void ReloadCurrentLevel(){
+	int idx=theApp->m_nCurrentLevel;
+	if(!theApp->m_sLastFile.empty() && theApp->LoadFile(theApp->m_sLastFile)){
+		theApp->m_nCurrentLevel=(idx>=0 && idx<(int)theApp->m_pDocument->m_objLevels.size())?idx:0;
+	}else{
+		theApp->LoadFile("data/levels/PuzzleBoy.lev");
+		theApp->m_nCurrentLevel=0;
+	}
+}
+
+SimpleMessageBox* CreateLevelChangedMsgBox(){
+	SimpleMessageBox* msgBox=new SimpleMessageBox();
+
+	msgBox->m_prompt=_("Level has been edited.\nIf you continue, unsaved changes will be lost.\n\nContinue?");
+	msgBox->m_buttons.push_back(_("Yes"));
+	msgBox->m_buttons.push_back(_("No"));
+	msgBox->Create();
+	msgBox->m_nDefaultValue=0;
+	msgBox->m_nCancelValue=1;
+
+	return msgBox;
+}
+
+static int SolveCurrentLevel(bool bTestMode){
+	if(!theApp->m_view.empty()
+		&& theApp->m_view[0]->m_objPlayingLevel)
+	{
+		PuzzleBoyLevelData *dat=theApp->m_pDocument->GetLevel(theApp->m_nCurrentLevel);
+		if(dat){
+			/*printf("--- Solver Test ---\n");
+
+			Uint64 f=SDL_GetPerformanceFrequency(),t=SDL_GetPerformanceCounter();*/
+
+			PuzzleBoyLevel *lev=new PuzzleBoyLevel(*dat);
+			lev->StartGame();
+			u8string s;
+			int ret=lev->SolveIt(s,NULL,NULL);
+
+			/*t=SDL_GetPerformanceCounter()-t;
+
+			printf("SolveIt() returns %d, Time=%0.2fms\n",ret,double(t)/double(f)*1000.0);
+			if(ret==1) printf("The solution is %s\n",s.c_str());*/
+
+			delete lev;
+
+			//show solution
+			switch(ret){
+			case 1:
+				ret=LevelRecordScreen(_("Level Solver"),_("The solution is:"),s,true);
+				if(ret>0){
+					theApp->ApplyRecord(s,ret==2,bTestMode);
+					return 0;
+				}
+				break;
+			case 0:
+				theApp->ShowToolTip(_("No solution"));
+				break;
+			case -1:
+				theApp->ShowToolTip(_("Aborted"));
+				break;
+			default:
+				theApp->ShowToolTip(_("Can't solve this level"));
+				break;
+			}
+		}
+	}
+
+	return -1;
+}
+
 class MainMenuScreen:public SimpleListScreen{
 public:
-	static const int TestFeatureStart=6;
+	static const int TestFeatureStart=7;
 public:
 	void OnDirty() override{
 		ResetList();
@@ -399,6 +538,7 @@ public:
 		AddItem(_("Choose Level"));
 		AddItem(_("Choose Level File"));
 		AddItem(_("Level Record"));
+		AddItem(_("Edit Level"));
 		AddItem(_("Config"));
 		AddItem(_("Exit Game"));
 
@@ -441,6 +581,10 @@ public:
 			}
 			break;
 		case 3:
+			//edit level
+			return 3;
+			break;
+		case 4:
 			//config
 			ConfigScreen().DoModal();
 			m_bDirty=true;
@@ -450,55 +594,14 @@ public:
 			//resize the game screen in case of button size changed
 			m_nResizeTime++;
 			break;
-		case 4:
+		case 5:
 			//exit game
 			m_bRun=false;
 			return 0;
 			break;
 		case TestFeatureStart:
 			//ad-hoc solver test
-			if(!theApp->m_view.empty()
-				&& theApp->m_view[0]->m_objPlayingLevel)
-			{
-				PuzzleBoyLevelData *dat=theApp->m_pDocument->GetLevel(theApp->m_nCurrentLevel);
-				if(dat){
-					/*printf("--- Solver Test ---\n");
-
-					Uint64 f=SDL_GetPerformanceFrequency(),t=SDL_GetPerformanceCounter();*/
-
-					PuzzleBoyLevel *lev=new PuzzleBoyLevel(*dat);
-					lev->StartGame();
-					u8string s;
-					int ret=lev->SolveIt(s,NULL,NULL);
-
-					/*t=SDL_GetPerformanceCounter()-t;
-
-					printf("SolveIt() returns %d, Time=%0.2fms\n",ret,double(t)/double(f)*1000.0);
-					if(ret==1) printf("The solution is %s\n",s.c_str());*/
-
-					delete lev;
-
-					//show solution
-					switch(ret){
-					case 1:
-						ret=LevelRecordScreen(_("Level Solver"),_("The solution is:"),s,true);
-						if(ret>0){
-							theApp->ApplyRecord(s,ret==2);
-							return 0;
-						}
-						break;
-					case 0:
-						theApp->ShowToolTip(_("No solution"));
-						break;
-					case -1:
-						theApp->ShowToolTip(_("Aborted"));
-						break;
-					default:
-						theApp->ShowToolTip(_("Can't solve this level"));
-						break;
-					}
-				}
-			}
+			return SolveCurrentLevel(false);
 			break;
 		case TestFeatureStart+1:
 			//ad-hoc random level TEST
@@ -510,7 +613,7 @@ public:
 						delete theApp->m_pDocument;
 						theApp->m_pDocument=doc;
 						theApp->m_nCurrentLevel=0;
-						SaveTempFile("/levels/rnd-%Y%m%d%H%M%S.lev");
+						SaveUserLevelFile("rnd-%Y%m%d%H%M%S.lev",true);
 						return 1;
 					}
 				}
@@ -526,7 +629,7 @@ public:
 						delete theApp->m_pDocument;
 						theApp->m_pDocument=doc;
 						theApp->m_nCurrentLevel=0;
-						SaveTempFile("/levels/rnd-%Y%m%d%H%M%S.lev");
+						SaveUserLevelFile("rnd-%Y%m%d%H%M%S.lev",true);
 						return 1;
 					}
 				}
@@ -534,7 +637,7 @@ public:
 			break;
 		case TestFeatureStart+3:
 			//save temp file
-			SaveTempFile("/levels/tmp-%Y%m%d%H%M%S.lev");
+			SaveUserLevelFile("tmp-%Y%m%d%H%M%S.lev",true);
 			return 0;
 			break;
 		case TestFeatureStart+4:
@@ -554,6 +657,520 @@ public:
 	}
 };
 
+class ChangeSizeScreen:public SimpleListScreen{
+public:
+	ChangeSizeScreen(int w,int h)
+		:m_nOldWidth(w),m_nOldHeight(h)
+		,m_nXOffset(0),m_nYOffset(0)
+		,m_nWidth(w),m_nHeight(h)
+		,m_bPreserve(false)
+	{
+	}
+
+	void OnDirty() override{
+		ResetList();
+
+		u8string yesno[2];
+		yesno[0]=_("No");
+		yesno[1]=_("Yes");
+
+		AddItem(str(MyFormat(_("Level Width"))(": %d")<<m_nWidth));
+		AddItem(str(MyFormat(_("Level Height"))(": %d")<<m_nHeight));
+		AddItem(_("Preserve Level Contents")+": "+yesno[m_bPreserve?1:0]);
+		AddItem(str(MyFormat(_("Horizontal Offset"))(": %d")<<m_nXOffset));
+		AddItem(str(MyFormat(_("Vertical Offset"))(": %d")<<m_nYOffset));
+
+		AddEmptyItem();
+
+		AddItem(_("Horizontal Align:"));
+		AddItem(_("Left"));
+		AddItem(_("Center"));
+		AddItem(_("Right"));
+
+		AddEmptyItem();
+
+		AddItem(_("Vertical Align:"));
+		AddItem(_("Top"));
+		AddItem(_("Vertical Center"));
+		AddItem(_("Bottom"));
+	}
+
+	int OnClick(int index) override{
+		switch(index){
+		case 0: //width
+			{
+				char s0[32];
+				sprintf(s0,"%d",m_nWidth);
+				u8string s=s0;
+				if(!SimpleInputScreen(_("Level Width"),
+					_("Level Width"),s)) break;
+				int n;
+				if(sscanf(s.c_str(),"%d",&n)!=1) break;
+				if(n<1) n=1;
+				else if(n>255) n=255;
+				m_nWidth=n;
+				m_bDirty=true;
+			}
+			break;
+		case 1: //height
+			{
+				char s0[32];
+				sprintf(s0,"%d",m_nHeight);
+				u8string s=s0;
+				if(!SimpleInputScreen(_("Level Height"),
+					_("Level Height"),s)) break;
+				int n;
+				if(sscanf(s.c_str(),"%d",&n)!=1) break;
+				if(n<1) n=1;
+				else if(n>255) n=255;
+				m_nHeight=n;
+				m_bDirty=true;
+			}
+			break;
+		case 2: //preserve
+			m_bPreserve=!m_bPreserve;
+			m_bDirty=true;
+			break;
+		case 3: //x offset
+			{
+				char s0[32];
+				sprintf(s0,"%d",m_nXOffset);
+				u8string s=s0;
+				if(!SimpleInputScreen(_("Horizontal Offset"),
+					_("Horizontal Offset"),s)) break;
+				int n;
+				if(sscanf(s.c_str(),"%d",&n)!=1) break;
+				if(n<-255) n=-255;
+				else if(n>255) n=255;
+				m_nXOffset=n;
+				m_bDirty=true;
+			}
+			break;
+		case 4: //y offset
+			{
+				char s0[32];
+				sprintf(s0,"%d",m_nYOffset);
+				u8string s=s0;
+				if(!SimpleInputScreen(_("Vertical Offset"),
+					_("Vertical Offset"),s)) break;
+				int n;
+				if(sscanf(s.c_str(),"%d",&n)!=1) break;
+				if(n<-255) n=-255;
+				else if(n>255) n=255;
+				m_nYOffset=n;
+				m_bDirty=true;
+			}
+			break;
+		case 7: //left
+			m_nXOffset=0;
+			m_bDirty=true;
+			break;
+		case 8: //center
+			m_nXOffset=(m_nWidth-m_nOldWidth)/2;
+			m_bDirty=true;
+			break;
+		case 9: //right
+			m_nXOffset=m_nWidth-m_nOldWidth;
+			m_bDirty=true;
+			break;
+		case 12: //top
+			m_nYOffset=0;
+			m_bDirty=true;
+			break;
+		case 13: //vcenter
+			m_nYOffset=(m_nHeight-m_nOldHeight)/2;
+			m_bDirty=true;
+			break;
+		case 14: //right
+			m_nYOffset=m_nHeight-m_nOldHeight;
+			m_bDirty=true;
+			break;
+		}
+
+		return -1;
+	}
+
+	int OnTitleBarButtonClick(int index) override{
+		return (index==SCREEN_KEYBOARD_YES)?1:0;
+	}
+
+	int DoModal() override{
+		//show
+		m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
+		m_RightButtons.push_back(SCREEN_KEYBOARD_YES);
+		CreateTitleBarText(_("Change Level Size"));
+		return SimpleListScreen::DoModal();
+	}
+public:
+	int m_nOldWidth,m_nOldHeight;
+	int m_nXOffset,m_nYOffset,m_nWidth,m_nHeight;
+	bool m_bPreserve;
+};
+
+class EditMenuScreen:public SimpleListScreen{
+public:
+	void OnDirty() override{
+		ResetList();
+
+		AddItem(_("Choose Level"));
+		AddItem(_("Choose Level File"));
+		AddItem(_("Test Level"));
+		AddItem(_("New Level File"));
+		AddItem(_("Save Level"));
+		AddItem(_("Config"));
+		AddItem(_("Exit Editor"));
+
+		AddEmptyItem();
+
+		AddItem(str(MyFormat(_("Level Pack Name"))(": %s")<<
+			toUTF8(theApp->m_pDocument->m_sLevelPackName)));
+		AddItem(str(MyFormat(_("Level Name"))(": %s")<<
+			toUTF8(theApp->m_pDocument->m_objLevels[theApp->m_nCurrentLevel]->m_sLevelName)));
+		AddItem(_("Change Level Size"));
+		AddItem(_("Add Level"));
+		AddItem(_("Move Level"));
+		AddItem(_("Remove Level"));
+	}
+
+	int OnClick(int index) override{
+		m_nPressedIndex=index;
+
+		switch(index){
+		case 0:
+			//choose level
+			if(ChooseLevelScreen().DoModal()) return 3;
+			break;
+		case 1:
+			//choose level file
+			if(ChooseLevelFileScreen().DoModal()){
+				ChooseLevelScreen().DoModal();
+				return 3;
+			}
+			break;
+		case 2:
+			//test level
+			return 4;
+			break;
+		case 3:
+			//new level pack
+			if(theApp->m_pDocument->m_bModified){
+				delete m_msgBox;
+				m_msgBox=CreateLevelChangedMsgBox();
+			}else{
+				return 32;
+			}
+			break;
+		case 4:
+			//save level
+			{
+				//get default file name
+				u8string fileName=theApp->m_sLastFile;
+				size_t n=fileName.find_last_of("\\/");
+				if(n!=fileName.npos) fileName=fileName.substr(n+1);
+
+				//show dialog
+				if(!SimpleInputScreen(_("Save Level"),
+					_("Please input level file name"),fileName)) break;
+
+				if(fileName.empty()) break;
+				SaveUserLevelFile(fileName.c_str(),false);
+				return 0;
+			}
+			break;
+		case 5:
+			//config
+			ConfigScreen().DoModal();
+			m_bDirty=true;
+			//recreate header in case of button size changed
+			CreateTitleBarText(_("Edit Level"));
+			CreateTitleBarButtons();
+			//resize the game screen in case of button size changed
+			m_nResizeTime++;
+			break;
+		case 6:
+			//exit editor
+			if(theApp->m_pDocument->m_bModified){
+				delete m_msgBox;
+				m_msgBox=CreateLevelChangedMsgBox();
+			}else{
+				return 1;
+			}
+			break;
+		case 8:
+			//level pack name
+			{
+				u8string s=toUTF8(theApp->m_pDocument->m_sLevelPackName);
+				if(!SimpleInputScreen(_("Level Pack Name"),
+					_("Please input level pack name"),s)) break;
+				theApp->m_pDocument->m_sLevelPackName=toUTF16(s);
+				theApp->m_pDocument->SetModifiedFlag();
+				m_bDirty=true;
+			}
+			break;
+		case 9:
+			//level name
+			{
+				u8string s=toUTF8(theApp->m_pDocument->m_objLevels[theApp->m_nCurrentLevel]->m_sLevelName);
+				if(!SimpleInputScreen(_("Level Name"),
+					_("Please input level name"),s)) break;
+				theApp->m_pDocument->m_objLevels[theApp->m_nCurrentLevel]->m_sLevelName
+					=theApp->m_view[0]->m_objPlayingLevel->m_sLevelName
+					=toUTF16(s);
+				theApp->m_pDocument->SetModifiedFlag();
+				m_bDirty=true;
+			}
+			break;
+		case 10:
+			//change size
+			{
+				PuzzleBoyLevelFile *pDoc=theApp->m_pDocument;
+				PuzzleBoyLevelData *lev=pDoc->m_objLevels[theApp->m_nCurrentLevel];
+
+				ChangeSizeScreen frm(lev->m_nWidth,lev->m_nHeight);
+
+				if(frm.DoModal()){
+					if((frm.m_nWidth!=lev->m_nWidth || frm.m_nHeight!=lev->m_nHeight
+						|| (frm.m_bPreserve && (frm.m_nXOffset!=0 || frm.m_nYOffset!=0))))
+					{
+						lev->Create(frm.m_nWidth,frm.m_nHeight,frm.m_bPreserve,frm.m_nXOffset,frm.m_nYOffset);
+						pDoc->SetModifiedFlag();
+						return 3;
+					}
+					return 0;
+				}
+			}
+			break;
+		case 11:
+			//add level
+			{
+				PuzzleBoyLevelFile *pDoc=theApp->m_pDocument;
+				int idx=theApp->m_nCurrentLevel;
+
+				PuzzleBoyLevelData *lev=new PuzzleBoyLevelData();
+				lev->CreateDefault();
+
+				if(idx>=(int)pDoc->m_objLevels.size()-1){
+					pDoc->m_objLevels.push_back(lev);
+					idx=pDoc->m_objLevels.size()-1;
+				}else{
+					if(idx<0) idx=0; else idx++;
+					pDoc->m_objLevels.insert(pDoc->m_objLevels.begin()+idx,lev);
+				}
+
+				theApp->m_nCurrentLevel=idx;
+				pDoc->SetModifiedFlag();
+				return 3;
+			}
+			break;
+		case 12:
+			//move level
+			{
+				char s0[32];
+				sprintf(s0,"%d",theApp->m_nCurrentLevel+1);
+				u8string s=s0;
+				if(!SimpleInputScreen(_("Move Level"),
+					_("Please input the destination level number"),s)) break;
+				int n;
+				if(sscanf(s.c_str(),"%d",&n)!=1) break;
+				n--;
+				int m=theApp->m_pDocument->m_objLevels.size();
+				if(n>=0 && n<m){
+					if(n==theApp->m_nCurrentLevel) return 0;
+
+					PuzzleBoyLevelFile *pDoc=theApp->m_pDocument;
+					PuzzleBoyLevelData *lev=pDoc->m_objLevels[theApp->m_nCurrentLevel];
+
+					if(n<theApp->m_nCurrentLevel){
+						for(int i=theApp->m_nCurrentLevel;i>n;i--){
+							pDoc->m_objLevels[i]=pDoc->m_objLevels[i-1];
+						}
+					}else{
+						for(int i=theApp->m_nCurrentLevel;i<n;i++){
+							pDoc->m_objLevels[i]=pDoc->m_objLevels[i+1];
+						}
+					}
+
+					pDoc->m_objLevels[n]=lev;
+					pDoc->SetModifiedFlag();
+					theApp->m_nCurrentLevel=n;
+					return 3;
+				}
+			}
+			break;
+		case 13:
+			//remove level
+			delete m_msgBox;
+			m_msgBox=new SimpleMessageBox();
+
+			m_msgBox->m_prompt=_("Are you sure?");
+			m_msgBox->m_buttons.push_back(_("Yes"));
+			m_msgBox->m_buttons.push_back(_("No"));
+			m_msgBox->Create();
+			m_msgBox->m_nDefaultValue=0;
+			m_msgBox->m_nCancelValue=1;
+
+			break;
+		}
+
+		return -1;
+	}
+
+	int OnMsgBoxClick(int index) override{
+		delete m_msgBox;
+		m_msgBox=NULL;
+
+		switch(m_nPressedIndex){
+		case 3: //new file
+			return index?-1:32;
+			break;
+		case 6: //exit
+			if(index==0){
+				ReloadCurrentLevel();
+				return 1;
+			}
+			break;
+		case 13: //remove level
+			if(index==0){
+				PuzzleBoyLevelFile *pDoc=theApp->m_pDocument;
+				int idx=theApp->m_nCurrentLevel;
+
+				if(pDoc->m_objLevels.size()==1){
+					pDoc->GetLevel(0)->CreateDefault();
+					idx=0;
+				}else if(pDoc->m_objLevels.empty()){
+					PuzzleBoyLevelData *lev=new PuzzleBoyLevelData();
+					lev->CreateDefault();
+					pDoc->m_objLevels.push_back(lev);
+					idx=0;
+				}else{
+					delete pDoc->m_objLevels[idx];
+					pDoc->m_objLevels.erase(pDoc->m_objLevels.begin()+idx);
+					if(idx>=(int)pDoc->m_objLevels.size()) idx=pDoc->m_objLevels.size()-1;
+				}
+
+				theApp->m_nCurrentLevel=idx;
+				pDoc->SetModifiedFlag();
+				return 3;
+			}
+			break;
+		}
+
+		return -1;
+	}
+
+	int DoModal() override{
+		//save changes
+		if(!theApp->m_view.empty() && theApp->m_view[0] && theApp->m_view[0]->m_bEditMode){
+			theApp->m_view[0]->SaveEdit();
+		}
+
+		//show
+		m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
+		CreateTitleBarText(_("Edit Level"));
+		return SimpleListScreen::DoModal();
+	}
+public:
+	int m_nPressedIndex;
+};
+
+class TestMenuScreen:public SimpleListScreen{
+public:
+	static const int TestFeatureStart=4;
+public:
+	void OnDirty() override{
+		ResetList();
+
+		AddItem(_("Level Record"));
+		AddItem(_("Config"));
+		AddItem(_("Quit to Editor"));
+
+		//test feature
+		AddEmptyItem();
+
+		AddItem(_("Level Solver"));
+	}
+
+	int OnClick(int index) override{
+		switch(index){
+		case 0:
+			//level record
+			if(!theApp->m_view.empty()
+				&& theApp->m_view[0]->m_objPlayingLevel)
+			{
+				u8string s=theApp->m_view[0]->m_objPlayingLevel->GetRecord();
+				int ret=LevelRecordScreen(_("Level Record"),
+					_("Copy record here or paste record\nand click 'Apply' button"),
+					s);
+				if(ret>0){
+					theApp->ApplyRecord(s,ret==2,true);
+					return 0;
+				}
+			}
+			break;
+		case 1:
+			//config
+			ConfigScreen().DoModal();
+			m_bDirty=true;
+			//recreate header in case of button size changed
+			CreateTitleBarText(_("Test Level"));
+			CreateTitleBarButtons();
+			//resize the game screen in case of button size changed
+			m_nResizeTime++;
+			break;
+		case 2:
+			//back to edit mode
+			return 3;
+			break;
+		case TestFeatureStart:
+			//ad-hoc solver test
+			return SolveCurrentLevel(true);
+			break;
+		}
+
+		return -1;
+	}
+
+	int DoModal() override{
+		//show
+		m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
+		CreateTitleBarText(_("Test Level"));
+		return SimpleListScreen::DoModal();
+	}
+};
+
+class MainMenuButton:public virtual MultiTouchView{
+public:
+	void OnTimer(){
+		if(theApp->m_bShowMainMenuButton){
+			MultiTouchViewStruct *view=theApp->touchMgr.FindView(this);
+			float f=float(theApp->m_nButtonSize)/float(screenHeight);
+			if(view){
+				view->left=screenAspectRatio-f;
+				view->top=0;
+				view->right=screenAspectRatio;
+				view->bottom=f;
+			}else{
+				theApp->touchMgr.AddView(screenAspectRatio-f,0,screenAspectRatio,f,
+					MultiTouchViewFlags::AcceptDragging,this,0);
+			}
+		}else{
+			theApp->touchMgr.RemoveView(this);
+		}
+	}
+	void OnMouseEvent(int which,int state,int xMouse,int yMouse,int nFlags,int nType) override{
+		if(nType==SDL_MOUSEBUTTONUP && state==SDL_BUTTON_LMASK && theApp->m_bShowMainMenuButton){
+			SDL_Event evt=event;
+			evt.type=SDL_KEYDOWN;
+			evt.key.state=SDL_PRESSED;
+			evt.key.repeat=0;
+			evt.key.keysym.scancode=SDL_SCANCODE_MENU;
+			evt.key.keysym.sym=SDLK_MENU;
+			evt.key.keysym.mod=0;
+			SDL_PushEvent(&evt);
+		}
+	}
+} *adhoc_menu_btn=NULL;
+
 static bool OnKeyDown(int nChar,int nFlags){
 	if(theApp->OnKeyDown(nChar,nFlags)) return true;
 
@@ -565,10 +1182,33 @@ static bool OnKeyDown(int nChar,int nFlags){
 		)
 	{
 		theApp->touchMgr.ResetDraggingState();
-		int ret=MainMenuScreen().DoModal();
-		if(ret>=1){
-			if(ret>=2) ret=2;
+		int ret;
+		bool b=(!theApp->m_view.empty() && theApp->m_view[0]);
+		if(b && theApp->m_view[0]->m_bEditMode){
+			ret=EditMenuScreen().DoModal();
+		}else if(b && theApp->m_view[0]->m_bTestMode){
+			ret=TestMenuScreen().DoModal();
+		}else{
+			ret=MainMenuScreen().DoModal();
+		}
+		switch(ret){
+		case 1: //single player
+		case 2: //multiplayer
 			theApp->StartGame(ret);
+			break;
+		case 3: //edit
+			theApp->StartGame(1,true);
+			break;
+		case 4: //test
+			theApp->StartGame(1,false,true);
+			break;
+		case 32: //new file
+			theApp->m_pDocument->CreateNew();
+			theApp->m_nCurrentLevel=0;
+			theApp->m_sLastFile.clear();
+			theApp->m_sLastRecord.clear();
+			theApp->StartGame(1,true);
+			break;
 		}
 		return false;
 	}
@@ -582,7 +1222,6 @@ static void OnKeyUp(int nChar,int nFlags){
 
 static void OnAutoSave(){
 	if(theApp && theApp->m_bAutoSave && theApp->m_view[0] && !theApp->m_sLastFile.empty()){
-		theApp->m_nLastLevel=theApp->m_view[0]->m_nCurrentLevel;
 		theApp->m_sLastRecord=theApp->m_view[0]->m_objPlayingLevel->GetRecord();
 		theApp->SaveConfig(externalStoragePath+"/PuzzleBoy.cfg");
 	}
@@ -590,6 +1229,9 @@ static void OnAutoSave(){
 
 static int MyEventFilter(void *userdata, SDL_Event *evt){
 	switch(evt->type){
+	case SDL_QUIT:
+		m_bRun=false;
+		break;
 	case SDL_APP_TERMINATING:
 	case SDL_APP_WILLENTERBACKGROUND:
 		OnAutoSave();
@@ -598,6 +1240,19 @@ static int MyEventFilter(void *userdata, SDL_Event *evt){
 		printf("[main] Fatal Error: Program received SDL_APP_LOWMEMORY! Program will abort\n");
 		OnAutoSave();
 		abort();
+		break;
+	case SDL_WINDOWEVENT:
+		switch(evt->window.event){
+		case SDL_WINDOWEVENT_EXPOSED:
+			m_nIdleTime=0;
+			break;
+		case SDL_WINDOWEVENT_SIZE_CHANGED:
+			m_nIdleTime=0;
+			OnVideoResize(
+				evt->window.data1,
+				evt->window.data2);
+			break;
+		}
 		break;
 	case SDL_KEYDOWN:
 		//check Alt+F4 or Ctrl+Q exit event (for all platforms)
@@ -613,18 +1268,18 @@ static int MyEventFilter(void *userdata, SDL_Event *evt){
 }
 
 int main(int argc,char** argv){
-	//init file system
-	initPaths();
-
 	//init SDL
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER)<0){
 		printf("[main] Fatal Error: Can't initialize SDL video or timer!\n");
 		abort();
 	}
 
-	if(SDL_InitSubSystem(SDL_INIT_JOYSTICK)>0){
+	/*if(SDL_InitSubSystem(SDL_INIT_JOYSTICK)>0){
 		printf("[main] Error: Can't initialize SDL joystick!\n");
-	}
+	}*/
+
+	//init file system
+	initPaths();
 
 	//init freetype
 	if(!FreeType_Init()){
@@ -665,17 +1320,20 @@ int main(int argc,char** argv){
 	do{
 		if(theApp->m_bAutoSave){
 			if(theApp->LoadFile(theApp->m_sLastFile)){
-				if(theApp->m_nLastLevel>=0 && theApp->m_nLastLevel<(int)theApp->m_pDocument->m_objLevels.size()){
-					theApp->m_nCurrentLevel=theApp->m_nLastLevel;
+				if(theApp->m_nCurrentLevel>=0 && theApp->m_nCurrentLevel<(int)theApp->m_pDocument->m_objLevels.size()){
+					//do nothing
 				}else{
 					printf("[main] Error: Level number specified by autosave out of range\n");
+					theApp->m_nCurrentLevel=0;
 					theApp->m_sLastRecord.clear();
 				}
 				break;
 			}else{
 				printf("[main] Error: Failed to load level file specified by autosave\n");
+				theApp->m_sLastRecord.clear();
 			}
 		}
+		theApp->m_nCurrentLevel=0;
 		if(!theApp->LoadFile("data/levels/PuzzleBoy.lev")){
 			printf("[main] Error: Failed to load default level file\n");
 		}
@@ -736,14 +1394,13 @@ int main(int argc,char** argv){
 		abort();
 	}
 
-	//FIXME: ad-hoc screen keypad
-	{
-		adhoc_screenkb_tex=CreateGLTexture(0,0,0,GL_CLAMP_TO_EDGE,GL_LINEAR,GL_LINEAR,"data/gfx/adhoc.bmp",NULL,NULL);
+	//load ad-hoc textures
+	adhoc_screenkb_tex=CreateGLTexture(0,0,0,GL_CLAMP_TO_EDGE,GL_LINEAR,GL_LINEAR,"data/gfx/adhoc.bmp",NULL,NULL,0);
+	adhoc3_tex=CreateGLTexture(0,0,GL_RGBA,GL_CLAMP_TO_EDGE,GL_LINEAR,GL_LINEAR,"data/gfx/adhoc3.bmp",NULL,NULL,0xFFFF00FF);
 
-		if(adhoc_screenkb_tex==0){
-			printf("[main] Fatal Error: Can't find necessary data! Make sure the working directory is correct!\n");
-			abort();
-		}
+	if(adhoc_screenkb_tex==0 || adhoc3_tex==0){
+		printf("[main] Fatal Error: Can't find necessary data! Make sure the working directory is correct!\n");
+		abort();
 	}
 
 	//try to load FreeType font
@@ -786,15 +1443,20 @@ int main(int argc,char** argv){
 		theApp->m_view[0]->m_objPlayingLevel->ApplyRecord(theApp->m_sLastRecord);
 	}
 
-	int nIdleTime=0;
+	//create ad-hoc main menu button
+	adhoc_menu_btn=new MainMenuButton;
+
+	//message box
+	SimpleMessageBox *msgBox=NULL;
 
 	while(m_bRun){
 		//game logic
-		if(theApp->OnTimer()) nIdleTime=0;
-		else if((++nIdleTime)>=64) nIdleTime=32;
+		UpdateIdleTime(theApp->OnTimer());
+
+		adhoc_menu_btn->OnTimer();
 
 		//clear and draw (if not idle, otherwise only draw after 32 frames)
-		if(nIdleTime<=32){
+		if(NeedToDrawScreen()){
 			ClearScreen();
 
 			theApp->Draw();
@@ -811,13 +1473,16 @@ int main(int argc,char** argv){
 				if(m==1){
 					PuzzleBoyLevelView *view=theApp->m_view[0];
 
-					fmt("\n")(_("Level %d: %s"))("\n")(_("Moves: %d"))<<(view->m_nCurrentLevel+1)
-						<<toUTF8(view->m_objPlayingLevel->m_sLevelName)
-						<<view->m_objPlayingLevel->m_nMoves;
+					fmt("\n")(_("Level %d: %s"))<<(view->m_nCurrentLevel+1)
+						<<toUTF8(view->m_objPlayingLevel->m_sLevelName);
 
-					if(view->m_nCurrentBestStep>0){
-						fmt(" - ")(_("Best: %d (%s)"))<<view->m_nCurrentBestStep
-							<<view->m_sCurrentBestStepOwner;
+					if(!view->m_bEditMode){
+						fmt("\n")(_("Moves: %d"))<<view->m_objPlayingLevel->m_nMoves;
+
+						if(view->m_nCurrentBestStep>0){
+							fmt(" - ")(_("Best: %d (%s)"))<<view->m_nCurrentBestStep
+								<<view->m_sCurrentBestStepOwner;
+						}
 					}
 				}else if(m>=2){
 					fmt("\nLevel: %d vs %d\nMoves: %d vs %d")<<(theApp->m_view[0]->m_nCurrentLevel+1)
@@ -830,63 +1495,40 @@ int main(int argc,char** argv){
 					SDL_MakeColor(255,255,255,255));
 			}
 
-			ShowScreen(&nIdleTime);
+			//draw message box
+			if(msgBox) msgBox->Draw();
+
+			ShowScreen();
 		}
 
 		while(SDL_PollEvent(&event)){
-			//check if clicked main menu button
-			switch(event.type){
-			case SDL_MOUSEBUTTONDOWN:
-			case SDL_MOUSEBUTTONUP:
-				if(theApp->m_bShowMainMenuButton
-					&& event.button.x>=screenWidth-theApp->m_nButtonSize
-					&& event.button.x<screenWidth
-					&& event.button.y>=0
-					&& event.button.y<theApp->m_nButtonSize)
-				{
-					if(event.type==SDL_MOUSEBUTTONUP){
-						SDL_Event evt=event;
-						evt.type=SDL_KEYDOWN;
-						evt.key.state=SDL_PRESSED;
-						evt.key.repeat=0;
-						evt.key.keysym.scancode=SDL_SCANCODE_MENU;
-						evt.key.keysym.sym=SDLK_MENU;
-						evt.key.keysym.mod=0;
-						SDL_PushEvent(&evt);
+			//check msgbox event
+			if(msgBox && msgBox->OnEvent()){
+				int ret=msgBox->m_nValue;
+				if(ret>=0){
+					delete msgBox;
+					msgBox=NULL;
+
+					if(ret==0){
+						ReloadCurrentLevel();
+						theApp->StartGame(1);
 					}
-					continue;
 				}
-				break;
+				continue;
 			}
 
 			//check multi-touch event
 			if(theApp->touchMgr.OnEvent()){
-				nIdleTime=0;
+				m_nIdleTime=0;
 				continue;
 			}
 
 			switch(event.type){
-			case SDL_QUIT:
-				m_bRun=false;
-				break;
-			case SDL_WINDOWEVENT:
-				switch(event.window.event){
-				case SDL_WINDOWEVENT_EXPOSED:
-					nIdleTime=0;
-					break;
-				case SDL_WINDOWEVENT_SIZE_CHANGED:
-					nIdleTime=0;
-					OnVideoResize(
-						event.window.data1,
-						event.window.data2);
-					break;
-				}
-				break;
 			case SDL_KEYUP:
 				switch(event.key.keysym.sym){
 				case SDLK_AC_BACK: event.key.keysym.sym=SDLK_ESCAPE; break;
 				}
-				nIdleTime=0;
+				m_nIdleTime=0;
 				OnKeyUp(
 					event.key.keysym.sym,
 					event.key.keysym.mod);
@@ -895,8 +1537,19 @@ int main(int argc,char** argv){
 #ifdef ANDROID
 				//chcek exit event (Android only)
 				else if(event.key.keysym.sym==SDLK_ESCAPE){
-					//just press Esc
-					if(theApp->m_bToolTipIsExit){
+					bool b=(!theApp->m_view.empty() && theApp->m_view[0]);
+					if(b && theApp->m_view[0]->m_bEditMode){
+						//exit edit mode
+						if(theApp->m_pDocument->m_bModified){
+							delete msgBox;
+							msgBox=CreateLevelChangedMsgBox();
+						}else{
+							theApp->StartGame(1);
+						}
+					}else if(b && theApp->m_view[0]->m_bTestMode){
+						//exit test mode
+						theApp->StartGame(1,true);
+					}else if(theApp->m_bToolTipIsExit){
 						m_bRun=false;
 					}else{
 						theApp->ShowToolTip(_("Press again to exit"),true);
@@ -908,7 +1561,7 @@ int main(int argc,char** argv){
 				switch(event.key.keysym.sym){
 				case SDLK_AC_BACK: event.key.keysym.sym=SDLK_ESCAPE; break;
 				}
-				nIdleTime=0;
+				m_nIdleTime=0;
 				if(OnKeyDown(
 					event.key.keysym.sym,
 					event.key.keysym.mod)) m_bKeyDownProcessed=true;
@@ -924,7 +1577,14 @@ int main(int argc,char** argv){
 	OnAutoSave();
 
 	//destroy everything
+	delete adhoc_menu_btn;
+	adhoc_menu_btn=NULL;
+
+	delete msgBox;
+	msgBox=NULL;
+
 	glDeleteTextures(1,&adhoc_screenkb_tex);
+	glDeleteTextures(1,&adhoc3_tex);
 
 	delete mainFont;
 	mainFont=NULL;

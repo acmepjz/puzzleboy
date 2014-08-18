@@ -59,7 +59,7 @@ public:
 
 	void ResetDraggingState();
 
-	void AddView(float left,float top,float right,float bottom,int flags,MultiTouchView* view);
+	void AddView(float left,float top,float right,float bottom,int flags,MultiTouchView* view,int index=-1);
 	MultiTouchViewStruct* FindView(MultiTouchView* view);
 	void RemoveView(MultiTouchView* view);
 

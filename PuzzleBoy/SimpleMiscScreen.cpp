@@ -110,9 +110,6 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 			if(txt.OnEvent()) continue;
 
 			switch(event.type){
-			case SDL_QUIT:
-				m_bRun=false;
-				break;
 			case SDL_MOUSEBUTTONUP:
 				if(event.button.y<buttonSize){
 					//check clicked title bar buttons
@@ -136,15 +133,6 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 					}
 				}
 
-				break;
-			case SDL_WINDOWEVENT:
-				switch(event.window.event){
-				case SDL_WINDOWEVENT_SIZE_CHANGED:
-					OnVideoResize(
-						event.window.data1,
-						event.window.data2);
-					break;
-				}
 				break;
 			case SDL_KEYDOWN:
 				switch(event.key.keysym.sym){
@@ -193,8 +181,6 @@ int SimpleConfigKeyScreen(int key){
 	std::vector<float> m_v;
 	std::vector<unsigned short> m_idx;
 
-	int nIdleTime=0;
-
 	while(m_bRun && b){
 		//get position of text box
 		SDL_Rect r={64,(screenHeight+buttonSize-64)/2,screenWidth-192,64};
@@ -202,7 +188,7 @@ int SimpleConfigKeyScreen(int key){
 		//create title bar buttons
 		if(m_nMyResizeTime!=m_nResizeTime){
 			m_nMyResizeTime=m_nResizeTime;
-			nIdleTime=0;
+			m_nIdleTime=0;
 
 			m_v.clear();
 			m_idx.clear();
@@ -220,10 +206,10 @@ int SimpleConfigKeyScreen(int key){
 		}
 
 		//update idle time
-		if((++nIdleTime)>=64) nIdleTime=32;
+		UpdateIdleTime(false);
 
 		//clear and draw (if not idle, otherwise only draw after 32 frames)
-		if(nIdleTime<=32){
+		if(NeedToDrawScreen()){
 			ClearScreen();
 
 			SetProjectionMatrix(1);
@@ -279,14 +265,11 @@ int SimpleConfigKeyScreen(int key){
 			}
 
 			//over
-			ShowScreen(&nIdleTime);
+			ShowScreen();
 		}
 
 		while(SDL_PollEvent(&event)){
 			switch(event.type){
-			case SDL_QUIT:
-				m_bRun=false;
-				break;
 			case SDL_MOUSEMOTION:
 				//TODO:
 				break;
@@ -294,7 +277,7 @@ int SimpleConfigKeyScreen(int key){
 				//TODO:
 				break;
 			case SDL_MOUSEBUTTONUP:
-				nIdleTime=0;
+				m_nIdleTime=0;
 				if(event.button.y<buttonSize){
 					//check clicked title bar buttons
 					if(event.button.x>=0 && event.button.x<buttonSize){
@@ -310,21 +293,8 @@ int SimpleConfigKeyScreen(int key){
 				}
 
 				break;
-			case SDL_WINDOWEVENT:
-				switch(event.window.event){
-				case SDL_WINDOWEVENT_EXPOSED:
-					nIdleTime=0;
-					break;
-				case SDL_WINDOWEVENT_SIZE_CHANGED:
-					nIdleTime=0;
-					OnVideoResize(
-						event.window.data1,
-						event.window.data2);
-					break;
-				}
-				break;
 			case SDL_KEYDOWN:
-				nIdleTime=0;
+				m_nIdleTime=0;
 				switch(event.key.keysym.sym){
 				case SDLK_AC_BACK:
 				case SDLK_ESCAPE:

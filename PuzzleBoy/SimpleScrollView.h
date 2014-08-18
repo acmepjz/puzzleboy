@@ -41,7 +41,7 @@ public:
 	void CenterView(float x=0.0f,float y=0.0f,float w=-1.0f,float h=-1.0f);
 	void EnsureVisible(float x,float y,float w=0.0f,float h=0.0f);
 
-	void ConstraintView(bool zoom);
+	bool ConstraintView(bool zoom);
 
 	void Draw();
 public:

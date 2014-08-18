@@ -43,7 +43,7 @@ public:
 
 	void MySerialize(MySerializer& ar);
 
-	void Create(int nWidth,int nHeight,int bPreserve=0,int nXOffset=0,int nYOffset=0);
+	void Create(int nWidth,int nHeight,bool bPreserve=false,int nXOffset=0,int nYOffset=0);
 	void CreateDefault();
 
 	int HitTestForPlacingBlocks(int x,int y,int nEditingBlockIndex=-1) const;
