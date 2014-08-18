@@ -379,10 +379,8 @@ bool SimpleTextBox::OnEvent(){
 }
 
 bool SimpleTextBox::OnTimer(){
-	bool ret=false;
-
 	//update scroll view
-	m_scrollView.OnTimer();
+	bool ret=m_scrollView.OnTimer();
 
 	//update caret animation
 	if(HasFocus()){

@@ -15,17 +15,20 @@ const float m_fPlayerSize=0.375f;
 void SetProjectionMatrix(int idx=0);
 
 void ClearScreen();
-void OnVideoResize(int width, int height);
 
 //draw FPS and other various overlay
-//lpIdleTime: optional variable, if the overlay is dirty then it set idle time to 0
-void ShowScreen(int* lpIdleTime=0);
+//will update global idle time
+void ShowScreen();
 
-unsigned int CreateGLTexture(int width,int height,int desiredFormat,int wrap,int minFilter,int magFilter,const char* srcBMPFile,SDL_Surface* srcSurface,const void* srcData);
+//width and height are used only when input data is srcData
+//input data priority: srcBMPFile>srcSurface>srcData
+//colorKey is used only when desiredFormat==GL_RGBA and colorKey!=0
+//bit 0-23 of colorKey is red, green, blue, respectively
+unsigned int CreateGLTexture(int width,int height,int desiredFormat,int wrap,int minFilter,int magFilter,const char* srcBMPFile,SDL_Surface* srcSurface,const void* srcData,unsigned int colorKey);
 
 void AddScreenKeyboard(float x,float y,float w,float h,int index,std::vector<float>& v,std::vector<unsigned short>& idx);
 void AddEmptyHorizontalButton(float left,float top,float right,float bottom,std::vector<float>& v,std::vector<unsigned short>& idx);
-void DrawScreenKeyboard(const std::vector<float>& v,const std::vector<unsigned short>& idx);
+void DrawScreenKeyboard(const std::vector<float>& v,const std::vector<unsigned short>& idx,unsigned int color=-1);
 
 const float SCREENKB_W=1.0f/8.0f;
 const float SCREENKB_H=1.0f/4.0f;
@@ -44,10 +47,13 @@ const int SCREEN_KEYBOARD_OPEN=0x202;
 const int SCREEN_KEYBOARD_SEARCH=0x203;
 const int SCREEN_KEYBOARD_MORE=0x300;
 const int SCREEN_KEYBOARD_FAST_FORWARD=0x301;
+const int SCREEN_KEYBOARD_PLAY=0x302;
+const int SCREEN_KEYBOARD_EMPTY=0x303;
 const int SCREEN_KEYBOARD_COPY=0x4;
 const int SCREEN_KEYBOARD_PASTE=0x5;
-
-const int SCREEN_KEYBOARD_EMPTY=0x303;
+const int SCREEN_KEYBOARD_ZOOM_IN=0x6;
+const int SCREEN_KEYBOARD_ZOOM_OUT=0x7;
+const int SCREEN_KEYBOARD_DELETE=0x104;
 
 extern int screenWidth;
 extern int screenHeight;
@@ -55,6 +61,17 @@ extern int m_nResizeTime;
 extern float screenAspectRatio;
 
 extern bool m_bRun;
+
+extern int m_nIdleTime;
+
+inline void UpdateIdleTime(bool bDirty){
+	if(bDirty) m_nIdleTime=0;
+	else if((++m_nIdleTime)>=64) m_nIdleTime=32;
+}
+
+inline bool NeedToDrawScreen(){
+	return m_nIdleTime<=32;
+}
 
 class SimpleFontFile;
 class SimpleBaseFont;
@@ -65,3 +82,6 @@ extern SimpleBaseFont *titleFont;
 
 void WaitForNextFrame();
 
+class SimpleMessageBox;
+
+SimpleMessageBox* CreateLevelChangedMsgBox();

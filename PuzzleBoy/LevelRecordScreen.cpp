@@ -147,9 +147,6 @@ int LevelRecordScreen(const u8string& title,const u8string& prompt,u8string& rec
 			if(txt.OnEvent()) continue;
 
 			switch(event.type){
-			case SDL_QUIT:
-				m_bRun=false;
-				break;
 			case SDL_MOUSEBUTTONUP:
 				if(event.button.y<buttonSize){
 					bool bCopy=false;
@@ -199,15 +196,6 @@ int LevelRecordScreen(const u8string& title,const u8string& prompt,u8string& rec
 					}
 				}
 
-				break;
-			case SDL_WINDOWEVENT:
-				switch(event.window.event){
-				case SDL_WINDOWEVENT_SIZE_CHANGED:
-					OnVideoResize(
-						event.window.data1,
-						event.window.data2);
-					break;
-				}
 				break;
 			case SDL_KEYDOWN:
 				switch(event.key.keysym.sym){

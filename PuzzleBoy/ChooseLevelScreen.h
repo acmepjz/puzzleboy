@@ -7,6 +7,7 @@ public:
 	void OnDirty() override;
 	int OnClick(int index) override;
 	int DoModal() override;
+	int OnMsgBoxClick(int index) override;
 private:
 	std::vector<u8string> m_files;
 	std::vector<u8string> m_fileDisplayName;

@@ -36,7 +36,7 @@ void SimpleProgressScreen::Create(){
 		}
 	}
 
-	m_Tex=CreateGLTexture(nWidth,nWidth,GL_LUMINANCE,GL_REPEAT,GL_LINEAR,GL_LINEAR,NULL,NULL,pixels);
+	m_Tex=CreateGLTexture(nWidth,nWidth,GL_LUMINANCE,GL_REPEAT,GL_LINEAR,GL_LINEAR,NULL,NULL,pixels,0);
 
 	free(pixels);
 
@@ -149,18 +149,6 @@ bool SimpleProgressScreen::DrawAndDoEvents(){
 	bool b=true;
 	while(SDL_PollEvent(&event)){
 		switch(event.type){
-		case SDL_QUIT:
-			m_bRun=false;
-			break;
-		case SDL_WINDOWEVENT:
-			switch(event.window.event){
-			case SDL_WINDOWEVENT_SIZE_CHANGED:
-				OnVideoResize(
-					event.window.data1,
-					event.window.data2);
-				break;
-			}
-			break;
 		case SDL_KEYDOWN:
 			switch(event.key.keysym.sym){
 			case SDLK_AC_BACK:

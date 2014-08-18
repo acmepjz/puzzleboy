@@ -1,5 +1,6 @@
 #include "SimpleListScreen.h"
 #include "SimpleText.h"
+#include "SimpleMessageBox.h"
 #include "PuzzleBoyApp.h"
 #include "main.h"
 
@@ -21,6 +22,7 @@ SimpleListScreen::SimpleListScreen()
 ,m_nReturnValue(0)
 ,m_bDirty(true)
 ,m_bDirtyOnResize(false)
+,m_msgBox(NULL)
 ,m_y0(0)
 {
 }
@@ -28,6 +30,7 @@ SimpleListScreen::SimpleListScreen()
 SimpleListScreen::~SimpleListScreen(){
 	delete m_txtTitle;
 	delete m_txtList;
+	delete m_msgBox;
 }
 
 void SimpleListScreen::OnDirty(){
@@ -39,6 +42,14 @@ int SimpleListScreen::OnClick(int index){
 
 int SimpleListScreen::OnTitleBarButtonClick(int index){
 	return m_nReturnValue;
+}
+
+int SimpleListScreen::OnMsgBoxClick(int index){
+	if(m_msgBox){
+		delete m_msgBox;
+		m_msgBox=NULL;
+	}
+	return -1;
 }
 
 void SimpleListScreen::ResetList(){
@@ -129,14 +140,12 @@ int SimpleListScreen::DoModal(){
 	Uint32 lastSwipeTime=SDL_GetTicks();
 	float dy=0.0f;
 
-	int nIdleTime=0;
-
 	while(m_bRun && b){
 		//update list
 		if(m_bDirty){
 			OnDirty();
 			m_bDirty=false;
-			nIdleTime=0;
+			m_nIdleTime=0;
 		}
 
 		//update animation
@@ -154,12 +163,12 @@ int SimpleListScreen::DoModal(){
 
 		if(m_nDraggingState==3 || m_y0<y02-1 || m_y0>y02+1){
 			if(scrollBarIdleTime>0) scrollBarIdleTime-=4;
-			nIdleTime=0;
+			m_nIdleTime=0;
 			y02=(m_y0+y02)>>1;
 		}else{
 			if(scrollBarIdleTime<32){
 				scrollBarIdleTime++;
-				nIdleTime=0;
+				m_nIdleTime=0;
 			}
 			y02=m_y0;
 		}
@@ -167,19 +176,19 @@ int SimpleListScreen::DoModal(){
 		if(selected0>=0){
 			selected2=selected0;
 			if(selectedTime<8) selectedTime++;
-			nIdleTime=0;
+			m_nIdleTime=0;
 		}else{
 			if(selectedTime>0){
 				selectedTime--;
-				nIdleTime=0;
+				m_nIdleTime=0;
 			}
 		}
 
 		//update idle time
-		if((++nIdleTime)>=64) nIdleTime=32;
+		UpdateIdleTime(false);
 
 		//clear and draw (if not idle, otherwise only draw after 32 frames)
-		if(nIdleTime<=32){
+		if(NeedToDrawScreen()){
 			ClearScreen();
 
 			SetProjectionMatrix(1);
@@ -286,17 +295,33 @@ int SimpleListScreen::DoModal(){
 				fnt->EndDraw();
 			}
 
-			ShowScreen(&nIdleTime);
+			//draw overlay
+			if(m_msgBox) m_msgBox->Draw();
+
+			ShowScreen();
 		}
 
 		while(SDL_PollEvent(&event)){
+			if(m_msgBox){
+				m_msgBox->OnEvent();
+				if(m_msgBox->m_nValue>=0){
+					int idx=OnMsgBoxClick(m_msgBox->m_nValue);
+					if(idx>=0){
+						if(m_msgBox){
+							delete m_msgBox;
+							m_msgBox=NULL;
+						}
+						m_nReturnValue=idx;
+						b=false;
+					}
+				}
+				continue;
+			}
+
 			switch(event.type){
-			case SDL_QUIT:
-				m_bRun=false;
-				break;
 			case SDL_MOUSEMOTION:
 				//experimental dragging support
-				nIdleTime=0;
+				m_nIdleTime=0;
 				if(event.motion.state){
 					switch(m_nDraggingState){
 					case 1:
@@ -323,7 +348,7 @@ int SimpleListScreen::DoModal(){
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				//experimental dragging support
-				nIdleTime=0;
+				m_nIdleTime=0;
 				if(m_nDraggingState==0){
 					if(event.button.x>=screenWidth-64 && event.button.y>=theApp->m_nButtonSize){
 						//dragging scrollbar
@@ -348,7 +373,7 @@ int SimpleListScreen::DoModal(){
 
 				break;
 			case SDL_MOUSEBUTTONUP:
-				nIdleTime=0;
+				m_nIdleTime=0;
 				if(m_nDraggingState<2){
 					if(event.button.y<theApp->m_nButtonSize){
 						//check clicked title bar buttons
@@ -394,26 +419,13 @@ int SimpleListScreen::DoModal(){
 				break;
 			case SDL_MOUSEWHEEL:
 				if(event.wheel.y){
-					nIdleTime=0;
+					m_nIdleTime=0;
 					if(event.wheel.y>0) m_y0-=theApp->m_nMenuHeight*4;
 					else m_y0+=theApp->m_nMenuHeight*4;
 				}
 				break;
-			case SDL_WINDOWEVENT:
-				switch(event.window.event){
-				case SDL_WINDOWEVENT_EXPOSED:
-					nIdleTime=0;
-					break;
-				case SDL_WINDOWEVENT_SIZE_CHANGED:
-					nIdleTime=0;
-					OnVideoResize(
-						event.window.data1,
-						event.window.data2);
-					break;
-				}
-				break;
 			case SDL_KEYDOWN:
-				nIdleTime=0;
+				m_nIdleTime=0;
 				switch(event.key.keysym.sym){
 				case SDLK_AC_BACK:
 				case SDLK_ESCAPE:
@@ -453,7 +465,7 @@ int SimpleListScreen::DoModal(){
 			m_nMyResizeTime=m_nResizeTime;
 			CreateTitleBarButtons();
 			if(m_bDirtyOnResize) m_bDirty=true;
-			nIdleTime=0;
+			m_nIdleTime=0;
 		}
 
 		WaitForNextFrame();

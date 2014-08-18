@@ -29,7 +29,7 @@ public:
 	bool LoadLocale();
 
 	void DestroyGame();
-	bool StartGame(int nPlayerCount);
+	bool StartGame(int nPlayerCount,bool bEditMode=false,bool bTestMode=false);
 
 	bool OnTimer();
 	bool OnKeyDown(int nChar,int nFlags);
@@ -40,7 +40,7 @@ public:
 
 	void ShowToolTip(const u8string& text,bool isExit=false);
 
-	void ApplyRecord(const u8string& record,bool animationDemo);
+	void ApplyRecord(const u8string& record,bool animationDemo,bool testMode=false);
 public:
 	GNUGetText m_objGetText;
 	MT19937 m_objMainRnd;
@@ -60,7 +60,6 @@ public:
 
 	//for saved progress
 	u8string m_sLastFile;
-	int m_nLastLevel;
 	u8string m_sLastRecord;
 
 	u8string m_sLocale; ///< empty means automatic, "?" means disabled

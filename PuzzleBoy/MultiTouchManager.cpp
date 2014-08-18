@@ -35,13 +35,23 @@ void MultiTouchManager::ResetDraggingState(){
 	m_nDraggingIndex=-1;
 }
 
-void MultiTouchManager::AddView(float left,float top,float right,float bottom,int flags,MultiTouchView* view){
+void MultiTouchManager::AddView(float left,float top,float right,float bottom,int flags,MultiTouchView* view,int index){
 	MultiTouchViewStruct viewStruct={
 		left,top,right,bottom,flags,view,
 		0.0f,0.0f,-1.0f
 	};
 
-	views.push_back(viewStruct);
+	if(index>=0 && index<(int)views.size()){
+		views.insert(views.begin()+index,viewStruct);
+
+		if(m_nDraggingIndex>=index) m_nDraggingIndex++;
+
+		for(std::map<long long,int>::iterator it=fingers.begin();it!=fingers.end();++it){
+			if(it->second>=index) it->second++;
+		}
+	}else{
+		views.push_back(viewStruct);
+	}
 }
 
 MultiTouchViewStruct* MultiTouchManager::FindView(MultiTouchView* view){
@@ -109,7 +119,7 @@ bool MultiTouchManager::OnEvent(){
 			}
 
 			if(idx>=0 && idx<(int)views.size()){
-				views[idx].view->OnMouseEvent(
+				if(views[idx].view) views[idx].view->OnMouseEvent(
 					event.motion.which,
 					event.motion.state,
 					event.motion.x,
@@ -141,7 +151,7 @@ bool MultiTouchManager::OnEvent(){
 				&& views[m_nDraggingIndex].m_nDraggingState==1
 				&& views[m_nDraggingIndex].flags>=0)
 			{
-				views[m_nDraggingIndex].view->OnMouseEvent(
+				if(views[m_nDraggingIndex].view) views[m_nDraggingIndex].view->OnMouseEvent(
 					event.button.which,
 					SDL_BUTTON(event.button.button),
 					event.button.x,
@@ -162,7 +172,7 @@ bool MultiTouchManager::OnEvent(){
 				&& views[m_nDraggingIndex].m_nDraggingState<2
 				&& views[m_nDraggingIndex].flags>=0)
 			{
-				views[m_nDraggingIndex].view->OnMouseEvent(
+				if(views[m_nDraggingIndex].view) views[m_nDraggingIndex].view->OnMouseEvent(
 					event.button.which,
 					SDL_BUTTON(event.button.button),
 					event.button.x,
@@ -205,11 +215,11 @@ bool MultiTouchManager::OnEvent(){
 
 				if(views[idx].flags & MultiTouchViewFlags::AcceptZoom){
 					if(event.wheel.y){
-						views[idx].view->OnMultiGesture(float(x)/float(screenHeight),float(y)/float(screenHeight),0.0f,0.0f,
+						if(views[idx].view) views[idx].view->OnMultiGesture(float(x)/float(screenHeight),float(y)/float(screenHeight),0.0f,0.0f,
 							event.wheel.y>0?1.1f:1.0f/1.1f);
 					}
 				}else{
-					views[idx].view->OnMouseWheel(event.wheel.which,
+					if(views[idx].view) views[idx].view->OnMouseWheel(event.wheel.which,
 						x,y,
 						event.wheel.x,
 						event.wheel.y,
@@ -270,7 +280,7 @@ bool MultiTouchManager::OnEvent(){
 					views[idx].m_fMultitouchOldY=fy;
 					views[idx].m_fMultitouchOldDistSquared=-1.0f;
 
-					views[idx].view->OnMouseEvent(
+					if(views[idx].view) views[idx].view->OnMouseEvent(
 						SDL_TOUCH_MOUSEID,
 						SDL_BUTTON_LMASK,
 						int(fx*float(screenHeight)+0.5f),
@@ -352,7 +362,7 @@ bool MultiTouchManager::OnEvent(){
 						views[i].m_fMultitouchOldX=x;
 						views[i].m_fMultitouchOldY=y;
 
-						views[i].view->OnMultiGesture(x,y,dx,dy,zoom);
+						if(views[i].view) views[i].view->OnMultiGesture(x,y,dx,dy,zoom);
 					}else if(views[i].f1==NULL
 						&& (views[i].m_nDraggingState==1 || views[i].m_nDraggingState==2))
 					{
@@ -360,7 +370,7 @@ bool MultiTouchManager::OnEvent(){
 						if(views[i].flags & MultiTouchViewFlags::AcceptDragging){
 							CheckDragging(i,views[i].f0->x*screenAspectRatio,views[i].f0->y);
 						}else{
-							views[i].view->OnMouseEvent(
+							if(views[i].view) views[i].view->OnMouseEvent(
 								SDL_TOUCH_MOUSEID,
 								SDL_BUTTON_LMASK,
 								int(views[i].f0->x*float(screenWidth)+0.5f),
@@ -399,7 +409,7 @@ bool MultiTouchManager::OnEvent(){
 						&& views[idx].flags>=0)
 					{
 						//send mouse up event
-						views[idx].view->OnMouseEvent(
+						if(views[idx].view) views[idx].view->OnMouseEvent(
 							SDL_TOUCH_MOUSEID,
 							SDL_BUTTON_LMASK,
 							int(event.tfinger.x*float(screenWidth)+0.5f),
@@ -441,6 +451,6 @@ void MultiTouchManager::CheckDragging(int index,float x,float y){
 		views[index].m_nDraggingState=2;
 		views[index].m_fMultitouchOldX=x;
 		views[index].m_fMultitouchOldY=y;
-		views[index].view->OnMultiGesture(x,y,dx,dy,1.0f);
+		if(views[index].view) views[index].view->OnMultiGesture(x,y,dx,dy,1.0f);
 	}
 }

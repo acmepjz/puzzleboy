@@ -4,6 +4,7 @@
 #include <vector>
 
 class SimpleText;
+class SimpleMessageBox;
 
 class SimpleListScreen{
 public:
@@ -14,6 +15,7 @@ public:
 	virtual int OnClick(int index);
 	virtual int OnTitleBarButtonClick(int index);
 	virtual int DoModal();
+	virtual int OnMsgBoxClick(int index);
 
 	void EnsureVisible(int index);
 	void EnsureVisible(){EnsureVisible(m_nListIndex);}
@@ -46,6 +48,7 @@ protected:
 	std::vector<float> m_v;
 	std::vector<unsigned short> m_idx;
 
+	SimpleMessageBox *m_msgBox;
 private:
 	int m_y0;
 };

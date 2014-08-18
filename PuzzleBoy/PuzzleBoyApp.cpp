@@ -20,7 +20,6 @@ PuzzleBoyApp *theApp=NULL;
 
 //ad-hoc!!
 extern SDL_Event event;
-extern GLuint adhoc_screenkb_tex;
 
 //test
 #ifdef ANDROID
@@ -223,7 +222,7 @@ void PuzzleBoyApp::LoadConfig(const u8string& fileName){
 
 	m_bAutoSave=GetConfig(cfg,"AutoSave",1)!=0;
 	m_sLastFile=GetConfig(cfg,"LastFile","");
-	m_nLastLevel=GetConfig(cfg,"LastLevel",0);
+	m_nCurrentLevel=GetConfig(cfg,"LastLevel",0);
 	m_sLastRecord=GetConfig(cfg,"LastRecord","");
 
 	m_bContinuousKey=GetConfig(cfg,"ContinuousKey",1)!=0;
@@ -267,9 +266,11 @@ void PuzzleBoyApp::SaveConfig(const u8string& fileName){
 	PutConfig(cfg,"Orientation",m_nOrientation);
 
 	PutConfig(cfg,"AutoSave",m_bAutoSave?1:0);
-	cfg["LastFile"]=m_sLastFile;
-	PutConfig(cfg,"LastLevel",m_nLastLevel);
-	cfg["LastRecord"]=m_sLastRecord;
+	if(m_bAutoSave){
+		cfg["LastFile"]=m_sLastFile;
+		PutConfig(cfg,"LastLevel",m_nCurrentLevel);
+		cfg["LastRecord"]=m_sLastRecord;
+	}
 
 	PutConfig(cfg,"ContinuousKey",m_bContinuousKey?1:0);
 	PutConfig(cfg,"ShowFPS",m_bShowFPS?1:0);
@@ -335,22 +336,7 @@ void PuzzleBoyApp::Draw(){
 
 		SetProjectionMatrix(1);
 
-		glDisable(GL_LIGHTING);
-		glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, adhoc_screenkb_tex);
-
-		glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glVertexPointer(2,GL_FLOAT,4*sizeof(float),&(v[0]));
-		glTexCoordPointer(2,GL_FLOAT,4*sizeof(float),&(v[2]));
-
-		glDrawElements(GL_TRIANGLES,i.size(),GL_UNSIGNED_SHORT,&(i[0]));
-
-		glDisableClientState(GL_VERTEX_ARRAY);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glDisable(GL_TEXTURE_2D);
+		DrawScreenKeyboard(v,i,0x80FFFFFF);
 	}
 }
 
@@ -361,7 +347,7 @@ void PuzzleBoyApp::DestroyGame(){
 	m_view.clear();
 }
 
-bool PuzzleBoyApp::StartGame(int nPlayerCount){
+bool PuzzleBoyApp::StartGame(int nPlayerCount,bool bEditMode,bool bTestMode){
 	DestroyGame();
 
 	m_nMyResizeTime=-1;
@@ -447,9 +433,11 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount){
 
 		touchMgr.AddView(0,0,0,0,MultiTouchViewFlags::AcceptDragging | MultiTouchViewFlags::AcceptZoom,view);
 	}else{
-		//single player
+		//single player (or edit mode)
 		PuzzleBoyLevelView *view=new PuzzleBoyLevelView();
 
+		view->m_bEditMode=bEditMode;
+		view->m_bTestMode=bTestMode;
 		view->m_sPlayerName=m_sPlayerName[0];
 		view->m_nKey=m_nKey;
 		view->m_scrollView.m_flags|=SimpleScrollViewFlags::AutoResize;
@@ -473,8 +461,8 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount){
 	return true;
 }
 
-void PuzzleBoyApp::ApplyRecord(const u8string& record,bool animationDemo){
-	StartGame(1);
+void PuzzleBoyApp::ApplyRecord(const u8string& record,bool animationDemo,bool testMode){
+	StartGame(1,false,testMode);
 
 	m_view[0]->m_bPlayFromRecord=true;
 	if(animationDemo){

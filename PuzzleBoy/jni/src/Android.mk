@@ -37,6 +37,7 @@ LOCAL_SRC_FILES := \
 ../../SimpleBitmapFont.cpp \
 ../../SimpleFont.cpp \
 ../../SimpleListScreen.cpp \
+../../SimpleMessageBox.cpp \
 ../../SimpleMiscScreen.cpp \
 ../../SimpleProgressScreen.cpp \
 ../../SimpleScrollView.cpp \

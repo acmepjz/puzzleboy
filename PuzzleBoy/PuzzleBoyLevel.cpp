@@ -434,7 +434,7 @@ void PuzzleBoyLevel::UpdateGraphics(int type){
 	}
 }
 
-void PuzzleBoyLevel::Draw(){
+void PuzzleBoyLevel::Draw(bool bEditMode,int nEditingBlockIndex){
 	if(m_Graphics==NULL) return;
 
 	glMatrixMode(GL_MODELVIEW);
@@ -476,7 +476,7 @@ void PuzzleBoyLevel::Draw(){
 	//pushable blocks
 	glColor4f(PUSH_BLOCK_COLOR);
 	for(unsigned int i=0;i<m_objBlocks.size();i++){
-		if(m_objBlocks[i]->m_nType==NORMAL_BLOCK && m_objBlocks[i]->m_faces){
+		if(m_objBlocks[i]->m_nType==NORMAL_BLOCK && m_objBlocks[i]->m_faces && (!bEditMode || i!=nEditingBlockIndex)){
 			bool b=(i==m_nBlockAnimationIndex);
 			if(b) glTranslatef(
 				m_nMoveAnimationX*float(m_nMoveAnimationTime-8)*0.125f,
@@ -490,7 +490,7 @@ void PuzzleBoyLevel::Draw(){
 	//target blocks
 	glColor4f(TARGET_BLOCK_COLOR);
 	for(unsigned int i=0;i<m_objBlocks.size();i++){
-		if(m_objBlocks[i]->m_nType==TARGET_BLOCK && m_objBlocks[i]->m_faces){
+		if(m_objBlocks[i]->m_nType==TARGET_BLOCK && m_objBlocks[i]->m_faces && (!bEditMode || i!=nEditingBlockIndex)){
 			bool b=(i==m_nBlockAnimationIndex);
 			if(b) glTranslatef(
 				m_nMoveAnimationX*float(m_nMoveAnimationTime-8)*0.125f,
@@ -504,7 +504,7 @@ void PuzzleBoyLevel::Draw(){
 	//rotate blocks
 	glColor4f(ROTATE_BLOCK_COLOR);
 	for(unsigned int i=0;i<m_objBlocks.size();i++){
-		if(m_objBlocks[i]->m_nType==ROTATE_BLOCK && m_objBlocks[i]->m_faces){
+		if(m_objBlocks[i]->m_nType==ROTATE_BLOCK && m_objBlocks[i]->m_faces && (!bEditMode || i!=nEditingBlockIndex)){
 			bool b=(i==m_nBlockAnimationIndex);
 			if(b){
 				float x=float(m_objBlocks[i]->m_x)+0.5f,y=float(m_objBlocks[i]->m_y)+0.5f;
@@ -526,7 +526,7 @@ void PuzzleBoyLevel::Draw(){
 	//shade of pushable blocks
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, PUSH_BLOCK_COLOR_mat);
 	for(unsigned int i=0;i<m_objBlocks.size();i++){
-		if(m_objBlocks[i]->m_nType==NORMAL_BLOCK && m_objBlocks[i]->m_shade){
+		if(m_objBlocks[i]->m_nType==NORMAL_BLOCK && m_objBlocks[i]->m_shade && (!bEditMode || i!=nEditingBlockIndex)){
 			bool b=(i==m_nBlockAnimationIndex);
 			if(b) glTranslatef(
 				m_nMoveAnimationX*float(m_nMoveAnimationTime-8)*0.125f,
@@ -540,7 +540,7 @@ void PuzzleBoyLevel::Draw(){
 	//shade of target blocks
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, TARGET_BLOCK_COLOR_mat);
 	for(unsigned int i=0;i<m_objBlocks.size();i++){
-		if(m_objBlocks[i]->m_nType==TARGET_BLOCK && m_objBlocks[i]->m_shade){
+		if(m_objBlocks[i]->m_nType==TARGET_BLOCK && m_objBlocks[i]->m_shade && (!bEditMode || i!=nEditingBlockIndex)){
 			bool b=(i==m_nBlockAnimationIndex);
 			if(b) glTranslatef(
 				m_nMoveAnimationX*float(m_nMoveAnimationTime-8)*0.125f,
@@ -554,7 +554,7 @@ void PuzzleBoyLevel::Draw(){
 	//shade of rotate blocks
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, ROTATE_BLOCK_COLOR_mat);
 	for(unsigned int i=0;i<m_objBlocks.size();i++){
-		if(m_objBlocks[i]->m_nType==ROTATE_BLOCK && m_objBlocks[i]->m_shade){
+		if(m_objBlocks[i]->m_nType==ROTATE_BLOCK && m_objBlocks[i]->m_shade && (!bEditMode || i!=nEditingBlockIndex)){
 			bool b=(i==m_nBlockAnimationIndex);
 			if(b){
 				float x=float(m_objBlocks[i]->m_x)+0.5f,y=float(m_objBlocks[i]->m_y)+0.5f;
@@ -570,7 +570,7 @@ void PuzzleBoyLevel::Draw(){
 	//center of rotate blocks & exit
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, ROTATE_BLOCK_CENTER_mat);
 	for(unsigned int i=0;i<m_objBlocks.size();i++){
-		if(m_objBlocks[i]->m_nType==ROTATE_BLOCK){
+		if(m_objBlocks[i]->m_nType==ROTATE_BLOCK && (!bEditMode || i!=nEditingBlockIndex)){
 			glTranslatef(float(m_objBlocks[i]->m_x),float(m_objBlocks[i]->m_y),0.0f);
 			m_Graphics->rotate_block_center.Draw();
 			glLoadIdentity();
@@ -608,7 +608,7 @@ void PuzzleBoyLevel::Draw(){
 	for(int j=0;j<m_nHeight;j++){
 		for(int i=0;i<m_nWidth;i++){
 			int idx=j*m_nWidth+i;
-			if(m_bMapData[idx]==PLAYER_TILE && !(i==m_nPlayerX && j==m_nPlayerY)){
+			if(m_bMapData[idx]==PLAYER_TILE && (i!=m_nPlayerX || j!=m_nPlayerY || bEditMode)){
 				glTranslatef(float(i),float(j),0.0f);
 				m_Graphics->player.Draw();
 				glLoadIdentity();
@@ -617,7 +617,7 @@ void PuzzleBoyLevel::Draw(){
 	}
 
 	//active player and animation
-	if(m_nPlayerX>=0 && m_nPlayerX<m_nWidth && m_nPlayerY>=0 && m_nPlayerY<m_nHeight){
+	if(m_nPlayerX>=0 && m_nPlayerX<m_nWidth && m_nPlayerY>=0 && m_nPlayerY<m_nHeight && !bEditMode){
 		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, PLAYER_ACTIVATED_mat);
 
 		float x0=float(m_nPlayerX),y0=float(m_nPlayerY);
@@ -646,7 +646,7 @@ void PuzzleBoyLevel::Draw(){
 
 		//line of all blocks
 		for(unsigned int i=0;i<m_objBlocks.size();i++){
-			if(m_objBlocks[i]->m_lines){
+			if(m_objBlocks[i]->m_lines && (!bEditMode || i!=nEditingBlockIndex)){
 				bool b=(i==m_nBlockAnimationIndex);
 				if(b){
 					switch(m_objBlocks[i]->m_nType){
@@ -677,7 +677,7 @@ void PuzzleBoyLevel::Draw(){
 			for(int i=0;i<m_nWidth;i++){
 				int idx=j*m_nWidth+i;
 				unsigned char d=m_bMapData[idx];
-				bool b=(i==m_nPlayerX && j==m_nPlayerY);
+				bool b=(i==m_nPlayerX && j==m_nPlayerY && !bEditMode);
 				if(b || d==PLAYER_TILE){
 					float x0=float(i),y0=float(j);
 
@@ -710,6 +710,60 @@ void PuzzleBoyLevel::Draw(){
 	//empty overlay
 	glColor4f(EMPTY_COLOR_OVERLAY);
 	m_Graphics->empty_overlay.Draw();
+
+	//edit mode
+	if(bEditMode && nEditingBlockIndex>=0 && nEditingBlockIndex<(int)m_objBlocks.size()){
+		//background
+		float vv[8]={
+			-1,-1,
+			-1,float(m_nHeight+1),
+			float(m_nWidth+1),-1,
+			float(m_nWidth+1),float(m_nHeight+1),
+		};
+
+		unsigned short ii[6]={0,1,3,0,3,2};
+
+		glColor4f(0.0f, 0.0f, 0.0f, 0.5f);
+
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(2,GL_FLOAT,0,vv);
+		glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,ii);
+		glDisableClientState(GL_VERTEX_ARRAY);
+
+		int type=m_objBlocks[nEditingBlockIndex]->m_nType;
+
+		if(m_objBlocks[nEditingBlockIndex]->m_faces){
+			switch(type){
+			case NORMAL_BLOCK: glColor4f(PUSH_BLOCK_COLOR); break;
+			case ROTATE_BLOCK: glColor4f(ROTATE_BLOCK_COLOR); break;
+			case TARGET_BLOCK: glColor4f(TARGET_BLOCK_COLOR); break;
+			}
+			m_objBlocks[nEditingBlockIndex]->m_faces->Draw();
+		}
+
+		glEnable(GL_LIGHTING);
+
+		if(m_objBlocks[nEditingBlockIndex]->m_shade){
+			glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,
+				type==TARGET_BLOCK?TARGET_BLOCK_COLOR_mat:
+				(type==ROTATE_BLOCK?ROTATE_BLOCK_COLOR_mat:PUSH_BLOCK_COLOR_mat));
+			m_objBlocks[nEditingBlockIndex]->m_shade->Draw();
+		}
+
+		if(type==ROTATE_BLOCK){
+			glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, ROTATE_BLOCK_CENTER_mat);
+			glTranslatef(float(m_objBlocks[nEditingBlockIndex]->m_x),float(m_objBlocks[nEditingBlockIndex]->m_y),0.0f);
+			m_Graphics->rotate_block_center.Draw();
+			glLoadIdentity();
+		}
+
+		glDisable(GL_LIGHTING);
+
+		if(theApp->m_bShowLines && m_objBlocks[nEditingBlockIndex]->m_lines){
+			glColor4f(LINE_COLOR);
+			m_objBlocks[nEditingBlockIndex]->m_lines->Draw();
+		}
+	}
 }
 
 bool PuzzleBoyLevel::Undo(){

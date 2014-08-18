@@ -4,11 +4,16 @@
 #include "main.h"
 #include "FileSystem.h"
 #include "PuzzleBoyLevelFile.h"
+#include "PuzzleBoyLevelView.h"
 #include "SimpleMiscScreen.h"
+#include "SimpleMessageBox.h"
 #include "MyFormat.h"
 
 #include <stdio.h>
 #include <string.h>
+
+//ad-hoc
+extern SDL_Event event;
 
 void ChooseLevelFileScreen::OnDirty(){
 	int count=m_files.size();
@@ -33,7 +38,21 @@ int ChooseLevelFileScreen::OnClick(int index){
 	return 1;
 }
 
+int ChooseLevelFileScreen::OnMsgBoxClick(int index){
+	delete m_msgBox;
+	m_msgBox=NULL;
+	return index?0:-1;
+}
+
 int ChooseLevelFileScreen::DoModal(){
+	//show a warning dialog
+	if(!theApp->m_view.empty() && theApp->m_view[0]	&& theApp->m_view[0]->m_bEditMode
+		&& theApp->m_pDocument && theApp->m_pDocument->m_bModified)
+	{
+		delete m_msgBox;
+		m_msgBox=CreateLevelChangedMsgBox();
+	}
+
 	//enum internal files
 	{
 		u8string fn="data/levels/";
