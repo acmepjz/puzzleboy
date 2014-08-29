@@ -1222,6 +1222,7 @@ static void OnKeyUp(int nChar,int nFlags){
 
 static void OnAutoSave(){
 	if(theApp && theApp->m_bAutoSave && theApp->m_view[0] && !theApp->m_sLastFile.empty()){
+		theApp->m_nCurrentLevel=theApp->m_view[0]->m_nCurrentLevel;
 		theApp->m_sLastRecord=theApp->m_view[0]->m_objPlayingLevel->GetRecord();
 		theApp->SaveConfig(externalStoragePath+"/PuzzleBoy.cfg");
 	}
@@ -1319,12 +1320,12 @@ int main(int argc,char** argv){
 	//load level file and progress
 	do{
 		if(theApp->m_bAutoSave){
+			int tmp=theApp->m_nCurrentLevel;
 			if(theApp->LoadFile(theApp->m_sLastFile)){
-				if(theApp->m_nCurrentLevel>=0 && theApp->m_nCurrentLevel<(int)theApp->m_pDocument->m_objLevels.size()){
-					//do nothing
+				if(tmp>=0 && tmp<(int)theApp->m_pDocument->m_objLevels.size()){
+					theApp->m_nCurrentLevel=tmp;
 				}else{
 					printf("[main] Error: Level number specified by autosave out of range\n");
-					theApp->m_nCurrentLevel=0;
 					theApp->m_sLastRecord.clear();
 				}
 				break;
