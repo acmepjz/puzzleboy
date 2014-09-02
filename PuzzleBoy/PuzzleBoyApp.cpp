@@ -105,7 +105,9 @@ bool PuzzleBoyApp::SaveFile(const u8string& fileName){
 		m_sLastFile=fileName;
 	}
 
-	if(!ret){
+	if(ret){
+		m_pDocument->m_bModified=false;
+	}else{
 		printf("[PuzzleBoyApp] Error: Failed to save file %s\n",fileName.c_str());
 	}
 
