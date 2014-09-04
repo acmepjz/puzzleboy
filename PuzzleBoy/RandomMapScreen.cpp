@@ -7,6 +7,8 @@
 #include "MyFormat.h"
 #include "main.h"
 
+#include <stdio.h>
+
 #include "include_sdl.h"
 
 void RandomMapScreen::OnDirty(){
@@ -118,6 +120,8 @@ static int TestRandomLevelThreadFunc(void* userData){
 PuzzleBoyLevelFile* RandomMapScreen::DoRandomLevels(int type,int levelCount){
 	if(levelCount<=0) return NULL;
 
+	Uint32 t=SDL_GetTicks();
+
 	//determine thread count
 	int threadCount=theApp->m_nThreadCount;
 	if(threadCount<=0) threadCount=SDL_GetCPUCount();
@@ -155,7 +159,7 @@ PuzzleBoyLevelFile* RandomMapScreen::DoRandomLevels(int type,int levelCount){
 		MT19937 *rnd=new MT19937;
 		unsigned int seed[16];
 		for(int j=0;j<16;j++){
-			seed[i]=theApp->m_objMainRnd.Rnd();
+			seed[j]=theApp->m_objMainRnd.Rnd();
 		}
 		rnd->Init(seed,sizeof(seed)/sizeof(unsigned int));
 
@@ -199,6 +203,9 @@ PuzzleBoyLevelFile* RandomMapScreen::DoRandomLevels(int type,int levelCount){
 	for(int i=0;i<threadCount;i++){
 		delete prog[i].rnd;
 	}
+
+	//print statistics
+	printf("[DoRandomLevels] Create %d random level(s) in %dms\n",doc->m_objLevels.size(),SDL_GetTicks()-t);
 
 	if(doc->m_objLevels.empty()){
 		delete doc;

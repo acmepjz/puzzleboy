@@ -1296,6 +1296,10 @@ int main(int argc,char** argv){
 
 	//init random number
 	{
+#if 0
+		//random number debug
+		unsigned int seed[4]={0xD0CF11E,0xDEADBEEF,0xBADC0DE,0xCAFEBABE};
+#else
 		unsigned int seed[4];
 		unsigned long long t=time(NULL);
 		seed[0]=(unsigned int)t;
@@ -1304,6 +1308,7 @@ int main(int argc,char** argv){
 		t=SDL_GetPerformanceCounter();
 		seed[2]=(unsigned int)t;
 		seed[3]=(unsigned int)(t>>32);
+#endif
 
 		theApp->m_objMainRnd.Init(seed,sizeof(seed)/sizeof(unsigned int));
 	}
