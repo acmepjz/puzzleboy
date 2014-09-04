@@ -158,7 +158,9 @@ int LevelRecordScreen(const u8string& title,const u8string& prompt,u8string& rec
 						//cancel
 						b=false;
 					}else if(readOnly){
-						if(event.button.x<screenWidth){
+						if(event.button.x<screenWidth-buttonSize){
+							//nothing
+						}else if(event.button.x<screenWidth){
 							//copy
 							bCopy=true;
 						}
