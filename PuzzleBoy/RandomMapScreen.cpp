@@ -120,7 +120,9 @@ static int TestRandomLevelThreadFunc(void* userData){
 PuzzleBoyLevelFile* RandomMapScreen::DoRandomLevels(int type,int levelCount){
 	if(levelCount<=0) return NULL;
 
+#ifdef RANDOM_MAP_PROFILING
 	Uint32 t=SDL_GetTicks();
+#endif
 
 	//determine thread count
 	int threadCount=theApp->m_nThreadCount;
@@ -204,8 +206,10 @@ PuzzleBoyLevelFile* RandomMapScreen::DoRandomLevels(int type,int levelCount){
 		delete prog[i].rnd;
 	}
 
+#ifdef RANDOM_MAP_PROFILING
 	//print statistics
 	printf("[DoRandomLevels] Create %d random level(s) in %dms\n",doc->m_objLevels.size(),SDL_GetTicks()-t);
+#endif
 
 	if(doc->m_objLevels.empty()){
 		delete doc;

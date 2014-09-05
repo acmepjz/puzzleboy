@@ -6,24 +6,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm>
+
+#ifdef RANDOM_MAP_PROFILING
+#include <SDL.h>
+#endif
+
+static const int MAX_WIDTH=16;
+static const int MAX_HEIGHT=16;
+
+inline int CalcScore(int st,int blockUsed){
+	return st+blockUsed*16;
+}
 
 int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rnd,void *userData,RandomLevelCallback callback){
-	struct{
-		inline int operator()(int st,int blockUsed){
-			return st+blockUsed*16;
-		}
-	}CalcScore;
-
 	struct RandomTestData{
 		PuzzleBoyLevelData *level;
 		int bestStep;
 		int bestScore;
 
-		static int Compare(const void* lp1,const void* lp2){
-			const RandomTestData *obj1=(const RandomTestData*)lp1;
-			const RandomTestData *obj2=(const RandomTestData*)lp2;
-
-			return (obj1->bestScore>obj2->bestScore)?-1:(obj1->bestScore<obj2->bestScore?1:0);
+		static bool Compare(const RandomTestData& obj1,const RandomTestData& obj2){
+			return (obj1.bestScore>obj2.bestScore);
 		}
 	};
 
@@ -37,6 +40,11 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rn
 	RandomTestData levels[PoolSize*2]={};
 
 	outputLevel=NULL;
+
+#ifdef RANDOM_MAP_PROFILING
+	//profiling
+	int tt0=0,tt1=0,tt2=0;
+#endif
 
 	//init pool
 	for(int i=0;i<PoolSize;i++){
@@ -61,16 +69,16 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rn
 
 	//random rotate blocks (buggy!!!1!!)
 //#define USE_TMP2
-	unsigned char tmp[8][8];
+	unsigned char tmp[MAX_HEIGHT][MAX_WIDTH];
 #ifdef USE_TMP2
-	unsigned char tmp2[8][8];
+	unsigned char tmp2[MAX_HEIGHT][MAX_WIDTH];
 #endif
 
 	bool bAbort=false;
 
 	for(int r=0;r<IterationCount;r++){
 		for(int levelIndex=0;levelIndex<PoolSize;levelIndex++){
-			//TODO: abort
+			//check abort
 			if(callback && callback(userData,(r*PoolSize+levelIndex)/float(IterationCount*PoolSize))){
 				bAbort=true;
 				break;
@@ -102,13 +110,19 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rn
 				for(int jj=-1;jj<=1;jj++){
 					for(int ii=-1;ii<=1;ii++){
 						int xx=x+ii,yy=y+jj;
-						if(xx>=0 && xx<8 && yy>=0 && yy<8){
+						if(xx>=0 && xx<MAX_WIDTH && yy>=0 && yy<MAX_HEIGHT){
 							tmp2[yy][xx]=tmp2[yy][xx]/2+0x80;
 						}
 					}
 				}
 #endif
 			}
+
+			TestSolverExtendedData ed;
+
+#ifdef RANDOM_MAP_PROFILING
+			int ttt=SDL_GetTicks();
+#endif
 
 			//some random tries
 			for(int i=0;i<10;i++){
@@ -119,10 +133,13 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rn
 				if((x==0 || x==width-1) && (y==0 || y==height-1)) continue;
 				if(level(x,y) || tmp[y][x]) continue;
 
-				if(y>0) d[0]=(unsigned char)(2.0f*(float)rnd->Rnd()/4294967296.0f);
-				if(x>0) d[1]=(unsigned char)(2.0f*(float)rnd->Rnd()/4294967296.0f);
-				if(y<height-1) d[2]=(unsigned char)(2.0f*(float)rnd->Rnd()/4294967296.0f);
-				if(x<width-1) d[3]=(unsigned char)(2.0f*(float)rnd->Rnd()/4294967296.0f);
+//#define THRESHOLD 1717986918U
+#define THRESHOLD 0x80000000U
+
+				if(y>0) d[0]=(rnd->Rnd()>=THRESHOLD)?1:0;
+				if(x>0) d[1]=(rnd->Rnd()>=THRESHOLD)?1:0;
+				if(y<height-1) d[2]=(rnd->Rnd()>=THRESHOLD)?1:0;
+				if(x<width-1) d[3]=(rnd->Rnd()>=THRESHOLD)?1:0;
 
 				if(d[0] && (level(x,y-1) || tmp[y-1][x])) d[0]=0;
 				if(d[1] && (level(x-1,y) || tmp[y][x-1])) d[1]=0;
@@ -147,7 +164,6 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rn
 					PuzzleBoyLevel lev(level);
 					lev.StartGame();
 					u8string s;
-					TestSolverExtendedData ed;
 					int ret=TestSolver_SolveIt(lev,s,NULL,NULL,&ed);
 
 					if(ret==1){
@@ -180,7 +196,7 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rn
 				for(int jj=-1;jj<=1;jj++){
 					for(int ii=-1;ii<=1;ii++){
 						int xx=x+ii,yy=y+jj;
-						if(xx>=0 && xx<8 && yy>=0 && yy<8){
+						if(xx>=0 && xx<MAX_WIDTH && yy>=0 && yy<MAX_HEIGHT){
 							tmp2[yy][xx]=tmp2[yy][xx]/2+0x80;
 						}
 					}
@@ -188,11 +204,17 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rn
 #endif
 			}
 
+#ifdef RANDOM_MAP_PROFILING
+			tt0+=SDL_GetTicks()-ttt;
+#endif
+
 			//remove superfluous blocks - step 1
 			while(level.m_objBlocks.size()>bestCount){
 				delete level.m_objBlocks.back();
 				level.m_objBlocks.pop_back();
 			}
+
+			bool addWalls=false;
 
 			//check if nothing added
 			if(bestCount==oldCount){
@@ -227,15 +249,52 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rn
 				}*/
 			}else{
 				//remove superfluous blocks - step 2
+
+#ifdef RANDOM_MAP_PROFILING
+				int ttt=SDL_GetTicks();
+#endif
+
+				//0=unknown 1=removed 2=can't remove
+				const int m=level.m_objBlocks.size();
+				std::vector<unsigned char> removable(m,0);
+				std::vector<PushableBlock*> tmp=level.m_objBlocks;
+
+				//experiment ???????? (2)
+#ifdef USE_SOLUTION_REACHABLE
+				for(int i=0;i<m;i++){
+					int x=tmp[i]->m_x,y=tmp[i]->m_y;
+					int count=0;
+
+					if(tmp[i]->m_bData[0] && y>0 && ed.solutionReachable[(y-1)*16+x]) count++;
+					if(tmp[i]->m_bData[1] && x>0 && ed.solutionReachable[y*16+(x-1)]) count++;
+					if(tmp[i]->m_bData[2] && y<height-1 && ed.solutionReachable[(y+1)*16+x]) count++;
+					if(tmp[i]->m_bData[3] && x<width-1 && ed.solutionReachable[y*16+(x+1)]) count++;
+
+					if(count>=2) removable[i]=2; //???
+				}
+#endif
+
 				for(;;){
-					std::vector<PushableBlock*> tmp=level.m_objBlocks;
-					int m=tmp.size();
+					//random shuffle
+					for(int i=0;i<m-1;i++){
+						int j=i+int(float(m-i)*(float)rnd->Rnd()/4294967296.0f);
+						if(j>i){
+							std::swap(removable[i],removable[j]);
+							std::swap(tmp[i],tmp[j]);
+						}
+					}
+
 					int bestIndex=-1;
+					int threshold=bestStep; //bestStep-2; //FIXME: arbitrary
 
 					for(int i=0;i<m;i++){
+						//try to remove position i
+						if(removable[i]!=0) continue; //can't remove it or already removed
+
 						level.m_objBlocks.clear();
-						for(int j=0;j<i;j++) level.m_objBlocks.push_back(tmp[j]);
-						for(int j=i+1;j<m;j++) level.m_objBlocks.push_back(tmp[j]);
+						for(int j=0;j<m;j++){
+							if(removable[j]!=1 && j!=i) level.m_objBlocks.push_back(tmp[j]);
+						}
 
 						//now try to solve it
 						PuzzleBoyLevel lev(level);
@@ -247,23 +306,62 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rn
 						if(ret==1 && n>=bestStep){
 							bestStep=n;
 							bestIndex=i;
+							break; //experiment ???????? (1)
+						}
+						if(ret<1 || n<threshold){
+							//experiment ???????? (3): try to replace it by wall
+							/*PushableBlock *block=tmp[i];
+							int x=block->m_x,y=block->m_y;
+
+							lev(x,y)=WALL_TILE;
+							if(block->m_bData[0]) lev(x,y-1)=WALL_TILE;
+							if(block->m_bData[1]) lev(x-1,y)=WALL_TILE;
+							if(block->m_bData[2]) lev(x,y+1)=WALL_TILE;
+							if(block->m_bData[3]) lev(x+1,y)=WALL_TILE;
+
+							lev.StartGame();
+							int ret=TestSolver_SolveIt(lev,s,NULL,NULL,NULL);
+							int n=s.size();
+
+							if(ret==1 && n>=bestStep){
+								level(x,y)=WALL_TILE;
+								if(block->m_bData[0]) level(x,y-1)=WALL_TILE;
+								if(block->m_bData[1]) level(x-1,y)=WALL_TILE;
+								if(block->m_bData[2]) level(x,y+1)=WALL_TILE;
+								if(block->m_bData[3]) level(x+1,y)=WALL_TILE;
+								addWalls=true;
+								bestStep=n;
+								bestIndex=i;
+								break;
+							}*/
+
+							//can't remove it because the step get fewer
+							removable[i]=2;
 						}
 					}
 
-					if(bestIndex==-1){
-						level.m_objBlocks=tmp;
-						break;
-					}
+					if(bestIndex==-1) break;
 
-					level.m_objBlocks.clear();
-					for(int j=0;j<bestIndex;j++) level.m_objBlocks.push_back(tmp[j]);
-					for(int j=bestIndex+1;j<m;j++) level.m_objBlocks.push_back(tmp[j]);
-					delete tmp[bestIndex];
+					//remove it
+					removable[bestIndex]=1;
 				}
+
+				//apply changes
+				level.m_objBlocks.clear();
+				for(int j=0;j<m;j++){
+					if(removable[j]==1){
+						delete tmp[j];
+					}else{
+						level.m_objBlocks.push_back(tmp[j]);
+					}
+				}
+
+#ifdef RANDOM_MAP_PROFILING
+				tt1+=SDL_GetTicks()-ttt;
+#endif
 			}
 
 			//check deadlock blocks
-			TestSolverExtendedData ed;
 			{
 				PuzzleBoyLevel lev(level);
 				lev.StartGame();
@@ -273,7 +371,7 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rn
 				bestScore=CalcScore(bestStep,ed.blockUsed);
 			}
 
-			if(ed.deadlockBlockCount>0){
+			if(ed.deadlockBlockCount>0 || addWalls){
 				//remove deadlock blocks
 				for(int i=level.m_objBlocks.size()-1;i>=0;i--){
 					if((ed.blockStateReachable[i] & (ed.blockStateReachable[i]-1))==0
@@ -293,34 +391,59 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rn
 					}
 				}
 
+#ifdef RANDOM_MAP_PROFILING
+				int ttt=SDL_GetTicks();
+#endif
+
 				//now try to remove some walls
-				//TODO: use random order
-				for(;;){
-					bool changed=false;
-					for(int j=0;j<height;j++){
-						for(int i=0;i<width;i++){
-							if(level(i,j)==WALL_TILE){
-								level(i,j)=0;
+				std::vector<unsigned char> walls;
+				for(int j=0;j<height;j++){
+					for(int i=0;i<width;i++){
+						if(level(i,j)==WALL_TILE){
+							walls.push_back((j<<4)|i);
+						}
+					}
+				}
 
-								//now try to solve it
-								PuzzleBoyLevel lev(level);
-								lev.StartGame();
-								u8string s;
-								int ret=TestSolver_SolveIt(lev,s,NULL,NULL,NULL);
-								int n=s.size();
+				bool changed;
+				do{
+					changed=false;
+					const int m=walls.size();
+					if(m>0){
+						//random shuffle
+						for(int i=0;i<m-1;i++){
+							int j=i+int(float(m-i)*(float)rnd->Rnd()/4294967296.0f);
+							if(j>i) std::swap(walls[i],walls[j]);
+						}
 
-								if(ret==1 && n>=bestStep){
-									bestStep=n;
-									changed=true;
-								}else{
-									level(i,j)=WALL_TILE;
-								}
+						int threshold=bestStep-4; //FIXME: arbitrary
+
+						for(int i=m-1;i>=0;i--){
+							int idx=(walls[i]>>4)*level.m_nWidth+(walls[i]&0xF);
+							level[idx]=0;
+
+							//now try to solve it
+							PuzzleBoyLevel lev(level);
+							lev.StartGame();
+							u8string s;
+							int ret=TestSolver_SolveIt(lev,s,NULL,NULL,NULL);
+							int n=s.size();
+
+							if(ret==1 && n>=bestStep){
+								bestStep=n;
+								changed=true;
+								walls.erase(walls.begin()+i);
+							}else{
+								level[idx]=WALL_TILE;
+								if(n<threshold) walls.erase(walls.begin()+i); //can't remove this wall
 							}
 						}
 					}
+				}while(changed);
 
-					if(!changed) break;
-				}
+#ifdef RANDOM_MAP_PROFILING
+				tt2+=SDL_GetTicks()-ttt;
+#endif
 			}
 
 			//over, save newly generated level
@@ -333,8 +456,13 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rn
 		if(bAbort) break;
 
 		//sort levels
-		qsort(levels,PoolSize*2,sizeof(RandomTestData),RandomTestData::Compare);
+		std::stable_sort(levels,levels+(PoolSize*2),RandomTestData::Compare);
 	}
+
+#ifdef RANDOM_MAP_PROFILING
+	//debug!!!
+	printf("random add blocks %dms\nremove superfluous blocks %dms\nremove some walls %dms\n",tt0,tt1,tt2);
+#endif
 
 	//get return value
 	if(!bAbort){

@@ -4,6 +4,8 @@
 
 const int TestSolver_MaxBlockCount=64;
 
+//#define USE_SOLUTION_REACHABLE
+
 struct TestSolverExtendedData{
 	LevelSolverState state;
 	int blockUsed;
@@ -13,6 +15,10 @@ struct TestSolverExtendedData{
 	unsigned char reachable[256];
 	//0=unreachable (blocked), 1=reachable, 1 bit per direction
 	unsigned char blockStateReachable[TestSolver_MaxBlockCount];
+
+#ifdef USE_SOLUTION_REACHABLE
+	unsigned char solutionReachable[256];
+#endif
 
 	int deadlockBlockCount;
 };

@@ -504,7 +504,12 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string& rec,void* userData,
 							TestSolverNode node=nodes[idx];
 
 							unsigned char x=node.state&playerXMask,y=(node.state>>playerXSize)&playerYMask;
-							unsigned char pos=(y+1)*16+(x+1);
+							unsigned char pos=y*16+x;
+
+#ifdef USE_SOLUTION_REACHABLE
+							if(ed) ed->solutionReachable[pos]=1;
+#endif
+							pos+=17;
 
 							rec.push_back((newPos>pos)?(newPos>pos+2?'S':'D'):(newPos<pos-2?'W':'A'));
 							newPos=pos;

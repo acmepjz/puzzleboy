@@ -2,6 +2,8 @@
 
 #include <string.h>
 
+#define RANDOM_MAP_PROFILING
+
 class PuzzleBoyLevelData;
 class MT19937;
 
