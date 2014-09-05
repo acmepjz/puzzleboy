@@ -14,7 +14,7 @@
 extern SDL_Event event;
 extern bool m_bKeyDownProcessed;
 
-bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& text){
+bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& text,const char* allowedChars){
 	bool b=true,ret=false;
 
 	int buttonSize=theApp->m_nButtonSize;
@@ -47,6 +47,7 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 #endif
 	txt.m_scrollView.m_nAutoResizeOffset[2]=-64;
 	txt.m_scrollView.m_nAutoResizeOffset[3]=txt.m_scrollView.m_nAutoResizeOffset[1]+40;
+	if(allowedChars) txt.m_allowedChars=allowedChars;
 	txt.SetText(text);
 	txt.SetFocus();
 

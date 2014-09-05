@@ -54,6 +54,7 @@ const int SCREEN_KEYBOARD_PASTE=0x5;
 const int SCREEN_KEYBOARD_ZOOM_IN=0x6;
 const int SCREEN_KEYBOARD_ZOOM_OUT=0x7;
 const int SCREEN_KEYBOARD_DELETE=0x104;
+const int SCREEN_KEYBOARD_BACKSPACE=0x105;
 
 extern int screenWidth;
 extern int screenHeight;

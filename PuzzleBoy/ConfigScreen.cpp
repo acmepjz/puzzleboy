@@ -27,6 +27,7 @@ enum ConfigType{
 #ifndef __IPHONEOS__
 	ConfigShowMainMenuButton,
 #endif
+	ConfigAutoSaveRandomMap,
 	ConfigEmpty_1,
 	ConfigPlayerName, //player2,empty,title
 	ConfigKey=ConfigPlayerName+4,
@@ -115,6 +116,9 @@ void ConfigScreen::OnDirty(){
 	//show main menu button
 	AddItem(_("Show Main Menu Button: ")+yesno[theApp->m_bShowMainMenuButton?1:0]);
 #endif
+
+	//auto save random map
+	AddItem(_("Save Random Map Automatically: ")+yesno[theApp->m_bAutoSaveRandomMap?1:0]);
 
 	//empty line
 	AddEmptyItem();
@@ -412,6 +416,12 @@ int ConfigScreen::OnClick(int index){
 		m_bDirty=true;
 		break;
 #endif
+	case ConfigAutoSaveRandomMap:
+		//auto save random map
+		theApp->m_bAutoSaveRandomMap=!theApp->m_bAutoSaveRandomMap;
+		m_bConfigDirty=true;
+		m_bDirty=true;
+		break;
 	case ConfigPlayerName:
 	case ConfigPlayerName+1:
 		//player name

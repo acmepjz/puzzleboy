@@ -49,6 +49,8 @@ public:
 
 	bool m_bLocked;
 
+	u8string m_allowedChars;
+
 private:
 	static SimpleTextBox* m_objFocus;
 

@@ -39,10 +39,18 @@ SimpleTextBox::~SimpleTextBox(){
 void SimpleTextBox::SetText(const u8string& text){
 	m_chars.clear();
 
+	unsigned char allowedChars[256]={};
+	if(!m_allowedChars.empty()){
+		for(int i=0;i<(int)m_allowedChars.size();i++){
+			allowedChars[(unsigned char)m_allowedChars[i]]=1;
+		}
+	}
+
 	size_t m=text.size();
 
 	U8STRING_FOR_EACH_CHARACTER_DO_BEGIN(text,i,m,c,'?');
 
+	if(!m_allowedChars.empty() && (c>=256 || allowedChars[c]==0)) continue;
 	if(c!='\r' && (c!='\n' || (m_scrollView.m_flags & SimpleScrollViewFlags::Vertical)!=0)){
 		SimpleTextBoxCharacter ch={c,0,0};
 		m_chars.push_back(ch);
@@ -50,7 +58,7 @@ void SimpleTextBox::SetText(const u8string& text){
 
 	U8STRING_FOR_EACH_CHARACTER_DO_END();
 
-	m_caretPos=0;
+	m_caretPos=m_chars.size();
 	m_caretTimer=0;
 	m_caretDirty=true;
 }
@@ -71,8 +79,16 @@ void SimpleTextBox::SetMultiline(bool multiline,bool wrap){
 
 void SimpleTextBox::SetFocus(){
 	m_objFocus=this;
-	if(m_bLocked) SDL_StopTextInput();
-	else SDL_StartTextInput();
+	if(m_bLocked){
+		SDL_StopTextInput();
+	}else{
+		if(theApp->IsTouchscreen() && !m_allowedChars.empty()){
+			//TODO: screen keyboard
+			SDL_StopTextInput();
+			return;
+		}
+		SDL_StartTextInput();
+	}
 }
 
 void SimpleTextBox::ClearFocus(){
@@ -105,11 +121,19 @@ void SimpleTextBox::PasteFromClipboard(){
 		if(m_caretPos<0) m_caretPos=0;
 		else if(m_caretPos>(int)m_chars.size()) m_caretPos=m_chars.size();
 
+		unsigned char allowedChars[256]={};
+		if(!m_allowedChars.empty()){
+			for(int i=0;i<(int)m_allowedChars.size();i++){
+				allowedChars[(unsigned char)m_allowedChars[i]]=1;
+			}
+		}
+
 		size_t m=strlen(s)+1;
 
 		U8STRING_FOR_EACH_CHARACTER_DO_BEGIN(s,i,m,c,'?');
 
 		if(c==0) break;
+		if(!m_allowedChars.empty() && (c>=256 || allowedChars[c]==0)) continue;
 		if(c!='\r' && (c!='\n' || (m_scrollView.m_flags & SimpleScrollViewFlags::Vertical)!=0)){
 			SimpleTextBoxCharacter ch={c,0,0};
 			m_chars.insert(m_chars.begin()+(m_caretPos++),ch);
@@ -153,7 +177,6 @@ void SimpleTextBox::OnMouseEvent(int which,int state,int xMouse,int yMouse,int n
 			&& yMouse<m_scrollView.m_screen.y+m_scrollView.m_screen.h)
 		{
 			SetFocus();
-			SDL_StartTextInput();
 
 			//move caret
 			float fx,fy;
@@ -362,9 +385,17 @@ bool SimpleTextBox::OnEvent(){
 			if(m_caretPos<0) m_caretPos=0;
 			else if(m_caretPos>(int)m_chars.size()) m_caretPos=m_chars.size();
 
+			unsigned char allowedChars[256]={};
+			if(!m_allowedChars.empty()){
+				for(int i=0;i<(int)m_allowedChars.size();i++){
+					allowedChars[(unsigned char)m_allowedChars[i]]=1;
+				}
+			}
+
 			U8STRING_FOR_EACH_CHARACTER_DO_BEGIN(event.text.text,i,(sizeof(event.text.text)),c,'?');
 
 			if(c==0) break;
+			if(!m_allowedChars.empty() && (c>=256 || allowedChars[c]==0)) continue;
 			SimpleTextBoxCharacter ch={c,0,0};
 			m_chars.insert(m_chars.begin()+(m_caretPos++),ch);
 			m_caretTimer=0;
