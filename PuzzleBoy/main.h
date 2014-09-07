@@ -67,11 +67,11 @@ extern int m_nIdleTime;
 
 inline void UpdateIdleTime(bool bDirty){
 	if(bDirty) m_nIdleTime=0;
-	else if((++m_nIdleTime)>=64) m_nIdleTime=32;
+	else if((++m_nIdleTime)>=44) m_nIdleTime=4;
 }
 
 inline bool NeedToDrawScreen(){
-	return m_nIdleTime<=32;
+	return m_nIdleTime<=4;
 }
 
 class SimpleFontFile;

@@ -178,9 +178,7 @@ void SimpleMessageBox::Draw(){
 		glLoadIdentity();
 		glTranslatef(x+32.0f,y+32.0f,0);
 		glScalef(f,f,1);
-		mainFont->BeginDraw();
-		m_txtPrompt->Draw(SDL_MakeColor(255,255,255,255));
-		mainFont->EndDraw();
+		mainFont->DrawString(*m_txtPrompt,SDL_MakeColor(255,255,255,255));
 	}
 
 	//draw button
@@ -189,9 +187,7 @@ void SimpleMessageBox::Draw(){
 		glTranslatef(float(m_x),float(m_y),0);
 		if(!m_v.empty()) DrawScreenKeyboard(m_v,m_idx);
 		if(m_txtButtons){
-			mainFont->BeginDraw();
-			m_txtButtons->Draw(SDL_MakeColor(255,255,255,255));
-			mainFont->EndDraw();
+			mainFont->DrawString(*m_txtButtons,SDL_MakeColor(255,255,255,255));
 		}
 	}
 	

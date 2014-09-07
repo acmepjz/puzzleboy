@@ -238,12 +238,10 @@ int SimpleListScreen::DoModal(){
 
 			//draw list box
 			if(m_txtList && !m_txtList->empty()){
-				mainFont->BeginDraw();
 				glTranslatef(0.0f,float(theApp->m_nButtonSize-y02),0.0f);
-				m_txtList->Draw(SDL_MakeColor(255,255,255,255),
+				mainFont->DrawString(*m_txtList,SDL_MakeColor(255,255,255,255),
 					y02/theApp->m_nMenuHeight,screenHeight/theApp->m_nMenuHeight+1);
 				glLoadIdentity();
-				mainFont->EndDraw();
 			}
 
 			//draw scrollbar (experimental)
@@ -290,9 +288,7 @@ int SimpleListScreen::DoModal(){
 			if(m_txtTitle && !m_txtTitle->empty()){
 				SimpleBaseFont *fnt=titleFont?titleFont:mainFont;
 
-				fnt->BeginDraw();
-				m_txtTitle->Draw(SDL_MakeColor(255,255,255,255));
-				fnt->EndDraw();
+				fnt->DrawString(*m_txtTitle,SDL_MakeColor(255,255,255,255));
 			}
 
 			//draw overlay

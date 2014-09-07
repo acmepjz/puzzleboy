@@ -9,6 +9,12 @@
 #include "include_sdl.h"
 #include "include_gl.h"
 
+struct SimpleTextBoxCharacter{
+	int c;
+	float x; //in pixels
+	int row;
+};
+
 SimpleTextBox* SimpleTextBox::m_objFocus=NULL;
 char SimpleTextBox::m_IMEText[SDL_TEXTEDITINGEVENT_TEXT_SIZE]={};
 int SimpleTextBox::m_IMETextCaret=0;
@@ -16,12 +22,227 @@ int SimpleTextBox::m_IMETextCaret=0;
 //ad-hoc
 extern SDL_Event event;
 
+class SimpleTextBoxScreenKeyboard:public virtual MultiTouchView{
+public:
+	SimpleTextBoxScreenKeyboard():m_nMyResizeTime(-1),m_visible(false),
+		m_rows(0),m_animationTime(0),m_pressedKey(0),m_pressedTime(0)
+	{
+	}
+
+	void RegisterView(MultiTouchManager& mgr){
+		if(m_animationTime==4){
+			MultiTouchViewStruct *view=mgr.FindView(this);
+			if(view){
+				view->left=0.0f;
+				view->top=1.0f-float(m_rows*theApp->m_nButtonSize)/float(screenHeight);
+				view->right=screenAspectRatio;
+				view->bottom=1.0f;
+			}else{
+				mgr.AddView(0.0f,
+					1.0f-float(m_rows*theApp->m_nButtonSize)/float(screenHeight),
+					screenAspectRatio,
+					1.0f,
+					0,this,0);
+			}
+		}else{
+			mgr.RemoveView(this);
+		}
+	}
+
+	bool OnTimer(){
+		bool bDirty=false;
+
+		//create buttons
+		if(m_nMyResizeTime!=m_nResizeTime){
+			m_nMyResizeTime=m_nResizeTime;
+
+			m_v.clear();
+			m_idx.clear();
+			m_txt.clear();
+			m_keys.clear();
+			m_rows=0;
+
+			int buttonPerRow=screenWidth/theApp->m_nButtonSize;
+			if(buttonPerRow<=0) buttonPerRow=1; //oops
+
+			std::vector<unsigned char> currentRow;
+
+			unsigned char b[128]={};
+
+			for(int i=0,m=m_sAllowedChars.size();i<m;i++){
+				int c=(unsigned char)m_sAllowedChars[i];
+
+				if(c=='\n'){
+					AddRow(currentRow);
+					currentRow.clear();
+				}else if(c=='\b' || (c>=32 && c<=127)){
+					if(b[c]==0){
+						b[c]=1;
+						if((int)currentRow.size()>=buttonPerRow){
+							AddRow(currentRow);
+							currentRow.clear();
+						}
+						currentRow.push_back(c);
+					}
+				}
+			}
+
+			if(!currentRow.empty()) AddRow(currentRow);
+
+			bDirty=true;
+		}
+
+		//show/hide screen keyboard?
+		if(m_visible){
+			if(m_pressedKey && theApp->m_bContinuousKey){
+				//send continuous key event?
+				if((++m_pressedTime)>=12) m_pressedTime=10;
+				if(m_pressedTime==10) PushEvent();
+			}
+			if((++m_animationTime)>4) m_animationTime=4;
+		}else{
+			m_pressedKey=0;
+			m_pressedTime=0;
+			if((--m_animationTime)<0) m_animationTime=0;
+		}
+		bDirty|=(m_animationTime>0 && m_animationTime<4);
+
+		return bDirty;
+	}
+
+	void OnMouseEvent(int which,int state,int xMouse,int yMouse,int nFlags,int nType) override{
+		if(nType==SDL_MOUSEBUTTONUP){
+			m_pressedKey=0;
+			m_pressedTime=0;
+		}else if(nType==SDL_MOUSEBUTTONDOWN && state==SDL_BUTTON_LMASK){
+			int buttonSize=theApp->m_nButtonSize;
+			yMouse-=(screenHeight-m_rows*buttonSize);
+
+			//hit text
+			for(int i=0,m=m_keys.size();i<m;i++){
+				if(xMouse>=m_keys[i].first.x && yMouse>=m_keys[i].first.y
+					&& xMouse<m_keys[i].first.x+buttonSize
+					&& yMouse<m_keys[i].first.y+buttonSize)
+				{
+					m_pressedKey=m_keys[i].second;
+					m_pressedTime=0;
+					PushEvent();
+					break;
+				}
+			}
+		}
+	}
+
+	void Draw(){
+		if(m_animationTime<=0 || m_rows<=0) return;
+
+		SetProjectionMatrix(1);
+
+		//set world matrix
+		float h=float(m_rows*theApp->m_nButtonSize);
+		glLoadIdentity();
+		glTranslatef(0,float(screenHeight)-(h*m_animationTime)*0.25f,0);
+
+		//draw background
+		{
+			float vv[8]={
+				0,0,
+				0,h,
+				float(screenWidth),0,
+				float(screenWidth),h,
+			};
+
+			unsigned short ii[6]={0,1,3,0,3,2};
+
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glColor4f(0.25f, 0.25f, 0.25f, 0.875f);
+			glVertexPointer(2,GL_FLOAT,0,vv);
+			glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,ii);
+			glDisableClientState(GL_VERTEX_ARRAY);
+		}
+
+		//draw button
+		DrawScreenKeyboard(m_v,m_idx);
+
+		//draw button text
+		if(!m_txt.empty()) mainFont->DrawString(m_txt,SDL_MakeColor(255,255,255,255));
+
+		//reset world matrix
+		glLoadIdentity();
+	}
+private:
+	void AddRow(const std::vector<unsigned char>& currentRow){
+		int buttonSize=theApp->m_nButtonSize;
+		int m=currentRow.size();
+
+		std::pair<SDL_Point,int> key;
+		key.first.x=(screenWidth-m*buttonSize)/2;
+		key.first.y=m_rows*buttonSize;
+
+		for(int i=0;i<m;i++){
+			key.second=currentRow[i];
+
+			AddScreenKeyboard(float(key.first.x),float(key.first.y),
+				float(buttonSize),float(buttonSize),
+				(key.second=='\b')?SCREEN_KEYBOARD_BACKSPACE:SCREEN_KEYBOARD_EMPTY,
+				m_v,m_idx);
+
+			if(key.second!='\b' && key.second!=' '){
+				m_txt.AddString(mainFont,u8string(1,(char)key.second),
+					float(key.first.x),float(key.first.y),
+					float(buttonSize),float(buttonSize),
+					1.0f,DrawTextFlags::Center | DrawTextFlags::VCenter);
+			}
+
+			m_keys.push_back(key);
+			key.first.x+=buttonSize;
+		}
+
+		m_rows++;
+	}
+
+	void PushEvent(){
+		SDL_Event evt={};
+
+		if(m_pressedKey=='\b'){
+			evt.type=SDL_KEYDOWN;
+			evt.key.state=SDL_PRESSED;
+			evt.key.keysym.scancode=SDL_SCANCODE_BACKSPACE;
+			evt.key.keysym.sym=SDLK_BACKSPACE;
+		}else if(m_pressedKey>=32 && m_pressedKey<=127){
+			evt.type=SDL_TEXTINPUT;
+			evt.text.text[0]=m_pressedKey;
+		}else{
+			return;
+		}
+
+		SDL_PushEvent(&evt);
+	}
+
+public:
+	u8string m_sAllowedChars; //can contains \n
+	int m_nMyResizeTime;
+	bool m_visible;
+private:
+	std::vector<float> m_v;
+	std::vector<unsigned short> m_idx;
+	std::vector<std::pair<SDL_Point,int> > m_keys; //y-coordinate is incorrect
+	SimpleText m_txt;
+	int m_rows;
+	int m_animationTime; //0-4
+	int m_pressedKey; //key code
+	int m_pressedTime;
+};
+
 SimpleTextBox::SimpleTextBox()
 :m_bLocked(false)
+,m_keyboard(NULL)
 ,m_caretPos(0)
 ,m_caretTimer(0)
 ,m_caretDirty(true)
 {
+	memset(m_bAllowedChars,-1,sizeof(m_bAllowedChars));
+
 	//some temporary values
 	m_scrollView.m_virtual.w=8;
 	m_scrollView.m_virtual.h=8;
@@ -33,24 +254,43 @@ SimpleTextBox::SimpleTextBox()
 }
 
 SimpleTextBox::~SimpleTextBox(){
+	delete m_keyboard;
 	if(HasFocus()) m_objFocus=NULL;
+}
+
+void SimpleTextBox::SetAllowedChars(const char* allowedChars){
+	if(allowedChars==NULL || allowedChars[0]==0){
+		//don't delete m_keyboard because it causes MultiTouchManager crash
+		if(m_keyboard) m_keyboard->m_visible=false;
+
+		memset(m_bAllowedChars,-1,sizeof(m_bAllowedChars));
+		return;
+	}
+
+	//create screen keyboard if in touchscreen mode
+	if(theApp->IsTouchscreen()){
+		if(m_keyboard==NULL) m_keyboard=new SimpleTextBoxScreenKeyboard;
+		m_keyboard->m_sAllowedChars=allowedChars;
+		m_keyboard->m_sAllowedChars+='\b'; //for backspace
+		m_keyboard->m_nMyResizeTime=-1;
+	}
+
+	memset(m_bAllowedChars,0,sizeof(m_bAllowedChars));
+
+	for(int i=0;allowedChars[i];i++){
+		int c=int((unsigned char)allowedChars[i])-32;
+		if(c>=0 && c<sizeof(m_bAllowedChars)) m_bAllowedChars[c]=1;
+	}
 }
 
 void SimpleTextBox::SetText(const u8string& text){
 	m_chars.clear();
 
-	unsigned char allowedChars[256]={};
-	if(!m_allowedChars.empty()){
-		for(int i=0;i<(int)m_allowedChars.size();i++){
-			allowedChars[(unsigned char)m_allowedChars[i]]=1;
-		}
-	}
-
 	size_t m=text.size();
 
 	U8STRING_FOR_EACH_CHARACTER_DO_BEGIN(text,i,m,c,'?');
 
-	if(!m_allowedChars.empty() && (c>=256 || allowedChars[c]==0)) continue;
+	if(!IsCharAllowed(c)) continue;
 	if(c!='\r' && (c!='\n' || (m_scrollView.m_flags & SimpleScrollViewFlags::Vertical)!=0)){
 		SimpleTextBoxCharacter ch={c,0,0};
 		m_chars.push_back(ch);
@@ -79,12 +319,14 @@ void SimpleTextBox::SetMultiline(bool multiline,bool wrap){
 
 void SimpleTextBox::SetFocus(){
 	m_objFocus=this;
+	if(m_keyboard) m_keyboard->m_visible=false;
 	if(m_bLocked){
 		SDL_StopTextInput();
 	}else{
-		if(theApp->IsTouchscreen() && !m_allowedChars.empty()){
-			//TODO: screen keyboard
+		//show screen keyboard
+		if(theApp->IsTouchscreen() && m_bAllowedChars[0]!=0xFF && m_keyboard){
 			SDL_StopTextInput();
+			m_keyboard->m_visible=true;
 			return;
 		}
 		SDL_StartTextInput();
@@ -92,6 +334,7 @@ void SimpleTextBox::SetFocus(){
 }
 
 void SimpleTextBox::ClearFocus(){
+	if(m_objFocus) UpdateIdleTime(true); //???
 	m_objFocus=NULL;
 	SDL_StopTextInput();
 }
@@ -121,19 +364,12 @@ void SimpleTextBox::PasteFromClipboard(){
 		if(m_caretPos<0) m_caretPos=0;
 		else if(m_caretPos>(int)m_chars.size()) m_caretPos=m_chars.size();
 
-		unsigned char allowedChars[256]={};
-		if(!m_allowedChars.empty()){
-			for(int i=0;i<(int)m_allowedChars.size();i++){
-				allowedChars[(unsigned char)m_allowedChars[i]]=1;
-			}
-		}
-
 		size_t m=strlen(s)+1;
 
 		U8STRING_FOR_EACH_CHARACTER_DO_BEGIN(s,i,m,c,'?');
 
 		if(c==0) break;
-		if(!m_allowedChars.empty() && (c>=256 || allowedChars[c]==0)) continue;
+		if(!IsCharAllowed(c)) continue;
 		if(c!='\r' && (c!='\n' || (m_scrollView.m_flags & SimpleScrollViewFlags::Vertical)!=0)){
 			SimpleTextBoxCharacter ch={c,0,0};
 			m_chars.insert(m_chars.begin()+(m_caretPos++),ch);
@@ -160,6 +396,8 @@ void SimpleTextBox::RegisterView(MultiTouchManager& mgr){
 			float(m_scrollView.m_screen.y+m_scrollView.m_screen.h)/float(screenHeight),
 			MultiTouchViewFlags::AcceptDragging,this);
 	}
+
+	if(m_keyboard) m_keyboard->RegisterView(mgr);
 }
 
 void SimpleTextBox::OnMultiGesture(float fx,float fy,float dx,float dy,float zoom){
@@ -385,17 +623,10 @@ bool SimpleTextBox::OnEvent(){
 			if(m_caretPos<0) m_caretPos=0;
 			else if(m_caretPos>(int)m_chars.size()) m_caretPos=m_chars.size();
 
-			unsigned char allowedChars[256]={};
-			if(!m_allowedChars.empty()){
-				for(int i=0;i<(int)m_allowedChars.size();i++){
-					allowedChars[(unsigned char)m_allowedChars[i]]=1;
-				}
-			}
-
 			U8STRING_FOR_EACH_CHARACTER_DO_BEGIN(event.text.text,i,(sizeof(event.text.text)),c,'?');
 
 			if(c==0) break;
-			if(!m_allowedChars.empty() && (c>=256 || allowedChars[c]==0)) continue;
+			if(!IsCharAllowed(c)) continue;
 			SimpleTextBoxCharacter ch={c,0,0};
 			m_chars.insert(m_chars.begin()+(m_caretPos++),ch);
 			m_caretTimer=0;
@@ -411,14 +642,20 @@ bool SimpleTextBox::OnEvent(){
 
 bool SimpleTextBox::OnTimer(){
 	//update scroll view
-	bool ret=m_scrollView.OnTimer();
+	bool ret=m_scrollView.OnTimer() || m_caretDirty;
 
 	//update caret animation
 	if(HasFocus()){
 		m_caretTimer=(m_caretTimer+1)&0x1F;
-		ret=true;
+		ret|=(m_caretTimer&0xF)>=10;
 	}else{
 		m_caretTimer=0;
+	}
+
+	//update screen keyboard
+	if(m_keyboard){
+		if(!HasFocus()) m_keyboard->m_visible=false;
+		ret|=m_keyboard->OnTimer();
 	}
 
 	return ret;
@@ -570,9 +807,7 @@ void SimpleTextBox::Draw(){
 	}
 
 	//draw text
-	mainFont->BeginDraw();
-	txt.Draw(SDL_MakeColor(255,255,255,255));
-	mainFont->EndDraw();
+	mainFont->DrawString(txt,SDL_MakeColor(255,255,255,255));
 
 	//draw caret
 	int opacity;
@@ -610,4 +845,8 @@ void SimpleTextBox::Draw(){
 	m_scrollView.Draw();
 
 	m_scrollView.DisableScissorRect();
+}
+
+void SimpleTextBox::DrawOverlay(){
+	if(m_keyboard) m_keyboard->Draw();
 }

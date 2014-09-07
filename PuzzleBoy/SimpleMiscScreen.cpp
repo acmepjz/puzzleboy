@@ -47,11 +47,13 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 #endif
 	txt.m_scrollView.m_nAutoResizeOffset[2]=-64;
 	txt.m_scrollView.m_nAutoResizeOffset[3]=txt.m_scrollView.m_nAutoResizeOffset[1]+40;
-	if(allowedChars) txt.m_allowedChars=allowedChars;
+	if(allowedChars) txt.SetAllowedChars(allowedChars);
 	txt.SetText(text);
 	txt.SetFocus();
 
 	while(m_bRun && b){
+		bool bDirty=false;
+
 		//create title bar buttons
 		if(m_nMyResizeTime!=m_nResizeTime){
 			m_nMyResizeTime=m_nResizeTime;
@@ -69,48 +71,56 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 			AddScreenKeyboard(float(right+buttonSize*2),0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_YES,m_v,m_idx);
 
 			AddEmptyHorizontalButton(float(left),0,float(right),float(buttonSize),m_v,m_idx);
+
+			bDirty=true;
 		}
 
-		txt.OnTimer();
+		bDirty|=txt.OnTimer();
 		txt.RegisterView(mgr);
 
-		//clear and draw
-		ClearScreen();
+		UpdateIdleTime(bDirty);
 
-		SetProjectionMatrix(1);
+		if(NeedToDrawScreen()){
+			//clear and draw
+			ClearScreen();
 
-		glDisable(GL_LIGHTING);
+			SetProjectionMatrix(1);
 
-		//ad-hoc title bar
-		DrawScreenKeyboard(m_v,m_idx);
+			glDisable(GL_LIGHTING);
 
-		//draw title text
-		if(m_txtTitle && !m_txtTitle->empty()){
-			SimpleBaseFont *fnt=titleFont?titleFont:mainFont;
+			//ad-hoc title bar
+			DrawScreenKeyboard(m_v,m_idx);
 
-			fnt->BeginDraw();
-			m_txtTitle->Draw(SDL_MakeColor(255,255,255,255));
-			fnt->EndDraw();
+			//draw title text
+			if(m_txtTitle && !m_txtTitle->empty()){
+				SimpleBaseFont *fnt=titleFont?titleFont:mainFont;
+
+				fnt->DrawString(*m_txtTitle,SDL_MakeColor(255,255,255,255));
+			}
+
+			//draw prompt text
+			if(m_txtPrompt && !m_txtPrompt->empty()){
+				mainFont->DrawString(*m_txtPrompt,SDL_MakeColor(255,255,255,255));
+			}
+
+			//draw textbox
+			txt.Draw();
+
+			//draw overlay
+			txt.DrawOverlay();
+
+			//over
+			ShowScreen();
 		}
-
-		//draw prompt text
-		if(m_txtPrompt && !m_txtPrompt->empty()){
-			mainFont->BeginDraw();
-			m_txtPrompt->Draw(SDL_MakeColor(255,255,255,255));
-			mainFont->EndDraw();
-		}
-
-		//draw textbox
-		txt.Draw();
-
-		//over
-		ShowScreen();
 
 		while(SDL_PollEvent(&event)){
 			if(mgr.OnEvent()) continue;
 			if(txt.OnEvent()) continue;
 
 			switch(event.type){
+			case SDL_MOUSEBUTTONDOWN:
+				txt.ClearFocus(); //???
+				break;
 			case SDL_MOUSEBUTTONUP:
 				if(event.button.y<buttonSize){
 					//check clicked title bar buttons
@@ -224,16 +234,12 @@ int SimpleConfigKeyScreen(int key){
 			if(m_txtTitle && !m_txtTitle->empty()){
 				SimpleBaseFont *fnt=titleFont?titleFont:mainFont;
 
-				fnt->BeginDraw();
-				m_txtTitle->Draw(SDL_MakeColor(255,255,255,255));
-				fnt->EndDraw();
+				fnt->DrawString(*m_txtTitle,SDL_MakeColor(255,255,255,255));
 			}
 
 			//draw prompt text
 			if(m_txtPrompt && !m_txtPrompt->empty()){
-				mainFont->BeginDraw();
-				m_txtPrompt->Draw(SDL_MakeColor(255,255,255,255));
-				mainFont->EndDraw();
+				mainFont->DrawString(*m_txtPrompt,SDL_MakeColor(255,255,255,255));
 			}
 
 			//draw border

@@ -205,9 +205,7 @@ void ShowScreen(){
 			glDisableClientState(GL_VERTEX_ARRAY);
 
 			//draw text
-			mainFont->BeginDraw();
-			txt.Draw(SDL_MakeColor(255,255,255,alpha));
-			mainFont->EndDraw();
+			mainFont->DrawString(txt,SDL_MakeColor(255,255,255,alpha));
 		}
 
 		theApp->m_nToolTipTime-=2;
@@ -703,7 +701,7 @@ public:
 				sprintf(s0,"%d",m_nWidth);
 				u8string s=s0;
 				if(!SimpleInputScreen(_("Level Width"),
-					_("Level Width"),s,"0123456789")) break;
+					_("Level Width"),s,"01234\n56789")) break;
 				int n;
 				if(sscanf(s.c_str(),"%d",&n)!=1) break;
 				if(n<1) n=1;
@@ -718,7 +716,7 @@ public:
 				sprintf(s0,"%d",m_nHeight);
 				u8string s=s0;
 				if(!SimpleInputScreen(_("Level Height"),
-					_("Level Height"),s,"0123456789")) break;
+					_("Level Height"),s,"01234\n56789")) break;
 				int n;
 				if(sscanf(s.c_str(),"%d",&n)!=1) break;
 				if(n<1) n=1;
@@ -737,7 +735,7 @@ public:
 				sprintf(s0,"%d",m_nXOffset);
 				u8string s=s0;
 				if(!SimpleInputScreen(_("Horizontal Offset"),
-					_("Horizontal Offset"),s,"-0123456789")) break;
+					_("Horizontal Offset"),s,"-01234\n56789")) break;
 				int n;
 				if(sscanf(s.c_str(),"%d",&n)!=1) break;
 				if(n<-255) n=-255;
@@ -752,7 +750,7 @@ public:
 				sprintf(s0,"%d",m_nYOffset);
 				u8string s=s0;
 				if(!SimpleInputScreen(_("Vertical Offset"),
-					_("Vertical Offset"),s,"-0123456789")) break;
+					_("Vertical Offset"),s,"-01234\n56789")) break;
 				int n;
 				if(sscanf(s.c_str(),"%d",&n)!=1) break;
 				if(n<-255) n=-255;
@@ -969,7 +967,7 @@ public:
 				sprintf(s0,"%d",theApp->m_nCurrentLevel+1);
 				u8string s=s0;
 				if(!SimpleInputScreen(_("Move Level"),
-					_("Please input the destination level number"),s,"0123456789")) break;
+					_("Please input the destination level number"),s,"01234\n56789")) break;
 				int n;
 				if(sscanf(s.c_str(),"%d",&n)!=1) break;
 				n--;

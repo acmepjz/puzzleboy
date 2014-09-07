@@ -71,6 +71,8 @@ int LevelRecordScreen(const u8string& title,const u8string& prompt,u8string& rec
 	txt.SetText(record);
 
 	while(m_bRun && b){
+		bool bDirty=false;
+
 		//create title bar buttons
 		if(m_nMyResizeTime!=m_nResizeTime){
 			m_nMyResizeTime=m_nResizeTime;
@@ -105,48 +107,53 @@ int LevelRecordScreen(const u8string& title,const u8string& prompt,u8string& rec
 				1.0f,DrawTextFlags::Center|DrawTextFlags::VCenter|DrawTextFlags::AutoSize);
 			m_txtPrompt->AddString(mainFont,_("Animation Demo"),float(screenWidth-(224-4)),float(buttonSize+128),160-8,64,
 				1.0f,DrawTextFlags::Center|DrawTextFlags::VCenter|DrawTextFlags::AutoSize);
+
+			bDirty=true;
 		}
 
-		txt.OnTimer();
+		bDirty|=txt.OnTimer();
 		txt.RegisterView(mgr);
 
-		//clear and draw
-		ClearScreen();
+		UpdateIdleTime(bDirty);
 
-		SetProjectionMatrix(1);
+		if(NeedToDrawScreen()){
+			//clear and draw
+			ClearScreen();
 
-		glDisable(GL_LIGHTING);
+			SetProjectionMatrix(1);
 
-		//ad-hoc title bar
-		DrawScreenKeyboard(m_v,m_idx);
+			glDisable(GL_LIGHTING);
 
-		//draw title text
-		if(m_txtTitle && !m_txtTitle->empty()){
-			SimpleBaseFont *fnt=titleFont?titleFont:mainFont;
+			//ad-hoc title bar
+			DrawScreenKeyboard(m_v,m_idx);
 
-			fnt->BeginDraw();
-			m_txtTitle->Draw(SDL_MakeColor(255,255,255,255));
-			fnt->EndDraw();
+			//draw title text
+			if(m_txtTitle && !m_txtTitle->empty()){
+				SimpleBaseFont *fnt=titleFont?titleFont:mainFont;
+
+				fnt->DrawString(*m_txtTitle,SDL_MakeColor(255,255,255,255));
+			}
+
+			//draw prompt text
+			if(m_txtPrompt && !m_txtPrompt->empty()){
+				mainFont->DrawString(*m_txtPrompt,SDL_MakeColor(255,255,255,255));
+			}
+
+			//draw textbox
+			txt.Draw();
+
+			//over
+			ShowScreen();
 		}
-
-		//draw prompt text
-		if(m_txtPrompt && !m_txtPrompt->empty()){
-			mainFont->BeginDraw();
-			m_txtPrompt->Draw(SDL_MakeColor(255,255,255,255));
-			mainFont->EndDraw();
-		}
-
-		//draw textbox
-		txt.Draw();
-
-		//over
-		ShowScreen();
 
 		while(SDL_PollEvent(&event)){
 			if(mgr.OnEvent()) continue;
 			if(txt.OnEvent()) continue;
 
 			switch(event.type){
+			case SDL_MOUSEBUTTONDOWN:
+				txt.ClearFocus(); //???
+				break;
 			case SDL_MOUSEBUTTONUP:
 				if(event.button.y<buttonSize){
 					bool bCopy=false;

@@ -73,6 +73,17 @@ void SimpleBaseFont::DrawString(const u8string& str,float x,float y,float w,floa
 	if(!b) EndDraw();
 }
 
+void SimpleBaseFont::DrawString(const SimpleText& str,SDL_Color color,int start,int count){
+	if(str.empty()) return;
+
+	//draw
+	bool b=m_bDrawing;
+
+	if(!b) BeginDraw();
+	str.Draw(color,start,count);
+	if(!b) EndDraw();
+}
+
 void SimpleBaseFont::EndDraw(){
 	if(m_bDrawing){
 		glDisableClientState(GL_VERTEX_ARRAY);
@@ -302,7 +313,7 @@ void SimpleText::AdjustVerticalPosition(SimpleBaseFont *font,int start,float y,f
 	}
 }
 
-void SimpleText::Draw(SDL_Color color,int start,int count){
+void SimpleText::Draw(SDL_Color color,int start,int count) const{
 	if(count==0) return;
 
 	int st=0;
