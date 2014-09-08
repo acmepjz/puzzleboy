@@ -74,8 +74,7 @@ int ChooseLevelFileScreen::DoModal(){
 	}
 
 	//show
-	m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
-	CreateTitleBarText(_("Choose Level File"));
+	m_titleBar.m_sTitle=_("Choose Level File");
 	return SimpleListScreen::DoModal();
 }
 
@@ -92,12 +91,14 @@ void ChooseLevelScreen::OnDirty(){
 	int count;
 
 	if(m_searchFilter.empty()){
-		CreateTitleBarText(_("Choose Level"));
+		m_titleBar.m_sTitle=_("Choose Level");
 		count=theApp->m_pDocument->m_objLevels.size();
 	}else{
-		CreateTitleBarText(_("Search Result"));
+		m_titleBar.m_sTitle=_("Search Result");
 		count=m_searchResult.size();
 	}
+
+	RecreateTitleBar();
 
 	ResetList();
 
@@ -204,8 +205,8 @@ int ChooseLevelScreen::OnTitleBarButtonClick(int index){
 
 int ChooseLevelScreen::DoModal(){
 	m_bDirtyOnResize=true;
-	m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
-	m_RightButtons.push_back(SCREEN_KEYBOARD_SEARCH);
-	m_RightButtons.push_back(SCREEN_KEYBOARD_OPEN);
+	const int rightButtons[]={SCREEN_KEYBOARD_SEARCH,SCREEN_KEYBOARD_OPEN};
+	m_titleBar.m_RightButtons.assign(rightButtons,
+		rightButtons+(sizeof(rightButtons)/sizeof(rightButtons[0])));
 	return SimpleListScreen::DoModal();
 }

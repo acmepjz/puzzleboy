@@ -27,8 +27,7 @@ int RandomMapScreen::OnClick(int index){
 
 int RandomMapScreen::DoModal(){
 	//show
-	m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
-	CreateTitleBarText(_("Random Map"));
+	m_titleBar.m_sTitle=_("Random Map");
 	return SimpleListScreen::DoModal();
 }
 

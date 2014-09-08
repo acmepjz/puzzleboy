@@ -1,7 +1,9 @@
 #include "SimpleMiscScreen.h"
+#include "SimpleTitleBar.h"
 #include "SimpleText.h"
 #include "PuzzleBoyApp.h"
 #include "SimpleTextBox.h"
+#include "MyFormat.h"
 #include "main.h"
 
 #include <string.h>
@@ -19,18 +21,21 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 
 	int buttonSize=theApp->m_nButtonSize;
 
-	SimpleText *m_txtTitle=new SimpleText,*m_txtPrompt=new SimpleText;
-	int m_nMyResizeTime=-1;
+	SimpleText *m_txtPrompt=new SimpleText;
 
 	//create text
-	m_txtTitle->AddString(titleFont?titleFont:mainFont,title,1.25f*float(buttonSize),0,0,float(buttonSize),
-		(titleFont?1.0f:1.5f)*float(theApp->m_nButtonSize)/64.0f,DrawTextFlags::VCenter);
 	m_txtPrompt->AddString(mainFont,prompt,64,float(buttonSize+32),0,0,
 		1.0f,DrawTextFlags::Multiline);
 
-	//for title bar buttons
-	std::vector<float> m_v;
-	std::vector<unsigned short> m_idx;
+	//create title bar
+	SimpleTitleBar titleBar;
+	{
+		titleBar.m_sTitle=title;
+		titleBar.m_LeftButtons.assign(1,SCREEN_KEYBOARD_LEFT);
+		const int rightButtons[]={SCREEN_KEYBOARD_COPY,SCREEN_KEYBOARD_PASTE,SCREEN_KEYBOARD_YES};
+		titleBar.m_RightButtons.assign(rightButtons,
+			rightButtons+(sizeof(rightButtons)/sizeof(rightButtons[0])));
+	}
 
 	MultiTouchManager mgr;
 	SimpleTextBox txt;
@@ -52,30 +57,10 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 	txt.SetFocus();
 
 	while(m_bRun && b){
-		bool bDirty=false;
-
-		//create title bar buttons
-		if(m_nMyResizeTime!=m_nResizeTime){
-			m_nMyResizeTime=m_nResizeTime;
-
-			m_v.clear();
-			m_idx.clear();
-
-			const int left=buttonSize;
-			const int right=screenWidth-buttonSize*3;
-
-			AddScreenKeyboard(0,0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_LEFT,m_v,m_idx);
-
-			AddScreenKeyboard(float(right),0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_COPY,m_v,m_idx);
-			AddScreenKeyboard(float(right+buttonSize),0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_PASTE,m_v,m_idx);
-			AddScreenKeyboard(float(right+buttonSize*2),0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_YES,m_v,m_idx);
-
-			AddEmptyHorizontalButton(float(left),0,float(right),float(buttonSize),m_v,m_idx);
-
-			bDirty=true;
-		}
+		bool bDirty=titleBar.OnTimer();
 
 		bDirty|=txt.OnTimer();
+
 		txt.RegisterView(mgr);
 
 		UpdateIdleTime(bDirty);
@@ -88,15 +73,8 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 
 			glDisable(GL_LIGHTING);
 
-			//ad-hoc title bar
-			DrawScreenKeyboard(m_v,m_idx);
-
-			//draw title text
-			if(m_txtTitle && !m_txtTitle->empty()){
-				SimpleBaseFont *fnt=titleFont?titleFont:mainFont;
-
-				fnt->DrawString(*m_txtTitle,SDL_MakeColor(255,255,255,255));
-			}
+			//title bar
+			titleBar.Draw();
 
 			//draw prompt text
 			if(m_txtPrompt && !m_txtPrompt->empty()){
@@ -117,34 +95,32 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 			if(mgr.OnEvent()) continue;
 			if(txt.OnEvent()) continue;
 
-			switch(event.type){
-			case SDL_MOUSEBUTTONDOWN:
+			if(event.type==SDL_MOUSEBUTTONDOWN){
 				txt.ClearFocus(); //???
-				break;
-			case SDL_MOUSEBUTTONUP:
-				if(event.button.y<buttonSize){
-					//check clicked title bar buttons
-					if(event.button.x<0){
-						//nothing
-					}else if(event.button.x<buttonSize){
-						//cancel
-						b=false;
-					}else if(event.button.x<screenWidth-buttonSize*3){
-						//nothing
-					}else if(event.button.x<screenWidth-buttonSize*2){
-						//copy
-						txt.CopyToClipboard();
-					}else if(event.button.x<screenWidth-buttonSize){
-						//paste
-						txt.PasteFromClipboard();
-					}else if(event.button.x<screenWidth){
-						//ok
-						b=false;
-						ret=true;
-					}
-				}
+			}
 
-				break;
+			int titleBarResult=titleBar.OnEvent();
+			if(titleBarResult>=-1){
+				m_nIdleTime=0;
+				switch(titleBarResult){
+				case SCREEN_KEYBOARD_LEFT:
+					b=false;
+					break;
+				case SCREEN_KEYBOARD_COPY:
+					txt.CopyToClipboard();
+					break;
+				case SCREEN_KEYBOARD_PASTE:
+					txt.PasteFromClipboard();
+					break;
+				case SCREEN_KEYBOARD_YES:
+					b=false;
+					ret=true;
+					break;
+				}
+				continue;
+			}
+
+			switch(event.type){
 			case SDL_KEYDOWN:
 				switch(event.key.keysym.sym){
 				case SDLK_AC_BACK:
@@ -169,8 +145,9 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 
 	if(ret) txt.GetText(text);
 
-	delete m_txtTitle;
 	delete m_txtPrompt;
+
+	m_nIdleTime=0;
 
 	return ret;
 }
@@ -180,41 +157,29 @@ int SimpleConfigKeyScreen(int key){
 
 	int buttonSize=theApp->m_nButtonSize;
 
-	SimpleText *m_txtTitle=new SimpleText,*m_txtPrompt=new SimpleText;
-	int m_nMyResizeTime=-1;
+	SimpleText *m_txtPrompt=new SimpleText;
 
 	//create text
-	m_txtTitle->AddString(titleFont?titleFont:mainFont,_("Config Key"),1.25f*float(buttonSize),0,0,float(buttonSize),
-		(titleFont?1.0f:1.5f)*float(theApp->m_nButtonSize)/64.0f,DrawTextFlags::VCenter);
 	m_txtPrompt->AddString(mainFont,_("Press any key..."),64,float(buttonSize+32),0,0,1.0f,0);
 
-	//for title bar buttons
-	std::vector<float> m_v;
-	std::vector<unsigned short> m_idx;
+	//create title bar
+	SimpleTitleBar titleBar;
+	{
+		titleBar.m_sTitle=_("Config Key");
+		titleBar.m_LeftButtons.assign(1,SCREEN_KEYBOARD_LEFT);
+		titleBar.m_RightButtons.assign(1,SCREEN_KEYBOARD_YES);
+		titleBar.m_AdditionalButtons.push_back(
+			SimpleTitleBarButton(SCREEN_KEYBOARD_NO,SCREEN_KEYBOARD_NO,NULL,
+			-128,(buttonSize-64)/2,-64,(buttonSize+64)/2,
+			1.0f,0.5f,1.0f,0.5f));
+	}
 
 	while(m_bRun && b){
 		//get position of text box
 		SDL_Rect r={64,(screenHeight+buttonSize-64)/2,screenWidth-192,64};
 
 		//create title bar buttons
-		if(m_nMyResizeTime!=m_nResizeTime){
-			m_nMyResizeTime=m_nResizeTime;
-			m_nIdleTime=0;
-
-			m_v.clear();
-			m_idx.clear();
-
-			const int left=buttonSize;
-			const int right=screenWidth-buttonSize;
-
-			AddScreenKeyboard(0,0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_LEFT,m_v,m_idx);
-
-			AddScreenKeyboard(float(right),0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_YES,m_v,m_idx);
-
-			AddScreenKeyboard(float(r.x+r.w),float(r.y),64,64,SCREEN_KEYBOARD_NO,m_v,m_idx);
-
-			AddEmptyHorizontalButton(float(left),0,float(right),float(buttonSize),m_v,m_idx);
-		}
+		if(titleBar.OnTimer()) m_nIdleTime=0;
 
 		//update idle time
 		UpdateIdleTime(false);
@@ -227,15 +192,8 @@ int SimpleConfigKeyScreen(int key){
 
 			glDisable(GL_LIGHTING);
 
-			//ad-hoc title bar
-			DrawScreenKeyboard(m_v,m_idx);
-
-			//draw title text
-			if(m_txtTitle && !m_txtTitle->empty()){
-				SimpleBaseFont *fnt=titleFont?titleFont:mainFont;
-
-				fnt->DrawString(*m_txtTitle,SDL_MakeColor(255,255,255,255));
-			}
+			//draw title bar
+			titleBar.Draw();
 
 			//draw prompt text
 			if(m_txtPrompt && !m_txtPrompt->empty()){
@@ -276,30 +234,25 @@ int SimpleConfigKeyScreen(int key){
 		}
 
 		while(SDL_PollEvent(&event)){
-			switch(event.type){
-			case SDL_MOUSEMOTION:
-				//TODO:
-				break;
-			case SDL_MOUSEBUTTONDOWN:
-				//TODO:
-				break;
-			case SDL_MOUSEBUTTONUP:
+			int titleBarResult=titleBar.OnEvent();
+			if(titleBarResult>=-1){
 				m_nIdleTime=0;
-				if(event.button.y<buttonSize){
-					//check clicked title bar buttons
-					if(event.button.x>=0 && event.button.x<buttonSize){
-						b=false;
-						key=-1;
-					}else if(event.button.x>=screenWidth-buttonSize && event.button.x<screenWidth){
-						b=false;
-					}
-				}else if(event.button.x>=r.x+r.w && event.button.x<r.x+r.w+64
-					&& event.button.y>=r.y && event.button.y<r.y+r.h)
-				{
+				switch(titleBarResult){
+				case SCREEN_KEYBOARD_LEFT:
+					b=false;
+					key=-1;
+					break;
+				case SCREEN_KEYBOARD_YES:
+					b=false;
+					break;
+				case SCREEN_KEYBOARD_NO:
 					key=0;
+					break;
 				}
+				continue;
+			}
 
-				break;
+			switch(event.type){
 			case SDL_KEYDOWN:
 				m_nIdleTime=0;
 				switch(event.key.keysym.sym){
@@ -320,8 +273,306 @@ int SimpleConfigKeyScreen(int key){
 		WaitForNextFrame();
 	}
 
-	delete m_txtTitle;
 	delete m_txtPrompt;
 
+	m_nIdleTime=0;
+
 	return key;
+}
+
+ChangeSizeScreen::ChangeSizeScreen(int w,int h)
+:m_nOldWidth(w),m_nOldHeight(h)
+,m_nXOffset(0),m_nYOffset(0)
+,m_nWidth(w),m_nHeight(h)
+,m_bPreserve(false)
+{
+}
+
+bool ChangeSizeScreen::DoModal(){
+	bool b=true,ret=false;
+
+	int buttonSize=theApp->m_nButtonSize;
+
+	SimpleText *m_txtPrompt=new SimpleText;
+
+	SimpleTitleBar titleBar;
+	MultiTouchManager mgr;
+	SimpleTextBox txt[4];
+
+	u8string yesno[2];
+	yesno[0]=_("No");
+	yesno[1]=_("Yes");
+
+	//create title bar, text box, etc.
+	{
+		titleBar.m_sTitle=_("Change Level Size");
+		titleBar.m_LeftButtons.assign(1,SCREEN_KEYBOARD_LEFT);
+		titleBar.m_RightButtons.assign(1,SCREEN_KEYBOARD_YES);
+
+		u8string prompt[6];
+		prompt[0]=_("Level Width");
+		prompt[1]=_("Level Height");
+		prompt[2]=_("Horizontal Offset");
+		prompt[3]=_("Vertical Offset");
+		prompt[4]=_("Horizontal Align:");
+		prompt[5]=_("Vertical Align:");
+
+		u8string text[4];
+		text[0]=str(MyFormat("%d")<<m_nWidth);
+		text[1]=str(MyFormat("%d")<<m_nHeight);
+		text[2]=str(MyFormat("%d")<<m_nXOffset);
+		text[3]=str(MyFormat("%d")<<m_nYOffset);
+
+		int y=buttonSize+32;
+		int h1=48,h2=buttonSize;
+		if(y+h1*4+h2*3+112>screenHeight){
+			h1=40;
+			h2=40;
+		}
+
+		for(int i=0;i<4;i++){
+			if(i==2){
+				//preserve
+				titleBar.m_AdditionalButtons.push_back(
+					SimpleTitleBarButton(0x1010,-1,
+					(_("Preserve Level Contents")+": "+yesno[m_bPreserve?1:0]).c_str(),
+					64,y,-64,y+h2,0.0f,0.0f,1.0f,0.0f));
+
+				y+=h2+16;
+			}
+
+			//label
+			m_txtPrompt->AddString(mainFont,prompt[i],64,float(y),176,float(h1),
+				1.0f,DrawTextFlags::VCenter|DrawTextFlags::AutoSize);
+
+			//textbox
+			txt[i].m_scrollView.m_flags|=SimpleScrollViewFlags::AutoResize;
+			txt[i].m_scrollView.m_fAutoResizeScale[2]=1.0f;
+			txt[i].m_scrollView.m_nAutoResizeOffset[0]=256;
+			txt[i].m_scrollView.m_nAutoResizeOffset[1]=y;
+			txt[i].m_scrollView.m_nAutoResizeOffset[2]=-192;
+			txt[i].m_scrollView.m_nAutoResizeOffset[3]=y+h1;
+			txt[i].SetAllowedChars(i<2?"01234\n56789":"-01234\n56789");
+			txt[i].SetText(text[i]);
+
+			//two buttons
+			titleBar.m_AdditionalButtons.push_back(
+				SimpleTitleBarButton(0x1000+i*2,SCREEN_KEYBOARD_EMPTY,"-",
+				-176,y,-128,y+h1,1.0f,0.0f,1.0f,0.0f));
+			titleBar.m_AdditionalButtons.push_back(
+				SimpleTitleBarButton(0x1001+i*2,SCREEN_KEYBOARD_EMPTY,"+",
+				-112,y,-64,y+h1,1.0f,0.0f,1.0f,0.0f));
+
+			y+=h1+16;
+		}
+
+		//align
+		m_txtPrompt->AddString(mainFont,prompt[4],64,float(y),176,float(h2),
+			1.0f,DrawTextFlags::VCenter|DrawTextFlags::AutoSize);
+		titleBar.m_AdditionalButtons.push_back(
+			SimpleTitleBarButton(0x1011,-1,
+			_("Left").c_str(),
+			256,y,144,y+h2,0.0f,0.0f,1.0f/3.0f,0.0f));
+		titleBar.m_AdditionalButtons.push_back(
+			SimpleTitleBarButton(0x1012,-1,
+			_("Center").c_str(),
+			152,y,40,y+h2,1.0f/3.0f,0.0f,2.0f/3.0f,0.0f));
+		titleBar.m_AdditionalButtons.push_back(
+			SimpleTitleBarButton(0x1013,-1,
+			_("Right").c_str(),
+			48,y,-64,y+h2,2.0f/3.0f,0.0f,1.0f,0.0f));
+
+		y+=h2+16;
+
+		m_txtPrompt->AddString(mainFont,prompt[5],64,float(y),176,float(h2),
+			1.0f,DrawTextFlags::VCenter|DrawTextFlags::AutoSize);
+		titleBar.m_AdditionalButtons.push_back(
+			SimpleTitleBarButton(0x1014,-1,
+			_("Top").c_str(),
+			256,y,144,y+h2,0.0f,0.0f,1.0f/3.0f,0.0f));
+		titleBar.m_AdditionalButtons.push_back(
+			SimpleTitleBarButton(0x1015,-1,
+			_("Vertical Center").c_str(),
+			152,y,40,y+h2,1.0f/3.0f,0.0f,2.0f/3.0f,0.0f));
+		titleBar.m_AdditionalButtons.push_back(
+			SimpleTitleBarButton(0x1016,-1,
+			_("Bottom").c_str(),
+			48,y,-64,y+h2,2.0f/3.0f,0.0f,1.0f,0.0f));
+
+		y+=h2+16;
+	}
+
+	while(m_bRun && b){
+		bool bDirty=titleBar.OnTimer();
+
+		for(int i=0;i<4;i++) bDirty|=txt[i].OnTimer();
+
+		for(int i=0;i<4;i++) txt[i].RegisterView(mgr);
+
+		UpdateIdleTime(bDirty);
+
+		if(NeedToDrawScreen()){
+			//clear and draw
+			ClearScreen();
+
+			SetProjectionMatrix(1);
+
+			glDisable(GL_LIGHTING);
+
+			//title bar
+			titleBar.Draw();
+
+			//draw prompt text
+			if(m_txtPrompt && !m_txtPrompt->empty()){
+				mainFont->DrawString(*m_txtPrompt,SDL_MakeColor(255,255,255,255));
+			}
+
+			//draw textbox
+			for(int i=0;i<4;i++) txt[i].Draw();
+
+			//draw overlay
+			for(int i=0;i<4;i++) txt[i].DrawOverlay();
+
+			//over
+			ShowScreen();
+		}
+
+		while(SDL_PollEvent(&event)){
+			if(mgr.OnEvent()) continue;
+			{
+				bool bProcessed=false;
+				for(int i=0;i<4;i++){
+					if(txt[i].OnEvent()){
+						bProcessed=true;
+						break;
+					}
+				}
+				if(bProcessed) continue;
+			}
+
+			if(event.type==SDL_MOUSEBUTTONDOWN){
+				SimpleTextBox::ClearFocus(); //???
+			}
+
+			int titleBarResult=titleBar.OnEvent();
+			if(titleBarResult>=-1){
+				m_nIdleTime=0;
+				switch(titleBarResult){
+				case SCREEN_KEYBOARD_LEFT:
+					b=false;
+					break;
+				case SCREEN_KEYBOARD_YES:
+					b=false;
+					ret=true;
+					break;
+				case 0x1000: case 0x1001: case 0x1002: case 0x1003:
+				case 0x1004: case 0x1005: case 0x1006: case 0x1007:
+					{
+						u8string s;
+						int n;
+
+						txt[(titleBarResult&0xF)>>1].GetText(s);
+						if(sscanf(s.c_str(),"%d",&n)==1){
+							if(titleBarResult&1) n++;
+							else n--;
+
+							if(n<1 && titleBarResult<0x1004) n=1;
+							else if(n<-255) n=-255;
+							else if(n>255) n=255;
+
+							txt[(titleBarResult&0xF)>>1].SetText(str(MyFormat("%d")<<n));
+						}
+					}
+					break;
+				case 0x1010:
+					m_bPreserve=!m_bPreserve;
+					titleBar.m_AdditionalButtons[4].m_sCaption=
+						_("Preserve Level Contents")+": "+yesno[m_bPreserve?1:0];
+					titleBar.Create();
+					m_nIdleTime=0;
+					break;
+				case 0x1011: case 0x1012: case 0x1013:
+					{
+						u8string s;
+						int n;
+
+						txt[0].GetText(s);
+						if(sscanf(s.c_str(),"%d",&n)!=1) break;
+						if(n<1) n=1; else if(n>255) n=255;
+						m_nWidth=n;
+
+						m_nXOffset=(titleBarResult==0x1011)?0:
+							(titleBarResult==0x1012)?(m_nWidth-m_nOldWidth)/2:
+							(m_nWidth-m_nOldWidth);
+						txt[2].SetText(str(MyFormat("%d")<<m_nXOffset));
+					}
+					break;
+				case 0x1014: case 0x1015: case 0x1016:
+					{
+						u8string s;
+						int n;
+
+						txt[1].GetText(s);
+						if(sscanf(s.c_str(),"%d",&n)!=1) break;
+						if(n<1) n=1; else if(n>255) n=255;
+						m_nHeight=n;
+
+						m_nYOffset=(titleBarResult==0x1014)?0:
+							(titleBarResult==0x1015)?(m_nHeight-m_nOldHeight)/2:
+							(m_nHeight-m_nOldHeight);
+						txt[3].SetText(str(MyFormat("%d")<<m_nYOffset));
+					}
+					break;
+				}
+				continue;
+			}
+
+			switch(event.type){
+			case SDL_KEYDOWN:
+				switch(event.key.keysym.sym){
+				case SDLK_AC_BACK:
+				case SDLK_ESCAPE:
+					m_bKeyDownProcessed=true;
+					b=false;
+					break;
+				}
+				break;
+			}
+		}
+
+		WaitForNextFrame();
+	}
+
+	SDL_StopTextInput();
+
+	if(ret){
+		u8string s;
+		int n;
+
+		txt[0].GetText(s);
+		if(sscanf(s.c_str(),"%d",&n)!=1) ret=false;
+		if(n<1) n=1; else if(n>255) n=255;
+		m_nWidth=n;
+
+		txt[1].GetText(s);
+		if(sscanf(s.c_str(),"%d",&n)!=1) ret=false;
+		if(n<1) n=1; else if(n>255) n=255;
+		m_nHeight=n;
+
+		txt[2].GetText(s);
+		if(sscanf(s.c_str(),"%d",&n)!=1) ret=false;
+		if(n<-255) n=-255; else if(n>255) n=255;
+		m_nXOffset=n;
+
+		txt[3].GetText(s);
+		if(sscanf(s.c_str(),"%d",&n)!=1) ret=false;
+		if(n<-255) n=-255; else if(n>255) n=255;
+		m_nYOffset=n;
+	}
+
+	delete m_txtPrompt;
+
+	m_nIdleTime=0;
+
+	return ret;
 }

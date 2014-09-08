@@ -175,7 +175,7 @@ int ConfigScreen::OnClick(int index){
 			}
 			screen.m_nListIndex=theApp->m_nAnimationSpeed;
 
-			screen.m_sTitle=_("Animation Speed");
+			screen.m_titleBar.m_sTitle=_("Animation Speed");
 
 			//show and get result
 			int ret=screen.DoModal();
@@ -215,7 +215,7 @@ int ConfigScreen::OnClick(int index){
 				if(i<<4==theApp->m_nButtonSize) screen.m_nListIndex=i-4;
 			}
 
-			screen.m_sTitle=_("Button Size");
+			screen.m_titleBar.m_sTitle=_("Button Size");
 
 			//show and get result
 			int ret=screen.DoModal();
@@ -224,8 +224,7 @@ int ConfigScreen::OnClick(int index){
 				m_bConfigDirty=true;
 				m_bDirty=true;
 				//recreate header
-				CreateTitleBarText(_("Config"));
-				CreateTitleBarButtons();
+				RecreateTitleBar();
 			}
 		}
 		break;
@@ -265,7 +264,7 @@ int ConfigScreen::OnClick(int index){
 
 			screen.m_nListIndex=listIndex;
 
-			screen.m_sTitle=_("Language");
+			screen.m_titleBar.m_sTitle=_("Language");
 
 			//show and get result
 			int ret=screen.DoModal();
@@ -289,7 +288,7 @@ int ConfigScreen::OnClick(int index){
 			}
 			screen.m_nListIndex=theApp->m_nThreadCount;
 
-			screen.m_sTitle=_("Thread Count");
+			screen.m_titleBar.m_sTitle=_("Thread Count");
 
 			//show and get result
 			int ret=screen.DoModal();
@@ -311,7 +310,7 @@ int ConfigScreen::OnClick(int index){
 			screen.m_sList.push_back(_("Vertical Up-Down"));
 			screen.m_nListIndex=theApp->m_nOrientation;
 
-			screen.m_sTitle=_("Multiplayer Orientation");
+			screen.m_titleBar.m_sTitle=_("Multiplayer Orientation");
 
 			//show and get result
 			int ret=screen.DoModal();
@@ -351,7 +350,7 @@ int ConfigScreen::OnClick(int index){
 				if(i<<3==theApp->m_nMenuTextSize) screen.m_nListIndex=i-4;
 			}
 
-			screen.m_sTitle=_("Menu Text Size");
+			screen.m_titleBar.m_sTitle=_("Menu Text Size");
 
 			//show and get result
 			int ret=screen.DoModal();
@@ -375,7 +374,7 @@ int ConfigScreen::OnClick(int index){
 			}
 			screen.m_nListIndex=theApp->m_nMenuHeightFactor-4;
 
-			screen.m_sTitle=_("Menu Height");
+			screen.m_titleBar.m_sTitle=_("Menu Height");
 
 			//show and get result
 			int ret=screen.DoModal();
@@ -397,7 +396,7 @@ int ConfigScreen::OnClick(int index){
 			screen.m_sList.push_back(_("Automatic"));
 			screen.m_nListIndex=theApp->m_nTouchConfig;
 
-			screen.m_sTitle=_("Touchscreen Mode");
+			screen.m_titleBar.m_sTitle=_("Touchscreen Mode");
 
 			//show and get result
 			int ret=screen.DoModal();
@@ -464,8 +463,7 @@ int ConfigScreen::DoModal(){
 	m_bConfigDirty=false;
 
 	//show
-	m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
-	CreateTitleBarText(_("Config"));
+	m_titleBar.m_sTitle=_("Config");
 	int ret=SimpleListScreen::DoModal();
 
 	//save config
