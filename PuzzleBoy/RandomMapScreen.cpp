@@ -11,18 +11,46 @@
 
 #include "include_sdl.h"
 
+//normal sizes
+static const SDL_Point RotateBlockOnlySizes[]={
+	{6,6},{6,8},{6,10},{8,6},{8,8},{10,6},
+};
+const int RotateBlockOnlySizesCount=sizeof(RotateBlockOnlySizes)/sizeof(SDL_Point);
+
+const int MaxRandomTypes=RotateBlockOnlySizesCount;
+
+//experimental sizes
+static const SDL_Point RotateBlockOnlySizes2[]={
+	{8,10},{10,8},{10,10},
+};
+const int RotateBlockOnlySizesCount2=sizeof(RotateBlockOnlySizes2)/sizeof(SDL_Point);
+
 void RandomMapScreen::OnDirty(){
 	ResetList();
 
-	AddItem(_("Rotate block only 6x6"));
-	AddItem(_("Rotate block only 8x6"));
-	AddItem(_("Rotate block only 8x8"));
-
+	for(int i=0;i<RotateBlockOnlySizesCount;i++){
+		AddItem(str(MyFormat(_("Rotate block only %dx%d"))
+			<<RotateBlockOnlySizes[i].x
+			<<RotateBlockOnlySizes[i].y));
+	}
 	AddItem(_("Random"));
+
+	AddEmptyItem();
+
+	for(int i=0;i<RotateBlockOnlySizesCount2;i++){
+		AddItem(str(MyFormat(_("Rotate block only %dx%d"))
+			<<RotateBlockOnlySizes2[i].x
+			<<RotateBlockOnlySizes2[i].y));
+	}
 }
 
 int RandomMapScreen::OnClick(int index){
-	return index+1;
+	switch(index){
+	case MaxRandomTypes+1:
+		return -1;
+	default:
+		return index+1;
+	}
 }
 
 int RandomMapScreen::DoModal(){
@@ -32,20 +60,35 @@ int RandomMapScreen::DoModal(){
 }
 
 int RandomMapScreen::DoRandom(int type,PuzzleBoyLevelData*& outputLevel,MT19937 *rnd,void *userData,RandomLevelCallback callback){
-	const int MaxRandomTypes=3;
-
 	type--;
-	if(type<0 || type>=MaxRandomTypes){
+	if(type==MaxRandomTypes){
 		type=int((float)MaxRandomTypes*(float)rnd->Rnd()/4294967296.0f);
 	}
 
-	switch(type){
-		case 0: return RandomTest(6,6,outputLevel,rnd,userData,callback);
-		case 1: return RandomTest(8,6,outputLevel,rnd,userData,callback);
-		case 2: return RandomTest(8,8,outputLevel,rnd,userData,callback);
+	int i=type;
+
+	//normal sizes
+	if(i>=0 && i<RotateBlockOnlySizesCount){
+		return RandomTest(
+			RotateBlockOnlySizes[i].x,
+			RotateBlockOnlySizes[i].y,
+			outputLevel,rnd,userData,callback);
 	}
+	i-=RotateBlockOnlySizesCount;
+
+	//experimental sizes
+	i-=2;
+
+	if(i>=0 && i<RotateBlockOnlySizesCount2){
+		return RandomTest(
+			RotateBlockOnlySizes2[i].x,
+			RotateBlockOnlySizes2[i].y,
+			outputLevel,rnd,userData,callback);
+	}
+	i-=RotateBlockOnlySizesCount2;
 
 	//shouldn't goes here
+	printf("[DoRandom] Error: Unknown random map type: %d\n",type); //not thread safe
 	return 0;
 }
 
