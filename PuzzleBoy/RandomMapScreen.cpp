@@ -12,35 +12,44 @@
 #include "include_sdl.h"
 
 //normal sizes
-static const SDL_Point RotateBlockOnlySizes[]={
-	{6,6},{6,8},{6,10},{8,6},{8,8},{10,6},
+static const SDL_Rect RotateBlockOnlySizes[]={
+	{6,6,1},{6,8,1},{6,10,1},{8,6,1},{8,8,1},{10,6,1},
+	{5,5,2},{5,7,2},{7,5,2},{6,6,2},
 };
-const int RotateBlockOnlySizesCount=sizeof(RotateBlockOnlySizes)/sizeof(SDL_Point);
+const int RotateBlockOnlySizesCount=sizeof(RotateBlockOnlySizes)/sizeof(SDL_Rect);
 
 const int MaxRandomTypes=RotateBlockOnlySizesCount;
 
 //experimental sizes
-static const SDL_Point RotateBlockOnlySizes2[]={
-	{8,10},{10,8},{10,10},
+static const SDL_Rect RotateBlockOnlySizes2[]={
+	{8,10,1},{10,8,1},{10,10,1},
+	{6,8,2},{8,6,2},
+	{5,5,3},{5,7,3},{7,5,3},{6,6,3},
 };
-const int RotateBlockOnlySizesCount2=sizeof(RotateBlockOnlySizes2)/sizeof(SDL_Point);
+const int RotateBlockOnlySizesCount2=sizeof(RotateBlockOnlySizes2)/sizeof(SDL_Rect);
 
 void RandomMapScreen::OnDirty(){
 	ResetList();
 
 	for(int i=0;i<RotateBlockOnlySizesCount;i++){
-		AddItem(str(MyFormat(_("Rotate block only %dx%d"))
-			<<RotateBlockOnlySizes[i].x
-			<<RotateBlockOnlySizes[i].y));
+		MyFormat fmt(_("Rotate block only"));
+		fmt(" %dx%d ")<<RotateBlockOnlySizes[i].x<<RotateBlockOnlySizes[i].y;
+		if(RotateBlockOnlySizes[i].w>1){
+			fmt(_("(%d players)"))<<RotateBlockOnlySizes[i].w;
+		}
+		AddItem(str(fmt));
 	}
 	AddItem(_("Random"));
 
 	AddEmptyItem();
 
 	for(int i=0;i<RotateBlockOnlySizesCount2;i++){
-		AddItem(str(MyFormat(_("Rotate block only %dx%d"))
-			<<RotateBlockOnlySizes2[i].x
-			<<RotateBlockOnlySizes2[i].y));
+		MyFormat fmt(_("Rotate block only"));
+		fmt(" %dx%d ")<<RotateBlockOnlySizes2[i].x<<RotateBlockOnlySizes2[i].y;
+		if(RotateBlockOnlySizes2[i].w>1){
+			fmt(_("(%d players)"))<<RotateBlockOnlySizes2[i].w;
+		}
+		AddItem(str(fmt));
 	}
 }
 
@@ -72,6 +81,7 @@ int RandomMapScreen::DoRandom(int type,PuzzleBoyLevelData*& outputLevel,MT19937 
 		return RandomTest(
 			RotateBlockOnlySizes[i].x,
 			RotateBlockOnlySizes[i].y,
+			RotateBlockOnlySizes[i].w,
 			outputLevel,rnd,userData,callback);
 	}
 	i-=RotateBlockOnlySizesCount;
@@ -83,6 +93,7 @@ int RandomMapScreen::DoRandom(int type,PuzzleBoyLevelData*& outputLevel,MT19937 
 		return RandomTest(
 			RotateBlockOnlySizes2[i].x,
 			RotateBlockOnlySizes2[i].y,
+			RotateBlockOnlySizes2[i].w,
 			outputLevel,rnd,userData,callback);
 	}
 	i-=RotateBlockOnlySizesCount2;

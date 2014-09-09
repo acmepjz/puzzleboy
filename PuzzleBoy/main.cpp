@@ -15,6 +15,7 @@
 #include "LevelRecordScreen.h"
 #include "SimpleMessageBox.h"
 #include "SimpleMiscScreen.h"
+#include "SimpleProgressScreen.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -479,27 +480,33 @@ SimpleMessageBox* CreateLevelChangedMsgBox(){
 	return msgBox;
 }
 
+static int SolveLevelCallback(void* userData,const LevelSolverState& progress){
+	SimpleProgressScreen *progressScreen=(SimpleProgressScreen*)userData;
+
+	progressScreen->progress=float(progress.nOpenedNodeCount)/float(progress.nAllNodeCount);
+	return progressScreen->DrawAndDoEvents()?0:1;
+}
+
 static int SolveCurrentLevel(bool bTestMode){
 	if(!theApp->m_view.empty()
 		&& theApp->m_view[0]->m_objPlayingLevel)
 	{
 		PuzzleBoyLevelData *dat=theApp->m_pDocument->GetLevel(theApp->m_nCurrentLevel);
 		if(dat){
-			/*printf("--- Solver Test ---\n");
+			//create progress screen
+			SimpleProgressScreen progressScreen;
+			progressScreen.Create();
 
-			Uint64 f=SDL_GetPerformanceFrequency(),t=SDL_GetPerformanceCounter();*/
-
+			//start solver
 			PuzzleBoyLevel *lev=new PuzzleBoyLevel(*dat);
 			lev->StartGame();
 			u8string s;
-			int ret=lev->SolveIt(s,NULL,NULL);
-
-			/*t=SDL_GetPerformanceCounter()-t;
-
-			printf("SolveIt() returns %d, Time=%0.2fms\n",ret,double(t)/double(f)*1000.0);
-			if(ret==1) printf("The solution is %s\n",s.c_str());*/
+			int ret=lev->SolveIt(s,&progressScreen,SolveLevelCallback);
 
 			delete lev;
+
+			//over
+			progressScreen.Destroy();
 
 			//show solution
 			switch(ret){

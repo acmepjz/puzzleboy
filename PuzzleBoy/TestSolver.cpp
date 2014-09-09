@@ -7,7 +7,11 @@
 #include <map>
 #include <vector>
 
+//#define SOLVER_PROFILING
+
+#ifdef SOLVER_PROFILING
 #include <SDL.h>
+#endif
 
 //test solver for level with rotate blocks only
 
@@ -157,9 +161,10 @@ static TestSolverStateType TestSolver_SortPlayerPosition(int playerCount,unsigne
 	return pos;
 }
 
-int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string& rec,void* userData,LevelSolverCallback callback,TestSolverExtendedData *ed){
-	//DEBGU
+int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,LevelSolverCallback callback,TestSolverExtendedData *ed){
+#ifdef SOLVER_PROFILING
 	int ttt=SDL_GetTicks();
+#endif
 
 	//type|(dir<<4)
 	const unsigned char LUT1[16]={
@@ -509,7 +514,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string& rec,void* userData,
 	std::vector<TestSolverNode> nodes;
 	size_t currentIndex=0;
 
-	rec.clear();
+	if(rec) rec->clear();
 
 	const unsigned char playerXMask=(1<<playerXSize)-1;
 	const unsigned char playerYMask=(1<<playerYSize)-1;
@@ -561,7 +566,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string& rec,void* userData,
 
 		//for each player
 		shift=0;
-		for(int currentPlayer=0;currentPlayer<level.m_nPlayerCount;currentPlayer++){
+		for(int currentPlayer=0;currentPlayer<level.m_nPlayerCount;currentPlayer++,shift+=playerXSize+playerYSize){
 			if(pos[currentPlayer]==exitPos) continue;
 
 			//adhoc???
@@ -679,42 +684,44 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string& rec,void* userData,
 							}while(idx>=0);
 
 							//generate solution
-							int prevPlayer=-1;
-							for(int i=positions.size()-1;i>0;i--){
-								int currentPlayer=-1;
+							if(rec){
+								int prevPlayer=-1;
+								for(int i=positions.size()-1;i>0;i--){
+									int currentPlayer=-1;
 
-								for(int j=0;j<level.m_nPlayerCount;j++){
-									if(positions[i][j]!=positions[i-1][j]){
-										currentPlayer=j;
-										break;
-									}
-								}
-								assert(currentPlayer>=0);
-
-								unsigned char pos=positions[i][currentPlayer],
-									newPos=positions[i-1][currentPlayer];
-
-								//check if go to exit
-								if(newPos==exitPos){
-									for(int i=0;i<4;i++){
-										char d=dirLUT[i];
-										if(mapData[pos+d]==EXIT_TILE){
-											newPos=pos+d;
+									for(int j=0;j<level.m_nPlayerCount;j++){
+										if(positions[i][j]!=positions[i-1][j]){
+											currentPlayer=j;
 											break;
 										}
 									}
-								}
+									assert(currentPlayer>=0);
 
-								if(currentPlayer!=prevPlayer){
-									if(level.m_nPlayerCount>1){
-										//we need to switch player
-										rec.append(str(MyFormat("(%d,%d)")<<(pos&0xF)<<((pos>>4)&0xF)));
+									unsigned char pos=positions[i][currentPlayer],
+										newPos=positions[i-1][currentPlayer];
+
+									//check if go to exit
+									if(newPos==exitPos){
+										for(int i=0;i<4;i++){
+											char d=dirLUT[i];
+											if(mapData[pos+d]==EXIT_TILE){
+												newPos=pos+d;
+												break;
+											}
+										}
 									}
-									prevPlayer=currentPlayer;
-								}
 
-								//generate one step
-								rec.push_back((newPos>pos)?(newPos>pos+2?'S':'D'):(newPos<pos-2?'W':'A'));
+									if(currentPlayer!=prevPlayer){
+										if(level.m_nPlayerCount>1){
+											//we need to switch player
+											rec->append(str(MyFormat("(%d,%d)")<<(pos&0xF)<<((pos>>4)&0xF)));
+										}
+										prevPlayer=currentPlayer;
+									}
+
+									//generate one step
+									rec->push_back((newPos>pos)?(newPos>pos+2?'S':'D'):(newPos<pos-2?'W':'A'));
+								}
 							}
 
 							//generate extended data
@@ -723,6 +730,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string& rec,void* userData,
 
 								int idx=currentIndex;
 								TestSolverStateType st=newState;
+								ed->moves=positions.size()-1;
 								ed->pushes=0;
 
 								unsigned char shift=(playerXSize+playerYSize)*level.m_nPlayerCount;
@@ -758,11 +766,12 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string& rec,void* userData,
 
 							//debug
 #ifdef _DEBUG
-							printf("[TestSolver] Debug: Solution found. Nodes=%d (Opened=%d), Step=%d\n",nodes.size(),currentIndex,rec.size());
+							printf("[TestSolver] Debug: Solution found. Nodes=%d (Opened=%d), Step=%d\n",nodes.size(),currentIndex,positions.size()-1);
 #endif
 
-							//DEBGU
+#ifdef SOLVER_PROFILING
 							printf("Time=%dms\n",SDL_GetTicks()-ttt);
+#endif
 
 							return 1;
 						}
@@ -784,8 +793,6 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string& rec,void* userData,
 
 			//adhoc???
 			if(mapData[pos[currentPlayer]]==FLOOR_TILE) mapData[pos[currentPlayer]]=WALL_TILE;
-
-			shift+=playerXSize+playerYSize;
 		}
 
 		//ad-hoc???
@@ -793,13 +800,21 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string& rec,void* userData,
 			if(mapData[pos[i]]==WALL_TILE) mapData[pos[i]]=FLOOR_TILE;
 		}
 
+#ifdef _DEBUG
+#define PROGRESS_MASK 0x7FF
+#else
+#define PROGRESS_MASK 0x7FFF
+#endif
+
 		//next node
-		if(((++currentIndex) & 0xFFFF)==0 && callback){
+		if(((++currentIndex) & PROGRESS_MASK)==0 && callback){
+#ifndef SOLVER_PROFILING
 			LevelSolverState progress={
 				nodes.size(),
 				currentIndex,
 			};
 			if(callback(userData,progress)) return -1;
+#endif
 		}
 	}while(currentIndex<nodes.size());
 
@@ -814,10 +829,14 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string& rec,void* userData,
 	printf("[TestSolver] Debug: Solution not found. Nodes=%d\n",nodes.size());
 #endif
 
+#ifdef SOLVER_PROFILING
+	printf("Time=%dms\n",SDL_GetTicks()-ttt);
+#endif
+
 	return 0;
 }
 
-int RunSolver(SolverType type,const PuzzleBoyLevel& level,u8string& rec,void* userData,LevelSolverCallback callback){
+int RunSolver(SolverType type,const PuzzleBoyLevel& level,u8string* rec,void* userData,LevelSolverCallback callback){
 	switch(type){
 	case TEST_SOLVER: return TestSolver_SolveIt(level,rec,userData,callback);
 	default: return -2;

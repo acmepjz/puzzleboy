@@ -9,6 +9,7 @@ const int TestSolver_MaxBlockCount=64;
 struct TestSolverExtendedData{
 	LevelSolverState state;
 	int blockUsed;
+	int moves;
 	int pushes;
 
 	//1=reachable, other=unreachable (blocked)
@@ -24,7 +25,7 @@ struct TestSolverExtendedData{
 };
 
 //test solver for level with rotate blocks only
-int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string& rec,void* userData,LevelSolverCallback callback,TestSolverExtendedData *ed=NULL);
+int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec=0,void* userData=0,LevelSolverCallback callback=0,TestSolverExtendedData *ed=0);
 
 enum SolverType{
 	TEST_SOLVER,
@@ -35,4 +36,4 @@ enum SolverType{
 //rec: the output record
 //return value: 1=success 0=no solution -1=abort -2=error
 //note: call level.StartGame() before calling this function
-int RunSolver(SolverType type,const PuzzleBoyLevel& level,u8string& rec,void* userData,LevelSolverCallback callback);
+int RunSolver(SolverType type,const PuzzleBoyLevel& level,u8string* rec=0,void* userData=0,LevelSolverCallback callback=0);

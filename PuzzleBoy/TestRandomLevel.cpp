@@ -19,7 +19,7 @@ inline int CalcScore(int st,int blockUsed){
 	return st+blockUsed*16;
 }
 
-int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rnd,void *userData,RandomLevelCallback callback){
+int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputLevel,MT19937* rnd,void *userData,RandomLevelCallback callback){
 	struct RandomTestData{
 		PuzzleBoyLevelData *level;
 		int bestStep;
@@ -54,15 +54,28 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rn
 
 		memset(&(level.m_bMapData[0]),0,level.m_bMapData.size());
 
+		int bestScore=0;
+
 		//random start and end (ad-hoc) point
-		int y1=int((float)height*(float)rnd->Rnd()/4294967296.0f);
-		level(0,y1)=PLAYER_TILE;
 		int y2=int((float)height*(float)rnd->Rnd()/4294967296.0f);
 		level(width-1,y2)=EXIT_TILE;
 
-		y1-=y2;
-		if(y1<0) y1=-y1;
-		levels[i].bestScore=levels[i].bestStep=width-1+y1;
+		for(int j=0;j<playerCount;j++){
+			int x1=0;
+			if(j>0){
+				int xs=1+(width-2)*(j-1)/(playerCount-1);
+				int xe=1+(width-2)*j/(playerCount-1);
+				x1=xs+int((float)(xe-xs)*(float)rnd->Rnd()/4294967296.0f);
+			}
+			int y1=int((float)height*(float)rnd->Rnd()/4294967296.0f);
+			level(x1,y1)=PLAYER_TILE;
+
+			y1-=y2;
+			if(y1<0) y1=-y1;
+			bestScore+=width-1-x1+y1;
+		}
+
+		levels[i].bestScore=levels[i].bestStep=bestScore;
 
 		levels[i].level=&level;
 	}
@@ -163,11 +176,10 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rn
 				{
 					PuzzleBoyLevel lev(level);
 					lev.StartGame();
-					u8string s;
-					int ret=TestSolver_SolveIt(lev,s,NULL,NULL,&ed);
+					int ret=TestSolver_SolveIt(lev,NULL,NULL,NULL,&ed);
 
 					if(ret==1){
-						int n=s.size();
+						int n=ed.moves;
 						int sc=CalcScore(n,ed.blockUsed);
 						if(sc>bestScore){
 							bestStep=n;
@@ -299,9 +311,8 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rn
 						//now try to solve it
 						PuzzleBoyLevel lev(level);
 						lev.StartGame();
-						u8string s;
-						int ret=TestSolver_SolveIt(lev,s,NULL,NULL,NULL);
-						int n=s.size();
+						int ret=TestSolver_SolveIt(lev,NULL,NULL,NULL,&ed);
+						int n=ed.moves;
 
 						if(ret==1 && n>=bestStep){
 							bestStep=n;
@@ -365,9 +376,8 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rn
 			{
 				PuzzleBoyLevel lev(level);
 				lev.StartGame();
-				u8string s;
-				TestSolver_SolveIt(lev,s,NULL,NULL,&ed);
-				bestStep=s.size();
+				TestSolver_SolveIt(lev,NULL,NULL,NULL,&ed);
+				bestStep=ed.moves;
 				bestScore=CalcScore(bestStep,ed.blockUsed);
 			}
 
@@ -425,9 +435,8 @@ int RandomTest(int width,int height,PuzzleBoyLevelData*& outputLevel,MT19937* rn
 							//now try to solve it
 							PuzzleBoyLevel lev(level);
 							lev.StartGame();
-							u8string s;
-							int ret=TestSolver_SolveIt(lev,s,NULL,NULL,NULL);
-							int n=s.size();
+							int ret=TestSolver_SolveIt(lev,NULL,NULL,NULL,&ed);
+							int n=ed.moves;
 
 							if(ret==1 && n>=bestStep){
 								bestStep=n;
