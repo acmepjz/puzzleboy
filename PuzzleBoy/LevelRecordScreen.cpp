@@ -33,8 +33,7 @@ public:
 	}
 	int DoModal() override{
 		m_bDirtyOnResize=true;
-		m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
-		CreateTitleBarText(_("List of Records"));
+		m_titleBar.m_sTitle=_("List of Records");
 		return SimpleListScreen::DoModal();
 	}
 };
@@ -45,16 +44,29 @@ int LevelRecordScreen(const u8string& title,const u8string& prompt,u8string& rec
 
 	int buttonSize=theApp->m_nButtonSize;
 
-	SimpleText *m_txtTitle=new SimpleText,*m_txtPrompt=new SimpleText;
+	SimpleText *m_txtPrompt=new SimpleText;
 	int m_nMyResizeTime=-1;
 
 	//create text
-	m_txtTitle->AddString(titleFont?titleFont:mainFont,title,1.25f*float(buttonSize),0,0,float(buttonSize),
-		(titleFont?1.0f:1.5f)*float(theApp->m_nButtonSize)/64.0f,DrawTextFlags::VCenter);
+	m_txtPrompt->AddString(mainFont,prompt,64,float(buttonSize+32),0,0,
+		1.0f,DrawTextFlags::Multiline);
 
-	//for title bar buttons
-	std::vector<float> m_v;
-	std::vector<unsigned short> m_idx;
+	//create title bar
+	SimpleTitleBar titleBar;
+	{
+		titleBar.m_sTitle=title;
+		titleBar.m_LeftButtons.assign(1,SCREEN_KEYBOARD_LEFT);
+		const int rightButtons[]={SCREEN_KEYBOARD_COPY,SCREEN_KEYBOARD_PASTE,SCREEN_KEYBOARD_SEARCH};
+		titleBar.m_RightButtons.assign(rightButtons,rightButtons+(readOnly?1:3));
+		titleBar.m_AdditionalButtons.push_back(
+			SimpleTitleBarButton(0x1001,-1,_("Apply").c_str(),
+			-224,buttonSize+32,-64,buttonSize+96,
+			1.0f,0.0f,1.0f,0.0f));
+		titleBar.m_AdditionalButtons.push_back(
+			SimpleTitleBarButton(0x1002,-1,_("Animation Demo").c_str(),
+			-224,buttonSize+128,-64,buttonSize+192,
+			1.0f,0.0f,1.0f,0.0f));
+	}
 
 	MultiTouchManager mgr;
 	SimpleTextBox txt;
@@ -72,131 +84,84 @@ int LevelRecordScreen(const u8string& title,const u8string& prompt,u8string& rec
 
 	while(m_bRun && b){
 		//create title bar buttons
-		if(m_nMyResizeTime!=m_nResizeTime){
-			m_nMyResizeTime=m_nResizeTime;
+		bool bDirty=titleBar.OnTimer();
 
-			m_v.clear();
-			m_idx.clear();
-
-			AddScreenKeyboard(0,0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_LEFT,m_v,m_idx);
-
-			const int left=buttonSize;
-			const int right=screenWidth-buttonSize*(readOnly?1:3);
-
-			AddScreenKeyboard(float(right),0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_COPY,m_v,m_idx);
-			if(!readOnly){
-				AddScreenKeyboard(float(right+buttonSize),0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_PASTE,m_v,m_idx);
-				AddScreenKeyboard(float(right+buttonSize*2),0,float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_SEARCH,m_v,m_idx);
-			}
-
-			AddEmptyHorizontalButton(float(left),0,float(right),float(buttonSize),m_v,m_idx);
-
-			//add two buttons
-			AddEmptyHorizontalButton(float(screenWidth-224),float(buttonSize+32),
-				float(screenWidth-64),float(buttonSize+96),m_v,m_idx);
-			AddEmptyHorizontalButton(float(screenWidth-224),float(buttonSize+128),
-				float(screenWidth-64),float(buttonSize+192),m_v,m_idx);
-
-			//create prompt text
-			m_txtPrompt->clear();
-			m_txtPrompt->AddString(mainFont,prompt,64,float(buttonSize+32),0,0,
-				1.0f,DrawTextFlags::Multiline);
-			m_txtPrompt->AddString(mainFont,_("Apply"),float(screenWidth-(224-4)),float(buttonSize+32),160-8,64,
-				1.0f,DrawTextFlags::Center|DrawTextFlags::VCenter|DrawTextFlags::AutoSize);
-			m_txtPrompt->AddString(mainFont,_("Animation Demo"),float(screenWidth-(224-4)),float(buttonSize+128),160-8,64,
-				1.0f,DrawTextFlags::Center|DrawTextFlags::VCenter|DrawTextFlags::AutoSize);
-		}
-
-		txt.OnTimer();
+		bDirty|=txt.OnTimer();
 		txt.RegisterView(mgr);
 
-		//clear and draw
-		ClearScreen();
+		UpdateIdleTime(bDirty);
 
-		SetProjectionMatrix(1);
+		if(NeedToDrawScreen()){
+			//clear and draw
+			ClearScreen();
 
-		glDisable(GL_LIGHTING);
+			SetProjectionMatrix(1);
 
-		//ad-hoc title bar
-		DrawScreenKeyboard(m_v,m_idx);
+			glDisable(GL_LIGHTING);
 
-		//draw title text
-		if(m_txtTitle && !m_txtTitle->empty()){
-			SimpleBaseFont *fnt=titleFont?titleFont:mainFont;
+			//draw title bar
+			titleBar.Draw();
 
-			fnt->BeginDraw();
-			m_txtTitle->Draw(SDL_MakeColor(255,255,255,255));
-			fnt->EndDraw();
+			//draw prompt text
+			if(m_txtPrompt && !m_txtPrompt->empty()){
+				mainFont->DrawString(*m_txtPrompt,SDL_MakeColor(255,255,255,255));
+			}
+
+			//draw textbox
+			txt.Draw();
+
+			//over
+			ShowScreen();
 		}
-
-		//draw prompt text
-		if(m_txtPrompt && !m_txtPrompt->empty()){
-			mainFont->BeginDraw();
-			m_txtPrompt->Draw(SDL_MakeColor(255,255,255,255));
-			mainFont->EndDraw();
-		}
-
-		//draw textbox
-		txt.Draw();
-
-		//over
-		ShowScreen();
 
 		while(SDL_PollEvent(&event)){
 			if(mgr.OnEvent()) continue;
 			if(txt.OnEvent()) continue;
 
-			switch(event.type){
-			case SDL_MOUSEBUTTONUP:
-				if(event.button.y<buttonSize){
-					bool bCopy=false;
+			if(event.type==SDL_MOUSEBUTTONDOWN){
+				txt.ClearFocus(); //???
+			}
 
-					//check clicked title bar buttons
-					if(event.button.x<0){
-						//nothing
-					}else if(event.button.x<buttonSize){
-						//cancel
-						b=false;
-					}else if(readOnly){
-						if(event.button.x<screenWidth){
-							//copy
-							bCopy=true;
-						}
-					}else{
-						if(event.button.x<screenWidth-buttonSize*3){
-							//nothing
-						}else if(event.button.x<screenWidth-buttonSize*2){
-							//copy
-							bCopy=true;
-						}else if(event.button.x<screenWidth-buttonSize){
-							//paste
-							txt.PasteFromClipboard();
-						}else if(event.button.x<screenWidth){
-							//view all records
-							txt.ClearFocus();
-							int ret=RecordListScreen().DoModal();
-							if(ret>0){
-								u8string s;
-								RecordManager::ConvertRecordDataToString(theApp->m_view[0]->m_tCurrentBestRecord[ret-1].bSolution,s);
-								txt.SetText(s);
-							}
+			int titleBarResult=titleBar.OnEvent();
+			if(titleBarResult>=-1){
+				m_nIdleTime=0;
+				switch(titleBarResult){
+				case SCREEN_KEYBOARD_LEFT:
+					b=false;
+					break;
+				case SCREEN_KEYBOARD_COPY:
+					txt.CopyToClipboard();
+					break;
+				case SCREEN_KEYBOARD_PASTE:
+					txt.PasteFromClipboard();
+					break;
+				case SCREEN_KEYBOARD_SEARCH:
+					{
+						//view all records
+						txt.ClearFocus();
+						int ret=RecordListScreen().DoModal();
+						if(ret>0){
+							u8string s;
+							RecordManager::ConvertRecordDataToString(theApp->m_view[0]->m_tCurrentBestRecord[ret-1].bSolution,s);
+							txt.SetText(s);
 						}
 					}
-
-					if(bCopy) txt.CopyToClipboard();
-				}else if(event.button.x>=screenWidth-224 && event.button.x<screenWidth-64){
-					if(event.button.y>=buttonSize+32 && event.button.y<buttonSize+96){
-						//apply
-						ret=1;
-						b=false;
-					}else if(event.button.y>=buttonSize+128 && event.button.y<buttonSize+192){
-						//animation demo
-						ret=2;
-						b=false;
-					}
+					break;
+				case 0x1001:
+					//apply
+					ret=1;
+					b=false;
+					break;
+				case 0x1002:
+					//animation demo
+					ret=2;
+					b=false;
+					break;
 				}
+				continue;
+			}
 
-				break;
+			switch(event.type){
 			case SDL_KEYDOWN:
 				switch(event.key.keysym.sym){
 				case SDLK_AC_BACK:
@@ -216,8 +181,9 @@ int LevelRecordScreen(const u8string& title,const u8string& prompt,u8string& rec
 
 	if(ret) txt.GetText(record);
 
-	delete m_txtTitle;
 	delete m_txtPrompt;
+
+	m_nIdleTime=0;
 
 	return ret;
 }

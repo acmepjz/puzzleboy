@@ -43,6 +43,7 @@ LOCAL_SRC_FILES := \
 ../../SimpleScrollView.cpp \
 ../../SimpleText.cpp \
 ../../SimpleTextBox.cpp \
+../../SimpleTitleBar.cpp \
 ../../TestRandomLevel.cpp \
 ../../TestSolver.cpp \
 ../../UTF8-16.cpp \

@@ -15,8 +15,7 @@ extern SDL_Event event;
 extern bool m_bKeyDownProcessed;
 
 SimpleListScreen::SimpleListScreen()
-:m_txtTitle(NULL)
-,m_txtList(NULL)
+:m_txtList(NULL)
 ,m_nListCount(0)
 ,m_nListIndex(-1)
 ,m_nReturnValue(0)
@@ -28,7 +27,6 @@ SimpleListScreen::SimpleListScreen()
 }
 
 SimpleListScreen::~SimpleListScreen(){
-	delete m_txtTitle;
 	delete m_txtList;
 	delete m_msgBox;
 }
@@ -87,41 +85,15 @@ void SimpleListScreen::EnsureVisible(int index){
 	}
 }
 
-void SimpleListScreen::CreateTitleBarText(const u8string& title){
-	if(m_txtTitle) m_txtTitle->clear();
-	else m_txtTitle=new SimpleText;
-
-	m_txtTitle->AddString(titleFont?titleFont:mainFont,title,
-		(float(m_LeftButtons.size())+0.25f)*float(theApp->m_nButtonSize),0,0,float(theApp->m_nButtonSize),
-		(titleFont?1.0f:1.5f)*float(theApp->m_nButtonSize)/64.0f,DrawTextFlags::VCenter);
-}
-
-void SimpleListScreen::CreateTitleBarButtons(){
-	m_v.clear();
-	m_idx.clear();
-
-	int buttonSize=theApp->m_nButtonSize;
-
-	int left=int(m_LeftButtons.size())*buttonSize;
-	int right=screenWidth-int(m_RightButtons.size())*buttonSize;
-
-	for(int i=0,m=m_LeftButtons.size();i<m;i++){
-		AddScreenKeyboard(float(i*buttonSize),0,float(buttonSize),float(buttonSize),m_LeftButtons[i],m_v,m_idx);
-	}
-
-	for(int i=0,m=m_RightButtons.size();i<m;i++){
-		AddScreenKeyboard(float(right+i*buttonSize),0,float(buttonSize),float(buttonSize),m_RightButtons[i],m_v,m_idx);
-	}
-
-	AddEmptyHorizontalButton(float(left),0,float(right),float(buttonSize),m_v,m_idx);
-}
-
 const unsigned short i013032[]={0,1,3,0,3,2};
 
 int SimpleListScreen::DoModal(){
 	bool b=true;
 
-	CreateTitleBarButtons();
+	//???
+	if(m_titleBar.m_LeftButtons.empty()){
+		m_titleBar.m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
+	}
 
 	m_bDirty=true;
 	m_nReturnValue=0;
@@ -175,14 +147,19 @@ int SimpleListScreen::DoModal(){
 
 		if(selected0>=0){
 			selected2=selected0;
-			if(selectedTime<8) selectedTime++;
-			m_nIdleTime=0;
+			if(selectedTime<8){
+				selectedTime++;
+				m_nIdleTime=0;
+			}
 		}else{
 			if(selectedTime>0){
 				selectedTime--;
 				m_nIdleTime=0;
 			}
 		}
+
+		//update title bar
+		if(m_titleBar.OnTimer()) m_nIdleTime=0;
 
 		//update idle time
 		UpdateIdleTime(false);
@@ -238,12 +215,10 @@ int SimpleListScreen::DoModal(){
 
 			//draw list box
 			if(m_txtList && !m_txtList->empty()){
-				mainFont->BeginDraw();
 				glTranslatef(0.0f,float(theApp->m_nButtonSize-y02),0.0f);
-				m_txtList->Draw(SDL_MakeColor(255,255,255,255),
+				mainFont->DrawString(*m_txtList,SDL_MakeColor(255,255,255,255),
 					y02/theApp->m_nMenuHeight,screenHeight/theApp->m_nMenuHeight+1);
 				glLoadIdentity();
-				mainFont->EndDraw();
 			}
 
 			//draw scrollbar (experimental)
@@ -283,17 +258,8 @@ int SimpleListScreen::DoModal(){
 				glDisableClientState(GL_VERTEX_ARRAY);
 			}
 
-			//ad-hoc title bar
-			DrawScreenKeyboard(m_v,m_idx);
-
-			//draw title text
-			if(m_txtTitle && !m_txtTitle->empty()){
-				SimpleBaseFont *fnt=titleFont?titleFont:mainFont;
-
-				fnt->BeginDraw();
-				m_txtTitle->Draw(SDL_MakeColor(255,255,255,255));
-				fnt->EndDraw();
-			}
+			//draw title bar
+			m_titleBar.Draw();
 
 			//draw overlay
 			if(m_msgBox) m_msgBox->Draw();
@@ -318,10 +284,21 @@ int SimpleListScreen::DoModal(){
 				continue;
 			}
 
+			int titleBarResult=m_titleBar.OnEvent();
+			if(titleBarResult>=-1){
+				if(titleBarResult>=0){
+					int idx=OnTitleBarButtonClick(titleBarResult);
+					if(idx>=0){
+						m_nReturnValue=idx;
+						b=false;
+					}
+				}
+				continue;
+			}
+
 			switch(event.type){
 			case SDL_MOUSEMOTION:
 				//experimental dragging support
-				m_nIdleTime=0;
 				if(event.motion.state){
 					switch(m_nDraggingState){
 					case 1:
@@ -348,7 +325,6 @@ int SimpleListScreen::DoModal(){
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				//experimental dragging support
-				m_nIdleTime=0;
 				if(m_nDraggingState==0){
 					if(event.button.x>=screenWidth-64 && event.button.y>=theApp->m_nButtonSize){
 						//dragging scrollbar
@@ -373,36 +349,16 @@ int SimpleListScreen::DoModal(){
 
 				break;
 			case SDL_MOUSEBUTTONUP:
-				m_nIdleTime=0;
-				if(m_nDraggingState<2){
-					if(event.button.y<theApp->m_nButtonSize){
-						//check clicked title bar buttons
-						int idx=-1;
-
-						if(event.button.x>=0 && event.button.x<int(m_LeftButtons.size())*theApp->m_nButtonSize){
-							idx=m_LeftButtons[event.button.x/theApp->m_nButtonSize];
-						}else if(event.button.x>=screenWidth-int(m_RightButtons.size())*theApp->m_nButtonSize && event.button.x<screenWidth){
-							idx=m_RightButtons[(event.button.x-screenWidth+int(m_RightButtons.size())*theApp->m_nButtonSize)/theApp->m_nButtonSize];
-						}
-
-						if(idx>=0){
-							idx=OnTitleBarButtonClick(idx);
+				if(m_nDraggingState<2 && event.button.y>=theApp->m_nButtonSize){
+					//check clicked list box
+					int idx=y02+event.button.y-theApp->m_nButtonSize;
+					if(idx>=0){
+						idx/=theApp->m_nMenuHeight;
+						if(idx<m_nListCount){
+							idx=OnClick(idx);
 							if(idx>=0){
 								m_nReturnValue=idx;
 								b=false;
-							}
-						}
-					}else{
-						//check clicked list box
-						int idx=y02+event.button.y-theApp->m_nButtonSize;
-						if(idx>=0){
-							idx/=theApp->m_nMenuHeight;
-							if(idx<m_nListCount){
-								idx=OnClick(idx);
-								if(idx>=0){
-									m_nReturnValue=idx;
-									b=false;
-								}
 							}
 						}
 					}
@@ -425,7 +381,6 @@ int SimpleListScreen::DoModal(){
 				}
 				break;
 			case SDL_KEYDOWN:
-				m_nIdleTime=0;
 				switch(event.key.keysym.sym){
 				case SDLK_AC_BACK:
 				case SDLK_ESCAPE:
@@ -463,13 +418,14 @@ int SimpleListScreen::DoModal(){
 
 		if(m_nMyResizeTime!=m_nResizeTime){
 			m_nMyResizeTime=m_nResizeTime;
-			CreateTitleBarButtons();
 			if(m_bDirtyOnResize) m_bDirty=true;
 			m_nIdleTime=0;
 		}
 
 		WaitForNextFrame();
 	}
+
+	m_nIdleTime=0;
 
 	return m_nReturnValue;
 }
@@ -489,10 +445,4 @@ void SimpleStaticListScreen::OnDirty(){
 
 int SimpleStaticListScreen::OnClick(int index){
 	return index+1;
-}
-
-int SimpleStaticListScreen::DoModal(){
-	m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
-	CreateTitleBarText(m_sTitle);
-	return SimpleListScreen::DoModal();
 }

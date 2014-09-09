@@ -1,5 +1,6 @@
 #pragma once
 
+#include "SimpleTitleBar.h"
 #include "UTF8-16.h"
 #include <vector>
 
@@ -28,27 +29,22 @@ protected:
 	void AddEmptyItem();
 	void AddItem(const u8string& str,bool newIndex=true,float x=0.0f,float w=0.0f,int extraFlags=0);
 
-	void CreateTitleBarText(const u8string& title);
-	void CreateTitleBarButtons();
+	void RecreateTitleBar(){m_titleBar.Create();}
 private:
-	SimpleText *m_txtTitle;
 	SimpleText *m_txtList;
 	int m_nListCount;
 public:
+	SimpleTitleBar m_titleBar;
+
 	int m_nListIndex; //0-based
 	int m_nReturnValue;
 
 	bool m_bDirty;
 	bool m_bDirtyOnResize;
 
-	std::vector<int> m_LeftButtons;
-	std::vector<int> m_RightButtons;
 protected:
-	//for title bar buttons
-	std::vector<float> m_v;
-	std::vector<unsigned short> m_idx;
-
 	SimpleMessageBox *m_msgBox;
+
 private:
 	int m_y0;
 };
@@ -57,8 +53,6 @@ class SimpleStaticListScreen:public SimpleListScreen{
 public:
 	void OnDirty() override;
 	int OnClick(int index) override;
-	int DoModal() override;
 public:
 	std::vector<u8string> m_sList;
-	u8string m_sTitle;
 };

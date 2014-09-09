@@ -8,11 +8,8 @@
 
 #include <vector>
 
-struct SimpleTextBoxCharacter{
-	int c;
-	float x; //in pixels
-	int row;
-};
+struct SimpleTextBoxCharacter;
+class SimpleTextBoxScreenKeyboard;
 
 class SimpleTextBox:public virtual MultiTouchView{
 public:
@@ -43,6 +40,10 @@ public:
 	bool OnEvent();
 
 	void Draw();
+	void DrawOverlay();
+
+	//should be called before SetText or other similiar functions
+	void SetAllowedChars(const char* allowedChars);
 
 public:
 	SimpleScrollView m_scrollView;
@@ -51,6 +52,14 @@ public:
 
 private:
 	static SimpleTextBox* m_objFocus;
+
+	SimpleTextBoxScreenKeyboard *m_keyboard;
+
+	unsigned char m_bAllowedChars[128-32]; //only 32-127, if [0]==0xFF then disabled
+
+	bool IsCharAllowed(int c) const{
+		return m_bAllowedChars[0]==0xFF || (c>=32 && c<=127 && m_bAllowedChars[c-32]);
+	}
 
 	std::vector<SimpleTextBoxCharacter> m_chars;
 

@@ -19,6 +19,8 @@ struct SimpleFontGlyphMetric{
 	float advanceX;
 };
 
+class SimpleText;
+
 class SimpleBaseFont{
 public:
 	SimpleBaseFont();
@@ -40,6 +42,7 @@ public:
 
 	void BeginDraw();
 	void DrawString(const u8string& str,float x,float y,float w,float h,float scale,int flags,SDL_Color color);
+	void DrawString(const SimpleText& str,SDL_Color color,int start=0,int count=-1);
 	void EndDraw();
 
 	virtual bool GetCharMetric(int c,SimpleFontGlyphMetric& metric);
@@ -84,7 +87,7 @@ public:
 	int NewStringIndex();
 	void AddString(SimpleBaseFont *font,const u8string& str,float x,float y,float w,float h,float scale,int flags);
 
-	void Draw(SDL_Color color,int start=0,int count=-1);
+	void Draw(SDL_Color color,int start=0,int count=-1) const;
 
 	void clear();
 	bool empty() const{return v.empty();}

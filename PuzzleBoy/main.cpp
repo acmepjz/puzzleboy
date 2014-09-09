@@ -15,6 +15,7 @@
 #include "LevelRecordScreen.h"
 #include "SimpleMessageBox.h"
 #include "SimpleMiscScreen.h"
+#include "SimpleProgressScreen.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -205,9 +206,7 @@ void ShowScreen(){
 			glDisableClientState(GL_VERTEX_ARRAY);
 
 			//draw text
-			mainFont->BeginDraw();
-			txt.Draw(SDL_MakeColor(255,255,255,alpha));
-			mainFont->EndDraw();
+			mainFont->DrawString(txt,SDL_MakeColor(255,255,255,alpha));
 		}
 
 		theApp->m_nToolTipTime-=2;
@@ -481,27 +480,33 @@ SimpleMessageBox* CreateLevelChangedMsgBox(){
 	return msgBox;
 }
 
+static int SolveLevelCallback(void* userData,const LevelSolverState& progress){
+	SimpleProgressScreen *progressScreen=(SimpleProgressScreen*)userData;
+
+	progressScreen->progress=float(progress.nOpenedNodeCount)/float(progress.nAllNodeCount);
+	return progressScreen->DrawAndDoEvents()?0:1;
+}
+
 static int SolveCurrentLevel(bool bTestMode){
 	if(!theApp->m_view.empty()
 		&& theApp->m_view[0]->m_objPlayingLevel)
 	{
 		PuzzleBoyLevelData *dat=theApp->m_pDocument->GetLevel(theApp->m_nCurrentLevel);
 		if(dat){
-			/*printf("--- Solver Test ---\n");
+			//create progress screen
+			SimpleProgressScreen progressScreen;
+			progressScreen.Create();
 
-			Uint64 f=SDL_GetPerformanceFrequency(),t=SDL_GetPerformanceCounter();*/
-
+			//start solver
 			PuzzleBoyLevel *lev=new PuzzleBoyLevel(*dat);
 			lev->StartGame();
 			u8string s;
-			int ret=lev->SolveIt(s,NULL,NULL);
-
-			/*t=SDL_GetPerformanceCounter()-t;
-
-			printf("SolveIt() returns %d, Time=%0.2fms\n",ret,double(t)/double(f)*1000.0);
-			if(ret==1) printf("The solution is %s\n",s.c_str());*/
+			int ret=lev->SolveIt(s,&progressScreen,SolveLevelCallback);
 
 			delete lev;
+
+			//over
+			progressScreen.Destroy();
 
 			//show solution
 			switch(ret){
@@ -589,8 +594,7 @@ public:
 			ConfigScreen().DoModal();
 			m_bDirty=true;
 			//recreate header in case of button size changed
-			CreateTitleBarText(_("Main Menu"));
-			CreateTitleBarButtons();
+			RecreateTitleBar();
 			//resize the game screen in case of button size changed
 			m_nResizeTime++;
 			break;
@@ -613,7 +617,7 @@ public:
 						delete theApp->m_pDocument;
 						theApp->m_pDocument=doc;
 						theApp->m_nCurrentLevel=0;
-						SaveUserLevelFile("rnd-%Y%m%d%H%M%S.lev",true);
+						if(theApp->m_bAutoSaveRandomMap) SaveUserLevelFile("rnd-%Y%m%d%H%M%S.lev",true);
 						return 1;
 					}
 				}
@@ -629,7 +633,7 @@ public:
 						delete theApp->m_pDocument;
 						theApp->m_pDocument=doc;
 						theApp->m_nCurrentLevel=0;
-						SaveUserLevelFile("rnd-%Y%m%d%H%M%S.lev",true);
+						if(theApp->m_bAutoSaveRandomMap) SaveUserLevelFile("rnd-%Y%m%d%H%M%S.lev",true);
 						return 1;
 					}
 				}
@@ -651,160 +655,9 @@ public:
 
 	int DoModal() override{
 		//show
-		m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
-		CreateTitleBarText(_("Main Menu"));
+		m_titleBar.m_sTitle=_("Main Menu");
 		return SimpleListScreen::DoModal();
 	}
-};
-
-class ChangeSizeScreen:public SimpleListScreen{
-public:
-	ChangeSizeScreen(int w,int h)
-		:m_nOldWidth(w),m_nOldHeight(h)
-		,m_nXOffset(0),m_nYOffset(0)
-		,m_nWidth(w),m_nHeight(h)
-		,m_bPreserve(false)
-	{
-	}
-
-	void OnDirty() override{
-		ResetList();
-
-		u8string yesno[2];
-		yesno[0]=_("No");
-		yesno[1]=_("Yes");
-
-		AddItem(str(MyFormat(_("Level Width"))(": %d")<<m_nWidth));
-		AddItem(str(MyFormat(_("Level Height"))(": %d")<<m_nHeight));
-		AddItem(_("Preserve Level Contents")+": "+yesno[m_bPreserve?1:0]);
-		AddItem(str(MyFormat(_("Horizontal Offset"))(": %d")<<m_nXOffset));
-		AddItem(str(MyFormat(_("Vertical Offset"))(": %d")<<m_nYOffset));
-
-		AddEmptyItem();
-
-		AddItem(_("Horizontal Align:"));
-		AddItem(_("Left"));
-		AddItem(_("Center"));
-		AddItem(_("Right"));
-
-		AddEmptyItem();
-
-		AddItem(_("Vertical Align:"));
-		AddItem(_("Top"));
-		AddItem(_("Vertical Center"));
-		AddItem(_("Bottom"));
-	}
-
-	int OnClick(int index) override{
-		switch(index){
-		case 0: //width
-			{
-				char s0[32];
-				sprintf(s0,"%d",m_nWidth);
-				u8string s=s0;
-				if(!SimpleInputScreen(_("Level Width"),
-					_("Level Width"),s)) break;
-				int n;
-				if(sscanf(s.c_str(),"%d",&n)!=1) break;
-				if(n<1) n=1;
-				else if(n>255) n=255;
-				m_nWidth=n;
-				m_bDirty=true;
-			}
-			break;
-		case 1: //height
-			{
-				char s0[32];
-				sprintf(s0,"%d",m_nHeight);
-				u8string s=s0;
-				if(!SimpleInputScreen(_("Level Height"),
-					_("Level Height"),s)) break;
-				int n;
-				if(sscanf(s.c_str(),"%d",&n)!=1) break;
-				if(n<1) n=1;
-				else if(n>255) n=255;
-				m_nHeight=n;
-				m_bDirty=true;
-			}
-			break;
-		case 2: //preserve
-			m_bPreserve=!m_bPreserve;
-			m_bDirty=true;
-			break;
-		case 3: //x offset
-			{
-				char s0[32];
-				sprintf(s0,"%d",m_nXOffset);
-				u8string s=s0;
-				if(!SimpleInputScreen(_("Horizontal Offset"),
-					_("Horizontal Offset"),s)) break;
-				int n;
-				if(sscanf(s.c_str(),"%d",&n)!=1) break;
-				if(n<-255) n=-255;
-				else if(n>255) n=255;
-				m_nXOffset=n;
-				m_bDirty=true;
-			}
-			break;
-		case 4: //y offset
-			{
-				char s0[32];
-				sprintf(s0,"%d",m_nYOffset);
-				u8string s=s0;
-				if(!SimpleInputScreen(_("Vertical Offset"),
-					_("Vertical Offset"),s)) break;
-				int n;
-				if(sscanf(s.c_str(),"%d",&n)!=1) break;
-				if(n<-255) n=-255;
-				else if(n>255) n=255;
-				m_nYOffset=n;
-				m_bDirty=true;
-			}
-			break;
-		case 7: //left
-			m_nXOffset=0;
-			m_bDirty=true;
-			break;
-		case 8: //center
-			m_nXOffset=(m_nWidth-m_nOldWidth)/2;
-			m_bDirty=true;
-			break;
-		case 9: //right
-			m_nXOffset=m_nWidth-m_nOldWidth;
-			m_bDirty=true;
-			break;
-		case 12: //top
-			m_nYOffset=0;
-			m_bDirty=true;
-			break;
-		case 13: //vcenter
-			m_nYOffset=(m_nHeight-m_nOldHeight)/2;
-			m_bDirty=true;
-			break;
-		case 14: //right
-			m_nYOffset=m_nHeight-m_nOldHeight;
-			m_bDirty=true;
-			break;
-		}
-
-		return -1;
-	}
-
-	int OnTitleBarButtonClick(int index) override{
-		return (index==SCREEN_KEYBOARD_YES)?1:0;
-	}
-
-	int DoModal() override{
-		//show
-		m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
-		m_RightButtons.push_back(SCREEN_KEYBOARD_YES);
-		CreateTitleBarText(_("Change Level Size"));
-		return SimpleListScreen::DoModal();
-	}
-public:
-	int m_nOldWidth,m_nOldHeight;
-	int m_nXOffset,m_nYOffset,m_nWidth,m_nHeight;
-	bool m_bPreserve;
 };
 
 class EditMenuScreen:public SimpleListScreen{
@@ -882,8 +735,7 @@ public:
 			ConfigScreen().DoModal();
 			m_bDirty=true;
 			//recreate header in case of button size changed
-			CreateTitleBarText(_("Edit Level"));
-			CreateTitleBarButtons();
+			RecreateTitleBar();
 			//resize the game screen in case of button size changed
 			m_nResizeTime++;
 			break;
@@ -969,7 +821,9 @@ public:
 				sprintf(s0,"%d",theApp->m_nCurrentLevel+1);
 				u8string s=s0;
 				if(!SimpleInputScreen(_("Move Level"),
-					_("Please input the destination level number"),s)) break;
+					str(MyFormat(_("Please input the destination level number"))(" (1-%d)")
+					<<int(theApp->m_pDocument->m_objLevels.size())),
+					s,"01234\n56789")) break;
 				int n;
 				if(sscanf(s.c_str(),"%d",&n)!=1) break;
 				n--;
@@ -1065,8 +919,7 @@ public:
 		}
 
 		//show
-		m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
-		CreateTitleBarText(_("Edit Level"));
+		m_titleBar.m_sTitle=_("Edit Level");
 		return SimpleListScreen::DoModal();
 	}
 public:
@@ -1112,8 +965,7 @@ public:
 			ConfigScreen().DoModal();
 			m_bDirty=true;
 			//recreate header in case of button size changed
-			CreateTitleBarText(_("Test Level"));
-			CreateTitleBarButtons();
+			RecreateTitleBar();
 			//resize the game screen in case of button size changed
 			m_nResizeTime++;
 			break;
@@ -1132,8 +984,7 @@ public:
 
 	int DoModal() override{
 		//show
-		m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
-		CreateTitleBarText(_("Test Level"));
+		m_titleBar.m_sTitle=_("Test Level");
 		return SimpleListScreen::DoModal();
 	}
 };
@@ -1296,6 +1147,10 @@ int main(int argc,char** argv){
 
 	//init random number
 	{
+#if 0
+		//random number debug
+		unsigned int seed[4]={0xD0CF11E,0xDEADBEEF,0xBADC0DE,0xCAFEBABE};
+#else
 		unsigned int seed[4];
 		unsigned long long t=time(NULL);
 		seed[0]=(unsigned int)t;
@@ -1304,6 +1159,7 @@ int main(int argc,char** argv){
 		t=SDL_GetPerformanceCounter();
 		seed[2]=(unsigned int)t;
 		seed[3]=(unsigned int)(t>>32);
+#endif
 
 		theApp->m_objMainRnd.Init(seed,sizeof(seed)/sizeof(unsigned int));
 	}

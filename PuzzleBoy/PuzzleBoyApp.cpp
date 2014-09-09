@@ -37,6 +37,7 @@ PuzzleBoyApp::PuzzleBoyApp()
 ,m_bContinuousKey(true)
 ,m_bShowFPS(false)
 ,m_bShowMainMenuButton(true)
+,m_bAutoSaveRandomMap(true)
 ,m_pDocument(NULL)
 ,m_nCurrentLevel(0)
 ,m_nMyResizeTime(-1)
@@ -105,7 +106,9 @@ bool PuzzleBoyApp::SaveFile(const u8string& fileName){
 		m_sLastFile=fileName;
 	}
 
-	if(!ret){
+	if(ret){
+		m_pDocument->m_bModified=false;
+	}else{
 		printf("[PuzzleBoyApp] Error: Failed to save file %s\n",fileName.c_str());
 	}
 
@@ -232,6 +235,7 @@ void PuzzleBoyApp::LoadConfig(const u8string& fileName){
 #else
 	m_bShowMainMenuButton=GetConfig(cfg,"ShowMainMenuButton",1)!=0;
 #endif
+	m_bAutoSaveRandomMap=GetConfig(cfg,"AutoSaveRandomMap",1)!=0;
 
 	m_nButtonSize=GetConfig(cfg,"ButtonSize",64);
 	m_nMenuTextSize=GetConfig(cfg,"MenuTextSize",32);
@@ -275,6 +279,7 @@ void PuzzleBoyApp::SaveConfig(const u8string& fileName){
 	PutConfig(cfg,"ContinuousKey",m_bContinuousKey?1:0);
 	PutConfig(cfg,"ShowFPS",m_bShowFPS?1:0);
 	PutConfig(cfg,"ShowMainMenuButton",m_bShowMainMenuButton?1:0);
+	PutConfig(cfg,"AutoSaveRandomMap",m_bAutoSaveRandomMap?1:0);
 
 	PutConfig(cfg,"ButtonSize",m_nButtonSize);
 	PutConfig(cfg,"MenuTextSize",m_nMenuTextSize);

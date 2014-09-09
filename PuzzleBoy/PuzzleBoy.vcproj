@@ -303,6 +303,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SimpleTitleBar.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\TestRandomLevel.cpp"
 				>
 			</File>
@@ -454,6 +458,10 @@
 			</File>
 			<File
 				RelativePath=".\SimpleTextBox.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SimpleTitleBar.h"
 				>
 			</File>
 			<File

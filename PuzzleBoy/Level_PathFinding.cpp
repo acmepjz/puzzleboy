@@ -1063,7 +1063,7 @@ void PuzzleBoyLevel::OptimizeRecord(u8string& rec)
 
 int PuzzleBoyLevel::SolveIt(u8string& rec,void* userData,LevelSolverCallback callback) const{
 	for(int i=0;i<SOLVER_MAX;i++){
-		int ret=RunSolver((SolverType)i,*this,rec,userData,callback);
+		int ret=RunSolver((SolverType)i,*this,&rec,userData,callback);
 		if(ret>-2) return ret;
 	}
 

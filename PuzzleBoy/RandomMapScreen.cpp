@@ -7,44 +7,99 @@
 #include "MyFormat.h"
 #include "main.h"
 
+#include <stdio.h>
+
 #include "include_sdl.h"
+
+//normal sizes
+static const SDL_Rect RotateBlockOnlySizes[]={
+	{6,6,1},{6,8,1},{6,10,1},{8,6,1},{8,8,1},{10,6,1},
+	{5,5,2},{5,7,2},{7,5,2},{6,6,2},
+};
+const int RotateBlockOnlySizesCount=sizeof(RotateBlockOnlySizes)/sizeof(SDL_Rect);
+
+const int MaxRandomTypes=RotateBlockOnlySizesCount;
+
+//experimental sizes
+static const SDL_Rect RotateBlockOnlySizes2[]={
+	{8,10,1},{10,8,1},{10,10,1},
+	{6,8,2},{8,6,2},
+	{5,5,3},{5,7,3},{7,5,3},{6,6,3},
+};
+const int RotateBlockOnlySizesCount2=sizeof(RotateBlockOnlySizes2)/sizeof(SDL_Rect);
 
 void RandomMapScreen::OnDirty(){
 	ResetList();
 
-	AddItem(_("Rotate block only 6x6"));
-	AddItem(_("Rotate block only 8x6"));
-	AddItem(_("Rotate block only 8x8"));
-
+	for(int i=0;i<RotateBlockOnlySizesCount;i++){
+		MyFormat fmt(_("Rotate block only"));
+		fmt(" %dx%d ")<<RotateBlockOnlySizes[i].x<<RotateBlockOnlySizes[i].y;
+		if(RotateBlockOnlySizes[i].w>1){
+			fmt(_("(%d players)"))<<RotateBlockOnlySizes[i].w;
+		}
+		AddItem(str(fmt));
+	}
 	AddItem(_("Random"));
+
+	AddEmptyItem();
+
+	for(int i=0;i<RotateBlockOnlySizesCount2;i++){
+		MyFormat fmt(_("Rotate block only"));
+		fmt(" %dx%d ")<<RotateBlockOnlySizes2[i].x<<RotateBlockOnlySizes2[i].y;
+		if(RotateBlockOnlySizes2[i].w>1){
+			fmt(_("(%d players)"))<<RotateBlockOnlySizes2[i].w;
+		}
+		AddItem(str(fmt));
+	}
 }
 
 int RandomMapScreen::OnClick(int index){
-	return index+1;
+	switch(index){
+	case MaxRandomTypes+1:
+		return -1;
+	default:
+		return index+1;
+	}
 }
 
 int RandomMapScreen::DoModal(){
 	//show
-	m_LeftButtons.push_back(SCREEN_KEYBOARD_LEFT);
-	CreateTitleBarText(_("Random Map"));
+	m_titleBar.m_sTitle=_("Random Map");
 	return SimpleListScreen::DoModal();
 }
 
 int RandomMapScreen::DoRandom(int type,PuzzleBoyLevelData*& outputLevel,MT19937 *rnd,void *userData,RandomLevelCallback callback){
-	const int MaxRandomTypes=3;
-
 	type--;
-	if(type<0 || type>=MaxRandomTypes){
+	if(type==MaxRandomTypes){
 		type=int((float)MaxRandomTypes*(float)rnd->Rnd()/4294967296.0f);
 	}
 
-	switch(type){
-		case 0: return RandomTest(6,6,outputLevel,rnd,userData,callback);
-		case 1: return RandomTest(8,6,outputLevel,rnd,userData,callback);
-		case 2: return RandomTest(8,8,outputLevel,rnd,userData,callback);
+	int i=type;
+
+	//normal sizes
+	if(i>=0 && i<RotateBlockOnlySizesCount){
+		return RandomTest(
+			RotateBlockOnlySizes[i].x,
+			RotateBlockOnlySizes[i].y,
+			RotateBlockOnlySizes[i].w,
+			outputLevel,rnd,userData,callback);
 	}
+	i-=RotateBlockOnlySizesCount;
+
+	//experimental sizes
+	i-=2;
+
+	if(i>=0 && i<RotateBlockOnlySizesCount2){
+		return RandomTest(
+			RotateBlockOnlySizes2[i].x,
+			RotateBlockOnlySizes2[i].y,
+			RotateBlockOnlySizes2[i].w,
+			outputLevel,rnd,userData,callback);
+	}
+	i-=RotateBlockOnlySizesCount2;
 
 	//shouldn't goes here
+	printf("[DoRandom] Error: Unknown random map type: %d\n",type); //not thread safe
 	return 0;
 }
 
@@ -118,6 +173,10 @@ static int TestRandomLevelThreadFunc(void* userData){
 PuzzleBoyLevelFile* RandomMapScreen::DoRandomLevels(int type,int levelCount){
 	if(levelCount<=0) return NULL;
 
+#ifdef RANDOM_MAP_PROFILING
+	Uint32 t=SDL_GetTicks();
+#endif
+
 	//determine thread count
 	int threadCount=theApp->m_nThreadCount;
 	if(threadCount<=0) threadCount=SDL_GetCPUCount();
@@ -155,7 +214,7 @@ PuzzleBoyLevelFile* RandomMapScreen::DoRandomLevels(int type,int levelCount){
 		MT19937 *rnd=new MT19937;
 		unsigned int seed[16];
 		for(int j=0;j<16;j++){
-			seed[i]=theApp->m_objMainRnd.Rnd();
+			seed[j]=theApp->m_objMainRnd.Rnd();
 		}
 		rnd->Init(seed,sizeof(seed)/sizeof(unsigned int));
 
@@ -199,6 +258,11 @@ PuzzleBoyLevelFile* RandomMapScreen::DoRandomLevels(int type,int levelCount){
 	for(int i=0;i<threadCount;i++){
 		delete prog[i].rnd;
 	}
+
+#ifdef RANDOM_MAP_PROFILING
+	//print statistics
+	printf("[DoRandomLevels] Create %d random level(s) in %dms\n",doc->m_objLevels.size(),SDL_GetTicks()-t);
+#endif
 
 	if(doc->m_objLevels.empty()){
 		delete doc;
