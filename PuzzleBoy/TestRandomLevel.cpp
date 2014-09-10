@@ -19,16 +19,17 @@ inline int CalcScore(int st,int blockUsed){
 	return st+blockUsed*16;
 }
 
-int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputLevel,MT19937* rnd,void *userData,RandomLevelCallback callback){
-	struct RandomTestData{
-		PuzzleBoyLevelData *level;
-		int bestStep;
-		int bestScore;
+struct RandomTestData{
+	PuzzleBoyLevelData *level;
+	int bestStep;
+	int bestScore;
 
-		static bool Compare(const RandomTestData& obj1,const RandomTestData& obj2){
-			return (obj1.bestScore>obj2.bestScore);
-		}
-	};
+	static bool Compare(const RandomTestData& obj1,const RandomTestData& obj2){
+		return (obj1.bestScore>obj2.bestScore);
+	}
+};
+
+int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputLevel,MT19937* rnd,void *userData,RandomLevelCallback callback){
 
 	//fake genetic algorithm
 #ifdef _DEBUG

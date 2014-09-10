@@ -161,6 +161,13 @@ static TestSolverStateType TestSolver_SortPlayerPosition(int playerCount,unsigne
 	return pos;
 }
 
+struct PlayerPosition{
+	unsigned char& operator[](int index){
+		return p[index];
+	}
+	unsigned char p[4];
+};
+
 int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,LevelSolverCallback callback,TestSolverExtendedData *ed){
 #ifdef SOLVER_PROFILING
 	int ttt=SDL_GetTicks();
@@ -625,13 +632,6 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 					if(blockIdx==-1){
 						if(c==EXIT_TILE && playerRemaining==1){
 							//get player position of each step
-							struct PlayerPosition{
-								unsigned char& operator[](int index){
-									return p[index];
-								}
-								unsigned char p[4];
-							};
-
 							std::vector<PlayerPosition> positions;
 							PlayerPosition newPos={exitPos,exitPos,exitPos,exitPos};
 							positions.push_back(newPos);

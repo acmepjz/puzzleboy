@@ -133,7 +133,15 @@ bool MultiTouchManager::OnEvent(){
 		break;
 	case SDL_MOUSEBUTTONDOWN:
 		theApp->SetTouchscreen(event.button.which==SDL_TOUCH_MOUSEID);
-		if(event.motion.which!=SDL_TOUCH_MOUSEID){
+		if(event.motion.which==SDL_TOUCH_MOUSEID){
+			//eat mouse down event
+			if(HitTest(
+				float(event.button.x)/float(screenHeight),
+				float(event.button.y)/float(screenHeight))>=0)
+			{
+				return true;
+			}
+		}else{
 			float fx=float(event.button.x)/float(screenHeight);
 			float fy=float(event.button.y)/float(screenHeight);
 
@@ -165,7 +173,15 @@ bool MultiTouchManager::OnEvent(){
 		break;
 	case SDL_MOUSEBUTTONUP:
 		theApp->SetTouchscreen(event.button.which==SDL_TOUCH_MOUSEID);
-		if(event.motion.which!=SDL_TOUCH_MOUSEID){
+		if(event.motion.which==SDL_TOUCH_MOUSEID){
+			//eat mouse up event
+			if(HitTest(
+				float(event.button.x)/float(screenHeight),
+				float(event.button.y)/float(screenHeight))>=0)
+			{
+				return true;
+			}
+		}else{
 			bool ret=false;
 
 			if(m_nDraggingIndex>=0 && m_nDraggingIndex<(int)views.size()
@@ -196,7 +212,7 @@ bool MultiTouchManager::OnEvent(){
 		break;
 	case SDL_MOUSEWHEEL:
 		theApp->SetTouchscreen(event.wheel.which==SDL_TOUCH_MOUSEID);
-		if(event.motion.which!=SDL_TOUCH_MOUSEID){
+		{
 			int idx=m_nDraggingIndex;
 			int x,y;
 			SDL_GetMouseState(&x,&y);
