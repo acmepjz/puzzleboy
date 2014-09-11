@@ -7,11 +7,15 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
         message(WARNING "GCC version < 4.7, override unsupported")
         add_definitions(-Doverride=)
+    else()
+        add_definitions(-std=c++11)
     endif()
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.0)
         message(WARNING "Clang version < 3.0, override unsupported")
         add_definitions(-Doverride=)
+    else()
+        add_definitions(-std=c++11)
     endif()
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.0)
@@ -19,7 +23,13 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
         add_definitions(-Doverride=)
     endif()
 else()
-    message(WARNING "You are using an unsupported compiler! Compilation has only been tested with MSVC and GCC.")
+    message(WARNING "You are using an unsupported compiler! Compilation has only been tested with MSVC, GCC and Clang.")
+endif()
+
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
+    Set (WIN32_LIBRARIES shlwapi)
+else()
+    Set (WIN32_LIBRARIES " ")
 endif()
 
 Find_Package (SDL2 REQUIRED)
@@ -58,6 +68,7 @@ Target_Link_Libraries (
 	${MY_OPENGL_LIBRARY}
 	${SDL2_LIBRARY}
 	${FREETYPE_LIBRARIES}
+	${WIN32_LIBRARIES}
 )
 
 

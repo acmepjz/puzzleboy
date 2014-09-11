@@ -7,8 +7,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <SDL_endian.h>
+#include <SDL_platform.h>
 
-#ifdef WIN32
+#ifdef __WIN32__
 #include <windows.h>
 #endif
 
@@ -44,7 +45,7 @@ static bool GetSystemLocale0(char* buf,int size){
 		return true;
 	}
 
-#ifdef WIN32
+#ifdef __WIN32__
 	int i=GetLocaleInfoA(LOCALE_USER_DEFAULT,LOCALE_SISO639LANGNAME,buf,size);
 	if(i>0 && i<size){
 		int j=GetLocaleInfoA(LOCALE_USER_DEFAULT,LOCALE_SISO3166CTRYNAME,buf+i,size-i);
@@ -88,9 +89,11 @@ static bool GetSystemLocale0(char* buf,int size){
 bool GNUGetText::GetSystemLocale(char* buf,int size){
 	if(!GetSystemLocale0(buf,size)) return false;
 
+#ifdef __IPHONEOS__
 	// Copied from Anura engine: hack to make it work on iOS
 	if(strcmp(buf,"zh-Hans")==0) strncpy(buf,"zh_CN",size);
 	if(strcmp(buf,"zh-Hant")==0) strncpy(buf,"zh_TW",size);
+#endif
 
 	return true;
 }
