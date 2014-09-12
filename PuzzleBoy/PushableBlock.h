@@ -53,6 +53,8 @@ public:
 	unsigned char operator[](int idx) const {return m_bData[idx];}
 	unsigned char& operator[](int idx) {return m_bData[idx];}
 
+	bool IsSolid() const;
+
 	void CreateGraphics();
 public:
 	int m_nType,m_x,m_y,m_w,m_h;

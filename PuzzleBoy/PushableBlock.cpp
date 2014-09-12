@@ -208,6 +208,25 @@ static void DoBlockDataUnRLE(const std::vector<unsigned char>& src,std::vector<u
 	}
 }
 
+bool PushableBlock::IsSolid() const{
+	bool b=false;
+
+	switch(m_nType){
+	case NORMAL_BLOCK:
+	case TARGET_BLOCK:
+		b=true;
+		for(int i=0,m=m_w*m_h;i<m;i++){
+			if(m_bData[i]==0){
+				b=false;
+				break;
+			}
+		}
+		break;
+	}
+
+	return b;
+}
+
 bool PushableBlock::MFCSerialize(MFCSerializer& ar)
 {
 	if (ar.IsStoring())
@@ -219,15 +238,7 @@ bool PushableBlock::MFCSerialize(MFCSerializer& ar)
 		case TARGET_BLOCK:
 			{
 				//check if it's full
-				bool b=true;
-				for(int i=0,m=m_w*m_h;i<m;i++){
-					if(m_bData[i]==0){
-						b=false;
-						break;
-					}
-				}
-
-				if(b){
+				if(IsSolid()){
 					//use new format
 					int i;
 					if(m_w>=1 && m_w<=4 && m_h>=1 && m_h<=4){
