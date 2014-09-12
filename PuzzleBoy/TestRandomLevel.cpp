@@ -16,7 +16,7 @@ static const int MAX_WIDTH=16;
 static const int MAX_HEIGHT=16;
 
 inline int CalcScore(int st,int blockUsed){
-	return st+blockUsed*16;
+	return st+blockUsed*8;
 }
 
 struct RandomTestData{
@@ -29,7 +29,7 @@ struct RandomTestData{
 	}
 };
 
-int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputLevel,MT19937* rnd,void *userData,RandomLevelCallback callback){
+int RandomTest(int width,int height,int playerCount,int boxType,PuzzleBoyLevelData*& outputLevel,MT19937* rnd,void *userData,RandomLevelCallback callback){
 
 	//fake genetic algorithm
 #ifdef _DEBUG
@@ -47,6 +47,9 @@ int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputL
 	int tt0=0,tt1=0,tt2=0;
 #endif
 
+	//TODO: TARGET_BLOCK
+	int boxCount=(boxType==NORMAL_BLOCK)?1:0;
+
 	//init pool
 	for(int i=0;i<PoolSize;i++){
 		PuzzleBoyLevelData &level=*(new PuzzleBoyLevelData());
@@ -58,7 +61,7 @@ int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputL
 		int bestScore=0;
 
 		//random start and end (ad-hoc) point
-		int y2=int((float)height*(float)rnd->Rnd()/4294967296.0f);
+		const int y2=int((float)height*(float)rnd->Rnd()/4294967296.0f);
 		level(width-1,y2)=EXIT_TILE;
 
 		for(int j=0;j<playerCount;j++){
@@ -74,6 +77,69 @@ int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputL
 			y1-=y2;
 			if(y1<0) y1=-y1;
 			bestScore+=width-1-x1+y1;
+		}
+
+		//random add block
+		if(boxType==NORMAL_BLOCK){
+			PushableBlock *block=new PushableBlock;
+
+			block->m_nType=NORMAL_BLOCK;
+
+			for(;;){
+				int maxWidth=width>6?3:2,maxHeight=height>6?3:2;
+				block->m_w=1+int(float(maxWidth)*(float)rnd->Rnd()/4294967296.0f);
+				block->m_h=1+int(float(maxHeight)*(float)rnd->Rnd()/4294967296.0f);
+				block->m_x=2+int(float(width-3-block->m_w)*(float)rnd->Rnd()/4294967296.0f);
+				block->m_y=2+int(float(height-3-block->m_h)*(float)rnd->Rnd()/4294967296.0f);
+
+				bool b=true;
+				int x1=block->m_x,x2=block->m_x+block->m_w;
+				for(int y=block->m_y,y2=block->m_y+block->m_h;y<y2 && b;y++){
+					for(int x=x1;x<x2;x++){
+						if(level(x,y)){
+							b=false;
+							break;
+						}
+					}
+				}
+
+				if(b) break;
+			}
+
+			/*//try to block exit point
+			if(true || rnd->Rnd()<0x40000000U){
+				int x1=width-block->m_w,y1=y2-int(float(block->m_h)*(float)rnd->Rnd()/4294967296.0f);
+				if(y1<0) y1=0;
+				else if(y1>height-block->m_h) y1=height-block->m_h;
+
+				bool b=true;
+				{
+					for(int y=y1,y2=y1+block->m_h;y<y2 && b;y++){
+						for(int x=x1;x<width;x++){
+							if(level(x,y)==PLAYER_TILE){
+								b=false;
+								break;
+							}
+						}
+					}
+				}
+
+				if(b){
+					{
+						for(int y=y1,y2=y1+block->m_h;y<y2;y++){
+							for(int x=x1;x<width;x++){
+								level(x,y)=EMPTY_TILE;
+							}
+						}
+					}
+					char s[32];
+					sprintf(s,"(E=%d,%d)",width,y2+1);
+					level.m_sLevelName=toUTF16(s);
+				}
+			}*/
+
+			block->m_bData.assign(block->m_w*block->m_h,1);
+			level.m_objBlocks.push_back(block);
 		}
 
 		levels[i].bestScore=levels[i].bestStep=bestScore;
@@ -112,24 +178,33 @@ int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputL
 #endif
 			for(size_t i=0;i<bestCount;i++){
 				PushableBlock *block=level.m_objBlocks[i];
-				int x=block->m_x;
-				int y=block->m_y;
-				tmp[y][x]=1;
-				if(block->m_bData[0]) tmp[y-1][x]=1;
-				if(block->m_bData[1]) tmp[y][x-1]=1;
-				if(block->m_bData[2]) tmp[y+1][x]=1;
-				if(block->m_bData[3]) tmp[y][x+1]=1;
+				if(block->m_nType==ROTATE_BLOCK){
+					int x=block->m_x;
+					int y=block->m_y;
+					tmp[y][x]=1;
+					if(block->m_bData[0]) tmp[y-1][x]=1;
+					if(block->m_bData[1]) tmp[y][x-1]=1;
+					if(block->m_bData[2]) tmp[y+1][x]=1;
+					if(block->m_bData[3]) tmp[y][x+1]=1;
 
 #ifdef USE_TMP2
-				for(int jj=-1;jj<=1;jj++){
-					for(int ii=-1;ii<=1;ii++){
-						int xx=x+ii,yy=y+jj;
-						if(xx>=0 && xx<MAX_WIDTH && yy>=0 && yy<MAX_HEIGHT){
-							tmp2[yy][xx]=tmp2[yy][xx]/2+0x80;
+					for(int jj=-1;jj<=1;jj++){
+						for(int ii=-1;ii<=1;ii++){
+							int xx=x+ii,yy=y+jj;
+							if(xx>=0 && xx<MAX_WIDTH && yy>=0 && yy<MAX_HEIGHT){
+								tmp2[yy][xx]=tmp2[yy][xx]/2+0x80;
+							}
+						}
+					}
+#endif
+				}else{
+					int x1=block->m_x,x2=block->m_x+block->m_w;
+					for(int y=block->m_y,y2=block->m_y+block->m_h;y<y2;y++){
+						for(int x=x1;x<x2;x++){
+							tmp[y][x]=1;
 						}
 					}
 				}
-#endif
 			}
 
 			TestSolverExtendedData ed;
@@ -145,7 +220,8 @@ int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputL
 				unsigned char d[4]={};
 
 				if((x==0 || x==width-1) && (y==0 || y==height-1)) continue;
-				if(level(x,y) || tmp[y][x]) continue;
+				unsigned char tile=level(x,y);
+				if((tile!=FLOOR_TILE && tile!=EMPTY_TILE) || tmp[y][x]) continue;
 
 //#define THRESHOLD 1717986918U
 #define THRESHOLD 0x80000000U
@@ -155,10 +231,10 @@ int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputL
 				if(y<height-1) d[2]=(rnd->Rnd()>=THRESHOLD)?1:0;
 				if(x<width-1) d[3]=(rnd->Rnd()>=THRESHOLD)?1:0;
 
-				if(d[0] && (level(x,y-1) || tmp[y-1][x])) d[0]=0;
-				if(d[1] && (level(x-1,y) || tmp[y][x-1])) d[1]=0;
-				if(d[2] && (level(x,y+1) || tmp[y+1][x])) d[2]=0;
-				if(d[3] && (level(x+1,y) || tmp[y][x+1])) d[3]=0;
+				if(d[0] && (((tile=level(x,y-1))!=FLOOR_TILE && tile!=EMPTY_TILE) || tmp[y-1][x])) d[0]=0;
+				if(d[1] && (((tile=level(x-1,y))!=FLOOR_TILE && tile!=EMPTY_TILE) || tmp[y][x-1])) d[1]=0;
+				if(d[2] && (((tile=level(x,y+1))!=FLOOR_TILE && tile!=EMPTY_TILE) || tmp[y+1][x])) d[2]=0;
+				if(d[3] && (((tile=level(x+1,y))!=FLOOR_TILE && tile!=EMPTY_TILE) || tmp[y][x+1])) d[3]=0;
 
 				if(d[0]==0 && d[1]==0 && d[2]==0 && d[3]==0) continue;
 
@@ -234,8 +310,10 @@ int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputL
 				//random remove something
 				if(oldCount>0){
 					int i=int((float)oldCount*(float)rnd->Rnd()/4294967296.0f);
-					delete level.m_objBlocks[i];
-					level.m_objBlocks.erase(level.m_objBlocks.begin()+i);
+					if(level.m_objBlocks[i]->m_nType==ROTATE_BLOCK){
+						delete level.m_objBlocks[i];
+						level.m_objBlocks.erase(level.m_objBlocks.begin()+i);
+					}
 				}
 
 				//remove some wall
@@ -243,7 +321,8 @@ int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputL
 				for(int i=0,j=0;i<64 && j<m;i++){
 					int x=int((float)width*(float)rnd->Rnd()/4294967296.0f);
 					int y=int((float)height*(float)rnd->Rnd()/4294967296.0f);
-					if(level(x,y)==WALL_TILE){
+					unsigned char tile=level(x,y);
+					if(tile==WALL_TILE || tile==EMPTY_TILE){
 						level(x,y)=0;
 						m++;
 					}
@@ -274,7 +353,7 @@ int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputL
 
 				//experiment ???????? (2)
 #ifdef USE_SOLUTION_REACHABLE
-				for(int i=0;i<m;i++){
+				for(int i=boxCount;i<m;i++){
 					int x=tmp[i]->m_x,y=tmp[i]->m_y;
 					int count=0;
 
@@ -289,7 +368,7 @@ int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputL
 
 				for(;;){
 					//random shuffle
-					for(int i=0;i<m-1;i++){
+					for(int i=boxCount;i<m-1;i++){
 						int j=i+int(float(m-i)*(float)rnd->Rnd()/4294967296.0f);
 						if(j>i){
 							std::swap(removable[i],removable[j]);
@@ -300,7 +379,7 @@ int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputL
 					int bestIndex=-1;
 					int threshold=bestStep; //bestStep-2; //FIXME: arbitrary
 
-					for(int i=0;i<m;i++){
+					for(int i=boxCount;i<m;i++){
 						//try to remove position i
 						if(removable[i]!=0) continue; //can't remove it or already removed
 
@@ -384,8 +463,9 @@ int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputL
 
 			if(ed.deadlockBlockCount>0 || addWalls){
 				//remove deadlock blocks
-				for(int i=level.m_objBlocks.size()-1;i>=0;i--){
-					if((ed.blockStateReachable[i] & (ed.blockStateReachable[i]-1))==0
+				for(int i=level.m_objBlocks.size()-1;i>=boxCount;i--){
+					if((ed.blockStateReachable[i-boxCount] &
+						(ed.blockStateReachable[i-boxCount]-1))==0
 						/*&& rnd->Rnd()<2147483648.0f*/)
 					{
 						PushableBlock *block=level.m_objBlocks[i];
@@ -410,7 +490,8 @@ int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputL
 				std::vector<unsigned char> walls;
 				for(int j=0;j<height;j++){
 					for(int i=0;i<width;i++){
-						if(level(i,j)==WALL_TILE){
+						unsigned char tile=level(i,j);
+						if(tile==WALL_TILE || tile==EMPTY_TILE){
 							walls.push_back((j<<4)|i);
 						}
 					}
@@ -431,7 +512,9 @@ int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputL
 
 						for(int i=m-1;i>=0;i--){
 							int idx=(walls[i]>>4)*level.m_nWidth+(walls[i]&0xF);
-							level[idx]=0;
+							unsigned char tile=level[idx];
+							level[idx]=(tile==WALL_TILE && rnd->Rnd()<850000000U)
+								?EMPTY_TILE:FLOOR_TILE; //experimental
 
 							//now try to solve it
 							PuzzleBoyLevel lev(level);
@@ -444,7 +527,7 @@ int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputL
 								changed=true;
 								walls.erase(walls.begin()+i);
 							}else{
-								level[idx]=WALL_TILE;
+								level[idx]=tile;
 								if(n<threshold) walls.erase(walls.begin()+i); //can't remove this wall
 							}
 						}
@@ -479,8 +562,22 @@ int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputL
 		outputLevel=new PuzzleBoyLevelData;
 		outputLevel->Create(width+1,height);
 		for(int i=0,m=levels[0].level->m_objBlocks.size();i<m;i++){
-			outputLevel->m_objBlocks.push_back(new PushableBlock(*(levels[0].level->m_objBlocks[i])));
+			PushableBlock *block=levels[0].level->m_objBlocks[i];
+			outputLevel->m_objBlocks.push_back(new PushableBlock(*block));
+			if(block->m_nType==ROTATE_BLOCK) (*levels[0].level)(block->m_x,block->m_y)=0;
 		}
+
+		/*//get additional exit pos
+		int y2=-1;
+		{
+			u8string s=toUTF8(levels[0].level->m_sLevelName);
+			u8string::size_type lps=s.find("(E=");
+			if(lps!=u8string::npos){
+				int x,y;
+				if(sscanf(&(s[lps+3]),"%d,%d",&x,&y)==2) y2=y-1;
+			}
+		}*/
+
 		for(int j=0;j<height;j++){
 			for(int i=0;i<width;i++){
 				unsigned char c=(*levels[0].level)(i,j);
@@ -488,6 +585,8 @@ int RandomTest(int width,int height,int playerCount,PuzzleBoyLevelData*& outputL
 					if(c==EXIT_TILE){
 						c=0;
 						(*outputLevel)(width,j)=EXIT_TILE;
+					/*}else if(j==y2){
+						(*outputLevel)(width,j)=EXIT_TILE;*/
 					}else{
 						(*outputLevel)(width,j)=WALL_TILE;
 					}
