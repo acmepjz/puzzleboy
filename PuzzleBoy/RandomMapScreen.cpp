@@ -19,6 +19,10 @@ struct RandomMapSizeData{
 static const RandomMapSizeData RandomMapSizes[]={
 	{6,6,1,-1},{6,8,1,-1},{6,10,1,-1},{8,6,1,-1},{8,8,1,-1},{10,6,1,-1},
 	{5,5,2,-1},{5,7,2,-1},{7,5,2,-1},{6,6,2,-1},
+	{6,6,1,NORMAL_BLOCK},{6,8,1,NORMAL_BLOCK},
+	{8,6,1,NORMAL_BLOCK},
+	{6,6,1,TARGET_BLOCK},{6,8,1,TARGET_BLOCK},
+	{8,6,1,TARGET_BLOCK},
 };
 const int RandomMapSizesCount=sizeof(RandomMapSizes)/sizeof(RandomMapSizeData);
 
@@ -29,9 +33,10 @@ static const RandomMapSizeData RandomMapSizes2[]={
 	{8,10,1,-1},{10,8,1,-1},{10,10,1,-1},
 	{6,8,2,-1},{8,6,2,-1},{8,8,2,-1},
 	{5,5,3,-1},{5,7,3,-1},{7,5,3,-1},{6,6,3,-1},
-	{6,6,1,NORMAL_BLOCK},{6,8,1,NORMAL_BLOCK},
-	{8,6,1,NORMAL_BLOCK},{8,8,1,NORMAL_BLOCK},
+	{8,8,1,NORMAL_BLOCK},
 	{6,6,2,NORMAL_BLOCK},
+	{8,8,1,TARGET_BLOCK},
+	//{5,5,2,TARGET_BLOCK},
 };
 const int RandomMapSizesCount2=sizeof(RandomMapSizes2)/sizeof(RandomMapSizeData);
 

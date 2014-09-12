@@ -47,8 +47,7 @@ int RandomTest(int width,int height,int playerCount,int boxType,PuzzleBoyLevelDa
 	int tt0=0,tt1=0,tt2=0;
 #endif
 
-	//TODO: TARGET_BLOCK
-	int boxCount=(boxType==NORMAL_BLOCK)?1:0;
+	int boxCount=(boxType==NORMAL_BLOCK || boxType==TARGET_BLOCK)?1:0;
 
 	//init pool
 	for(int i=0;i<PoolSize;i++){
@@ -80,15 +79,15 @@ int RandomTest(int width,int height,int playerCount,int boxType,PuzzleBoyLevelDa
 		}
 
 		//random add block
-		if(boxType==NORMAL_BLOCK){
+		if(boxType==NORMAL_BLOCK || boxType==TARGET_BLOCK){
 			PushableBlock *block=new PushableBlock;
 
-			block->m_nType=NORMAL_BLOCK;
+			block->m_nType=boxType;
 
 			for(;;){
-				int maxWidth=width>6?3:2,maxHeight=height>6?3:2;
-				block->m_w=1+int(float(maxWidth)*(float)rnd->Rnd()/4294967296.0f);
-				block->m_h=1+int(float(maxHeight)*(float)rnd->Rnd()/4294967296.0f);
+				float maxWidth=width>6?2.5f:1.5f,maxHeight=height>6?2.5f:1.5f;
+				block->m_w=1+int(maxWidth*(float)rnd->Rnd()/4294967296.0f);
+				block->m_h=1+int(maxHeight*(float)rnd->Rnd()/4294967296.0f);
 				block->m_x=2+int(float(width-3-block->m_w)*(float)rnd->Rnd()/4294967296.0f);
 				block->m_y=2+int(float(height-3-block->m_h)*(float)rnd->Rnd()/4294967296.0f);
 
@@ -107,7 +106,7 @@ int RandomTest(int width,int height,int playerCount,int boxType,PuzzleBoyLevelDa
 			}
 
 			/*//try to block exit point
-			if(true || rnd->Rnd()<0x40000000U){
+			if(boxType==NORMAL_BLOCK && rnd->Rnd()<0x70000000U){
 				int x1=width-block->m_w,y1=y2-int(float(block->m_h)*(float)rnd->Rnd()/4294967296.0f);
 				if(y1<0) y1=0;
 				else if(y1>height-block->m_h) y1=height-block->m_h;
@@ -137,6 +136,23 @@ int RandomTest(int width,int height,int playerCount,int boxType,PuzzleBoyLevelDa
 					level.m_sLevelName=toUTF16(s);
 				}
 			}*/
+
+			if(boxType==TARGET_BLOCK){
+				//generate target pos
+				int xx,yy;
+				for(;;){
+					xx=int(float(width-block->m_w)*(float)rnd->Rnd()/4294967296.0f);
+					yy=int(float(height+1-block->m_h)*(float)rnd->Rnd()/4294967296.0f);
+					if(xx!=block->m_x || yy!=block->m_y) break;
+				}
+
+				int x2=xx+block->m_w;
+				for(int y=yy,y2=yy+block->m_h;y<y2;y++){
+					for(int x=xx;x<x2;x++){
+						level(x,y)=(level(x,y)==PLAYER_TILE)?PLAYER_AND_TARGET_TILE:TARGET_TILE;
+					}
+				}
+			}
 
 			block->m_bData.assign(block->m_w*block->m_h,1);
 			level.m_objBlocks.push_back(block);

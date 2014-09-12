@@ -216,6 +216,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 	//currently 0 or 1 boxes are supported (??? experimental)
 	//currently only rectangular boxes are supported
 	unsigned char boxWidth=0,boxHeight=0,boxXShift=0,boxYShift=0,boxXMask=0,boxYMask=0;
+	bool boxTarget=false;
 
 	TestSolverStateType initState=0;
 
@@ -262,10 +263,11 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 
 		if(obj.m_nType==ROTATE_BLOCK) continue;
 
-		if(obj.m_nType==NORMAL_BLOCK && obj.IsSolid()){
+		if(obj.IsSolid()){
 			if(boxWidth==0){
 				boxWidth=obj.m_w;
 				boxHeight=obj.m_h;
+				boxTarget=(obj.m_nType==TARGET_BLOCK);
 
 				if(boxWidth==0 || boxHeight==0 || boxWidth>=width || boxHeight>=height){
 					printf("[TestSolver] Error: Invalid block size\n");
@@ -381,9 +383,16 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 				bool b=true;
 				for(int jj=0;jj<boxHeight && b;jj++){
 					for(int ii=0;ii<boxWidth;ii++){
-						if((mapData[(unsigned char)((j+jj+1)*16+(i+ii+1))]&0x3)!=0x2){
-							b=false;
-							break;
+						if(boxTarget){
+							if(level.m_bTargetData[(j+jj)*level.m_nWidth+(i+ii)]==0){
+								b=false;
+								break;
+							}
+						}else{
+							if((mapData[(unsigned char)((j+jj+1)*16+(i+ii+1))]&0x3)!=0x2){
+								b=false;
+								break;
+							}
 						}
 					}
 				}
@@ -633,12 +642,19 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 
 		unsigned char pos[4];
 
-		unsigned char boxX=0,boxY=0,boxPos=0,boxFilled=0;
+		unsigned char boxX=0,boxY=0,boxPos=0;
+		bool boxFilled=false;
 		if(boxWidth){
 			boxX=(node.state>>boxXShift)&boxXMask;
 			boxY=(node.state>>boxYShift)&boxYMask;
 			boxPos=(boxY+1)*16+(boxX+1);
-			boxFilled=(boxFillData[boxY]>>boxX)&0x1;
+			boxFilled=((boxFillData[boxY]>>boxX)&0x1)!=0;
+
+			if(boxTarget){
+				//TODO: fix the bug that player still can go to exit when player count>=2
+				if(!boxFilled) playerRemaining++;
+				boxFilled=false;
+			}
 
 			//adhoc!!! slow!!!
 			if(boxFilled){
@@ -684,7 +700,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 	&& (unsigned char)(((POS)>>4)-1-boxY)<boxHeight)
 
 				//check push box
-				if((c&0x1)!=0 && CHECK_PUSH_BOX(newPos,boxFilled==0)){
+				if((c&0x1)!=0 && CHECK_PUSH_BOX(newPos,!boxFilled)){
 					unsigned char checkPos=boxPos+
 						(d==0?-16:(d==1?-1:(d==2?(boxHeight*16):boxWidth)));
 					unsigned char checkStep=(d&1)?16:1;
@@ -716,7 +732,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 							do{
 								unsigned char checkPos=block.pos+((n&3)-2)+((n&12)-8)*4;
 
-								if((mapData[checkPos]&0x2)==0 || CHECK_PUSH_BOX(checkPos,boxFilled==0)
+								if((mapData[checkPos]&0x2)==0 || CHECK_PUSH_BOX(checkPos,!boxFilled)
 									|| TestSolver_HitTestForBlocks(mapAdjacency,blocks,node.state,checkPos)!=-1)
 								{
 									b=false;
