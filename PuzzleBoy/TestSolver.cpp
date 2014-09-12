@@ -917,9 +917,9 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 							playerXSize+playerYSize,
 							newState|TestSolverStateType((newPos&playerXMask)|(((newPos>>4)&playerYMask)<<playerXSize))<<shift);
 						if(boxPushed){
-							boxPos+=dir-17;
+							unsigned char newBoxPos=boxPos+dir-17;
 							newState=(newState&~TestSolverStateType(((unsigned int)(boxXMask)<<boxXShift)|((unsigned int)(boxYMask)<<boxYShift)))
-								|((unsigned int)(boxPos&boxXMask)<<boxXShift)|((unsigned int)((boxPos>>4)&boxYMask)<<boxYShift);
+								|((unsigned int)(newBoxPos&boxXMask)<<boxXShift)|((unsigned int)((newBoxPos>>4)&boxYMask)<<boxYShift);
 						}
 						if(nodeMap.find(newState)==nodeMap.end()){
 							TestSolverNode newNode={currentIndex,newState};
