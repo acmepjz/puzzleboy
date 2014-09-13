@@ -88,11 +88,13 @@ int RandomTest(int width,int height,int playerCount,int boxType,PuzzleBoyLevelDa
 				float maxWidth=width>6?2.5f:1.5f,maxHeight=height>6?2.5f:1.5f;
 				block->m_w=1+int(maxWidth*(float)rnd->Rnd()/4294967296.0f);
 				block->m_h=1+int(maxHeight*(float)rnd->Rnd()/4294967296.0f);
-				block->m_x=2+int(float(width-3-block->m_w)*(float)rnd->Rnd()/4294967296.0f);
-				block->m_y=2+int(float(height-3-block->m_h)*(float)rnd->Rnd()/4294967296.0f);
+				int x1=width-3-block->m_w,x2=height-3-block->m_h;
+				block->m_x=(x1<2?1:2)+int(float(x1<2?2:x1)*(float)rnd->Rnd()/4294967296.0f);
+				block->m_y=(x2<2?1:2)+int(float(x2<2?2:x2)*(float)rnd->Rnd()/4294967296.0f);
 
 				bool b=true;
-				int x1=block->m_x,x2=block->m_x+block->m_w;
+				x1=block->m_x;
+				x2=block->m_x+block->m_w;
 				for(int y=block->m_y,y2=block->m_y+block->m_h;y<y2 && b;y++){
 					for(int x=x1;x<x2;x++){
 						if(level(x,y)){

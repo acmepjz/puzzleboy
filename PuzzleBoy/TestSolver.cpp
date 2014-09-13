@@ -638,7 +638,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 	do{
 		TestSolverNode node=nodes[currentIndex];
 
-		int playerRemaining=level.m_nPlayerCount;
+		unsigned char playerRemaining=level.m_nPlayerCount;
 
 		unsigned char pos[4];
 
@@ -651,8 +651,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 			boxFilled=((boxFillData[boxY]>>boxX)&0x1)!=0;
 
 			if(boxTarget){
-				//TODO: fix the bug that player still can go to exit when player count>=2
-				if(!boxFilled) playerRemaining++;
+				if(!boxFilled) playerRemaining=0xFF;
 				boxFilled=false;
 			}
 
@@ -698,6 +697,9 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 	boxWidth && (BOX_FILLED) \
 	&& (unsigned char)(((POS)&0xF)-1-boxX)<boxWidth \
 	&& (unsigned char)(((POS)>>4)-1-boxY)<boxHeight)
+
+				//check blocked exit
+				if((c&0x4)!=0 && (playerRemaining&0x80)!=0) c=0;
 
 				//check push box
 				if((c&0x1)!=0 && CHECK_PUSH_BOX(newPos,!boxFilled)){
@@ -755,7 +757,9 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 								if(HitTestLUT[block.type+newDir] & (1<<((blockIdx>>6)&3))){
 									newPos+=dir;
 									//no need to check if blocked by box because it will block rotation
-									if((c=mapData[newPos])&0x1) blockIdx=-1;
+									if(((c=mapData[newPos])&0x1)!=0 &&
+										((c&0x4)==0 || (playerRemaining&0x80)==0) /* check blocked exit */
+										) blockIdx=-1;
 								}else{
 									blockIdx=-1;
 								}
@@ -911,7 +915,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 						}
 
 						//add node
-						if(mapData[newPos]&0x4) newPos=exitPos;
+						if(c&0x4) newPos=exitPos;
 						newPos-=17;
 						newState=TestSolver_SortPlayerPosition(level.m_nPlayerCount,
 							playerXSize+playerYSize,
