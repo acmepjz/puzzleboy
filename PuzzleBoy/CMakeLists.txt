@@ -29,7 +29,7 @@ endif()
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
     Set (WIN32_LIBRARIES shlwapi)
 else()
-    Set (WIN32_LIBRARIES " ")
+    Set (WIN32_LIBRARIES )
 endif()
 
 Find_Package (SDL2 REQUIRED)

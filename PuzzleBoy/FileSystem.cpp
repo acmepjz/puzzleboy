@@ -230,7 +230,7 @@ std::vector<u8string> enumAllFiles(u8string path,const char* extension,bool cont
 			if(pDirent->d_name[1]==0||
 				(pDirent->d_name[1]=='.'&&pDirent->d_name[2]==0)) continue;
 		}
-		string s1=path+pDirent->d_name;
+		u8string s1=path+pDirent->d_name;
 		struct stat S_stat;
 		lstat(s1.c_str(),&S_stat);
 		if(!S_ISDIR(S_stat.st_mode)){
@@ -243,7 +243,7 @@ std::vector<u8string> enumAllFiles(u8string path,const char* extension,bool cont
 			if(containsPath){
 				v.push_back(s1);
 			}else{
-				v.push_back(string(pDirent->d_name));
+				v.push_back(u8string(pDirent->d_name));
 			}
 		}
 	}
@@ -336,12 +336,12 @@ std::vector<u8string> enumAllDirs(u8string path,bool containsPath){
 			if(pDirent->d_name[1]==0||
 				(pDirent->d_name[1]=='.'&&pDirent->d_name[2]==0)) continue;
 		}
-		string s1=path+pDirent->d_name;
+		u8string s1=path+pDirent->d_name;
 		struct stat S_stat;
 		lstat(s1.c_str(),&S_stat);
 		if(S_ISDIR(S_stat.st_mode)){
 			//Skip hidden folders.
-			s1=string(pDirent->d_name);
+			s1=u8string(pDirent->d_name);
 			if(s1.find('.')==0) continue;
 			
 			//Add result to vector.
