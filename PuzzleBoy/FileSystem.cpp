@@ -1,11 +1,22 @@
 #include "FileSystem.h"
+#include <SDL_platform.h>
 #include <string.h>
-#ifdef WIN32
+#ifdef __WIN32__
 #include <windows.h>
+#if !defined(_WIN32_IE) || _WIN32_IE<0x0600
+#undef _WIN32_IE
+#define _WIN32_IE 0x0600
+#endif
+#if !defined(_WIN32_WINNT) || _WIN32_WINNT<0x0500
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0500
+#endif
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <direct.h>
+#ifdef _MSC_VER
 #pragma comment(lib,"shlwapi.lib")
+#endif
 #else
 #include <strings.h>
 #include <sys/stat.h>
@@ -17,8 +28,6 @@
 #include <SDL.h>
 
 #define USE_SDL_RWOPS
-
-using namespace std;
 
 u8string externalStoragePath;
 
@@ -74,7 +83,7 @@ u8file *u8fopen(const char* filename,const char* mode){
 #ifdef USE_SDL_RWOPS
 	return (u8file*)SDL_RWFromFile(filename,mode);
 #else
-#ifdef WIN32
+#ifdef __WIN32__
 	u16string filenameW=toUTF16(filename);
 	u16string modeW=toUTF16(mode);
 	return (u8file*)_wfopen((const wchar_t*)filenameW.c_str(),(const wchar_t*)modeW.c_str());
@@ -130,8 +139,8 @@ int u8fclose(u8file* file){
 }
 
 std::vector<u8string> enumAllFiles(u8string path,const char* extension,bool containsPath){
-	vector<u8string> v;
-#ifdef WIN32
+	std::vector<u8string> v;
+#ifdef __WIN32__
 	WIN32_FIND_DATAW f;
 
 	if(!path.empty()){
@@ -221,7 +230,7 @@ std::vector<u8string> enumAllFiles(u8string path,const char* extension,bool cont
 			if(pDirent->d_name[1]==0||
 				(pDirent->d_name[1]=='.'&&pDirent->d_name[2]==0)) continue;
 		}
-		string s1=path+pDirent->d_name;
+		u8string s1=path+pDirent->d_name;
 		struct stat S_stat;
 		lstat(s1.c_str(),&S_stat);
 		if(!S_ISDIR(S_stat.st_mode)){
@@ -234,7 +243,7 @@ std::vector<u8string> enumAllFiles(u8string path,const char* extension,bool cont
 			if(containsPath){
 				v.push_back(s1);
 			}else{
-				v.push_back(string(pDirent->d_name));
+				v.push_back(u8string(pDirent->d_name));
 			}
 		}
 	}
@@ -244,8 +253,8 @@ std::vector<u8string> enumAllFiles(u8string path,const char* extension,bool cont
 }
 
 std::vector<u8string> enumAllDirs(u8string path,bool containsPath){
-	vector<u8string> v;
-#ifdef WIN32
+	std::vector<u8string> v;
+#ifdef __WIN32__
 	WIN32_FIND_DATAW f;
 
 	if(!path.empty()){
@@ -327,12 +336,12 @@ std::vector<u8string> enumAllDirs(u8string path,bool containsPath){
 			if(pDirent->d_name[1]==0||
 				(pDirent->d_name[1]=='.'&&pDirent->d_name[2]==0)) continue;
 		}
-		string s1=path+pDirent->d_name;
+		u8string s1=path+pDirent->d_name;
 		struct stat S_stat;
 		lstat(s1.c_str(),&S_stat);
 		if(S_ISDIR(S_stat.st_mode)){
 			//Skip hidden folders.
-			s1=string(pDirent->d_name);
+			s1=u8string(pDirent->d_name);
 			if(s1.find('.')==0) continue;
 			
 			//Add result to vector.
@@ -351,7 +360,7 @@ std::vector<u8string> enumAllDirs(u8string path,bool containsPath){
 void initPaths(){
 #if defined(ANDROID)
 	externalStoragePath=SDL_AndroidGetExternalStoragePath();
-#elif defined(WIN32)
+#elif defined(__WIN32__)
 	const int size=65536;
 	wchar_t *s=new wchar_t[size];
 	SHGetSpecialFolderPathW(NULL,s,CSIDL_PERSONAL,1);
@@ -370,7 +379,7 @@ void initPaths(){
 }
 
 bool createDirectory(const u8string& path){
-#ifdef WIN32
+#ifdef __WIN32__
 	const int size=65536;
 	wchar_t *s0=new wchar_t[size],*s=new wchar_t[size];
 

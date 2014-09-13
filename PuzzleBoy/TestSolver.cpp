@@ -100,15 +100,13 @@ static bool TestSolver_CalculateAdjacancyData(unsigned char mapAdjacency[256][4]
 		for(int d=0;d<4;d++){
 			unsigned char idx=blocks[ii].pos+dirLUT[d];
 			unsigned char count=counts[idx];
-			switch(mapData[idx]){
-			case FLOOR_TILE: case EMPTY_TILE: case EXIT_TILE:
+			if(mapData[idx]&0x2){ //if block is movable
 				if(count>=4){
 					printf("[TestSolver] Error: Too many adjacent blocks\n");
 					return false;
 				}
 				mapAdjacency[idx][count]=ii|(d<<6);
 				counts[idx]++;
-				break;
 			}
 		}
 	}
@@ -196,7 +194,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 	if(ed) memset(ed,0,sizeof(TestSolverExtendedData));
 
 	//================ init solver
-	if(level.m_nWidth>14 || level.m_nHeight>14){
+	if(level.m_nWidth>15 || level.m_nHeight>15){
 		printf("[TestSolver] Error: Map too big\n");
 		return -2;
 	}
@@ -209,28 +207,45 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 	
 	int width=level.m_nWidth;
 	int height=level.m_nHeight;
+
 	const unsigned char playerXSize=(width<=4)?((width<=2)?1:2):((width<=8)?3:4);
 	const unsigned char playerYSize=(height<=4)?((height<=2)?1:2):((height<=8)?3:4);
 	unsigned char stateSize=0;
 	unsigned char exitPos=0; //position of one of exit (y+1)*16+(x+1)
+
+	//currently 0 or 1 boxes are supported (??? experimental)
+	//currently only rectangular boxes are supported
+	unsigned char boxWidth=0,boxHeight=0,boxXShift=0,boxYShift=0,boxXMask=0,boxYMask=0;
+	bool boxTarget=false;
+
 	TestSolverStateType initState=0;
 
-	//load map
+	//load map, format:
+	//bit0=player is movable
+	//bit1=block is movable
+	//bit2=exit?
 	unsigned char mapData[256];
-	memset(mapData,WALL_TILE,sizeof(mapData));
+	memset(mapData,0,sizeof(mapData));
+
 	for(int j=0;j<level.m_nHeight;j++){
 		for(int i=0;i<level.m_nWidth;i++){
 			unsigned char c=level(i,j);
 			switch(c){
 			case FLOOR_TILE:
+				c=0x3;
+				break;
 			case WALL_TILE:
+				c=0x0;
+				break;
 			case EMPTY_TILE:
+				c=0x2;
 				break;
 			case EXIT_TILE:
+				c=0x7; //c=0x5; //< ???? this is correct behavior but it breaks old test file and random map generator (???)
 				exitPos=(j+1)*16+(i+1);
 				break;
 			case PLAYER_TILE:
-				c=0;
+				c=0x3;
 				initState|=TestSolverStateType(i|(j<<playerXSize))<<stateSize;
 				stateSize+=playerXSize+playerYSize;
 				break;
@@ -238,19 +253,60 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 				printf("[TestSolver] Error: Invalid block type\n");
 				return -2;
 			}
-			mapData[(j+1)*16+(i+1)]=c;
+			mapData[(unsigned char)((j+1)*16+(i+1))]=c;
 		}
 	}
 
-	//load blocks
+	//(experimental) pushable box support
+	for(size_t i=0;i<level.m_objBlocks.size();i++){
+		const PushableBlock &obj=*level.m_objBlocks[i];
+
+		if(obj.m_nType==ROTATE_BLOCK) continue;
+
+		if(obj.IsSolid()){
+			if(boxWidth==0){
+				boxWidth=obj.m_w;
+				boxHeight=obj.m_h;
+				boxTarget=(obj.m_nType==TARGET_BLOCK);
+
+				if(boxWidth==0 || boxHeight==0 || boxWidth>=width || boxHeight>=height){
+					printf("[TestSolver] Error: Invalid block size\n");
+					return -2;
+				}
+
+				int w=width+1-boxWidth,h=height+1-boxHeight;
+				const unsigned char boxXSize=(w<=4)?((w<=2)?1:2):((w<=8)?3:4);
+				const unsigned char boxYSize=(h<=4)?((h<=2)?1:2):((h<=8)?3:4);
+				boxXShift=stateSize;
+				boxYShift=stateSize+boxXSize;
+				stateSize+=boxXSize+boxYSize;
+				boxXMask=(1<<boxXSize)-1;
+				boxYMask=(1<<boxYSize)-1;
+
+				initState|=(TestSolverStateType(obj.m_x&boxXMask)<<boxXShift)
+					|(TestSolverStateType(obj.m_y&boxYMask)<<boxYShift);
+
+				continue;
+			}else{
+				printf("[TestSolver] Error: Too many blocks\n");
+				return -2;
+			}
+		}
+
+		printf("[TestSolver] Error: Invalid block type\n");
+		return -2;
+	}
+
+	//for deadlock optimization later
+	unsigned char newSize=stateSize;
+
+	//add rotate blocks
 	TestRotateBlock blocks[TestSolver_MaxBlockCount];
 	int blockCount=0;
 	for(size_t i=0;i<level.m_objBlocks.size();i++){
 		const PushableBlock &obj=*level.m_objBlocks[i];
-		if(obj.m_nType!=ROTATE_BLOCK){
-			printf("[TestSolver] Error: Invalid block type\n");
-			return -2;
-		}
+
+		if(obj.m_nType!=ROTATE_BLOCK) continue;
 
 		if(blockCount>TestSolver_MaxBlockCount){
 			printf("[TestSolver] Error: Too many blocks\n");
@@ -291,7 +347,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 		}
 
 		//add block
-		mapData[block.pos]=WALL_TILE;
+		mapData[block.pos]&=~0x3;
 		blocks[blockCount]=block;
 		blockCount++;
 	}
@@ -304,10 +360,10 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 		if(lps!=u8string::npos){
 			int x,y;
 			if(sscanf(&(s[lps+3]),"%d,%d",&x,&y)==2){
-				int p=y*16+x;
-				if(x>=1 && x<=width && y>=1 && y<=height && mapData[p]==0){
+				unsigned char p=y*16+x;
+				if(x>=1 && x<=width && y>=1 && y<=height){
 					exitPos=p;
-					mapData[p]=EXIT_TILE;
+					mapData[p]|=0x4;
 					e++;
 				}
 			}
@@ -315,6 +371,33 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 		if(e<=0){
 			printf("[TestSolver] Error: Invalid exit count\n");
 			return -2;
+		}
+	}
+
+	//(experimental) calculate box fill data
+	//bit=1 means box can fill into the hole
+	unsigned short boxFillData[16]={};
+	if(boxWidth){
+		for(int j=0;j<=height-boxHeight;j++){
+			for(int i=0;i<=width-boxWidth;i++){
+				bool b=true;
+				for(int jj=0;jj<boxHeight && b;jj++){
+					for(int ii=0;ii<boxWidth;ii++){
+						if(boxTarget){
+							if(level.m_bTargetData[(j+jj)*level.m_nWidth+(i+ii)]==0){
+								b=false;
+								break;
+							}
+						}else{
+							if((mapData[(unsigned char)((j+jj+1)*16+(i+ii+1))]&0x3)!=0x2){
+								b=false;
+								break;
+							}
+						}
+					}
+				}
+				if(b) boxFillData[j]|=1<<i;
+			}
 		}
 	}
 
@@ -334,7 +417,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 		for(int i=0;i<256;i++){
 			unsigned char c;
 
-			if(mapData[i]==WALL_TILE) c=2;
+			if((mapData[i]&0x3)==0x0) c=2; //???
 			else{
 				int idx=TestSolver_HitTestForBlocks(mapAdjacency,blocks,initState,i);
 				c=(idx==-1)?1:((idx>>8)==0xA?2:0);
@@ -372,7 +455,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 										unsigned char pushPos=blocks[i].pos+dirLUT[dir];
 										unsigned char playerPos=pushPos+dirLUT[(dir-1+(ddd<<1))&3];
 										if(reachable[playerPos]==1 && (HitTestLUT[blocks[i].type+d] & (1<<dir))!=0
-											&& mapData[playerPos]!=EMPTY_TILE && mapData[pushPos]!=EMPTY_TILE)
+											&& (mapData[playerPos]&0x1)!=0 && (mapData[pushPos]&0x1)!=0)
 										{
 											b=true;
 											break;
@@ -456,7 +539,6 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 
 		//remove deadlocked block
 		int deadlockBlockCount=0;
-		unsigned char newSize=(playerXSize+playerYSize)*level.m_nPlayerCount;
 		TestSolverStateType newState=initState&((TestSolverStateType(1)<<newSize)-1);
 
 		for(int i=0;i<blockCount;i++){
@@ -464,7 +546,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 				//blocked
 				unsigned char ht=HitTestLUT[blocks[i].type+((initState>>blocks[i].shift)&blocks[i].mask)];
 				for(int ii=0;ii<4;ii++){
-					if(ht & (1<<ii)) mapData[blocks[i].pos+dirLUT[ii]]=WALL_TILE;
+					if(ht & (1<<ii)) mapData[(unsigned char)(blocks[i].pos+dirLUT[ii])]&=~0x3;
 				}
 				deadlockBlockCount++;
 			}else{
@@ -536,7 +618,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 		for(int i=0;i<level.m_nPlayerCount;i++){
 			unsigned char x=(initState>>shift)&playerXMask,y=(initState>>(shift+playerXSize))&playerYMask;
 			unsigned char pos=(y+1)*16+(x+1);
-			if(mapData[pos]==EXIT_TILE){
+			if(mapData[pos]&0x4){
 				initState=(initState&~(((TestSolverStateType(1)<<(playerXSize+playerYSize))-1)<<shift))
 					|(TestSolverStateType(exitState)<<shift);
 				playerRemaining--;
@@ -556,9 +638,31 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 	do{
 		TestSolverNode node=nodes[currentIndex];
 
-		int playerRemaining=level.m_nPlayerCount;
+		unsigned char playerRemaining=level.m_nPlayerCount;
 
 		unsigned char pos[4];
+
+		unsigned char boxX=0,boxY=0,boxPos=0;
+		bool boxFilled=false;
+		if(boxWidth){
+			boxX=(node.state>>boxXShift)&boxXMask;
+			boxY=(node.state>>boxYShift)&boxYMask;
+			boxPos=(boxY+1)*16+(boxX+1);
+			boxFilled=((boxFillData[boxY]>>boxX)&0x1)!=0;
+
+			if(boxTarget){
+				if(!boxFilled) playerRemaining=0xFF;
+				boxFilled=false;
+			}
+
+			//adhoc!!! slow!!!
+			if(boxFilled){
+				unsigned char p=boxPos;
+				for(int j=0;j<boxHeight;j++,p+=16){
+					for(int i=0;i<boxWidth;i++) mapData[(unsigned char)(p+i)]=0x3;
+				}
+			}
+		}
 
 		unsigned char shift=0;
 		for(int i=0;i<level.m_nPlayerCount;i++){
@@ -568,8 +672,11 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 			shift+=playerXSize+playerYSize;
 
 			//adhoc????
-			if(mapData[pos[i]]==FLOOR_TILE) mapData[pos[i]]=WALL_TILE;
+			if(mapData[pos[i]]==0x3) mapData[pos[i]]=0x0;
 		}
+
+		//DEBGU
+		//printf("%d->%d p %d %d b %d %d\n",node.parent,currentIndex,(pos[0]-17)&0xF,(pos[0]-17)>>4,boxX,boxY);
 
 		//for each player
 		shift=0;
@@ -577,15 +684,41 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 			if(pos[currentPlayer]==exitPos) continue;
 
 			//adhoc???
-			if(mapData[pos[currentPlayer]]==WALL_TILE) mapData[pos[currentPlayer]]=FLOOR_TILE;
+			if(mapData[pos[currentPlayer]]==0x0) mapData[pos[currentPlayer]]=0x3;
 
 			//for each direction
 			for(int d=0;d<4;d++){
-				char dir=dirLUT[d];
+				const char dir=dirLUT[d];
 				unsigned char newPos=pos[currentPlayer]+dir;
 				unsigned char c=mapData[newPos];
+				bool boxPushed=false;
 
-				if(c==FLOOR_TILE || c==EXIT_TILE){
+#define CHECK_PUSH_BOX(POS,BOX_FILLED) ( \
+	boxWidth && (BOX_FILLED) \
+	&& (unsigned char)(((POS)&0xF)-1-boxX)<boxWidth \
+	&& (unsigned char)(((POS)>>4)-1-boxY)<boxHeight)
+
+				//check blocked exit
+				if((c&0x4)!=0 && (playerRemaining&0x80)!=0) c=0;
+
+				//check push box
+				if((c&0x1)!=0 && CHECK_PUSH_BOX(newPos,!boxFilled)){
+					unsigned char checkPos=boxPos+
+						(d==0?-16:(d==1?-1:(d==2?(boxHeight*16):boxWidth)));
+					unsigned char checkStep=(d&1)?16:1;
+					unsigned char checkCount=(d&1)?boxHeight:boxWidth;
+					for(;checkCount;checkPos+=checkStep,checkCount--){
+						if((mapData[checkPos]&0x2)==0
+							|| TestSolver_HitTestForBlocks(mapAdjacency,blocks,node.state,checkPos)!=-1)
+						{
+							c=0;
+							break;
+						}
+					}
+					if(c) boxPushed=true;
+				}
+
+				if(c&0x1){
 					//it's movable, now check for blocks
 					int blockIdx=TestSolver_HitTestForBlocks(mapAdjacency,blocks,node.state,newPos);
 					TestSolverStateType newState=node.state & ~(((((TestSolverStateType)1)<<(playerXSize+playerYSize))-1)<<shift);
@@ -601,7 +734,9 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 							do{
 								unsigned char checkPos=block.pos+((n&3)-2)+((n&12)-8)*4;
 
-								if(mapData[checkPos]==WALL_TILE || TestSolver_HitTestForBlocks(mapAdjacency,blocks,node.state,checkPos)!=-1){
+								if((mapData[checkPos]&0x2)==0 || CHECK_PUSH_BOX(checkPos,!boxFilled)
+									|| TestSolver_HitTestForBlocks(mapAdjacency,blocks,node.state,checkPos)!=-1)
+								{
 									b=false;
 									break;
 								}
@@ -621,7 +756,10 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 								//check if we should move twice
 								if(HitTestLUT[block.type+newDir] & (1<<((blockIdx>>6)&3))){
 									newPos+=dir;
-									if((c=mapData[newPos])!=EMPTY_TILE) blockIdx=-1;
+									//no need to check if blocked by box because it will block rotation
+									if(((c=mapData[newPos])&0x1)!=0 &&
+										((c&0x4)==0 || (playerRemaining&0x80)==0) /* check blocked exit */
+										) blockIdx=-1;
 								}else{
 									blockIdx=-1;
 								}
@@ -630,7 +768,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 					}
 
 					if(blockIdx==-1){
-						if(c==EXIT_TILE && playerRemaining==1){
+						if((c&0x4)!=0 && playerRemaining==1){
 							//get player position of each step
 							std::vector<PlayerPosition> positions;
 							PlayerPosition newPos={exitPos,exitPos,exitPos,exitPos};
@@ -704,7 +842,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 									if(newPos==exitPos){
 										for(int i=0;i<4;i++){
 											char d=dirLUT[i];
-											if(mapData[pos+d]==EXIT_TILE){
+											if(mapData[(unsigned char)(pos+d)]&0x4){
 												newPos=pos+d;
 												break;
 											}
@@ -777,11 +915,16 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 						}
 
 						//add node
-						if(mapData[newPos]==EXIT_TILE) newPos=exitPos;
+						if(c&0x4) newPos=exitPos;
 						newPos-=17;
 						newState=TestSolver_SortPlayerPosition(level.m_nPlayerCount,
 							playerXSize+playerYSize,
 							newState|TestSolverStateType((newPos&playerXMask)|(((newPos>>4)&playerYMask)<<playerXSize))<<shift);
+						if(boxPushed){
+							unsigned char newBoxPos=boxPos+dir-17;
+							newState=(newState&~TestSolverStateType(((unsigned int)(boxXMask)<<boxXShift)|((unsigned int)(boxYMask)<<boxYShift)))
+								|((unsigned int)(newBoxPos&boxXMask)<<boxXShift)|((unsigned int)((newBoxPos>>4)&boxYMask)<<boxYShift);
+						}
 						if(nodeMap.find(newState)==nodeMap.end()){
 							TestSolverNode newNode={currentIndex,newState};
 							nodes.push_back(newNode);
@@ -792,12 +935,20 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 			}
 
 			//adhoc???
-			if(mapData[pos[currentPlayer]]==FLOOR_TILE) mapData[pos[currentPlayer]]=WALL_TILE;
+			if(mapData[pos[currentPlayer]]==0x3) mapData[pos[currentPlayer]]=0x0;
 		}
 
 		//ad-hoc???
 		for(int i=0;i<level.m_nPlayerCount;i++){
-			if(mapData[pos[i]]==WALL_TILE) mapData[pos[i]]=FLOOR_TILE;
+			if(mapData[pos[i]]==0x0) mapData[pos[i]]=0x3;
+		}
+
+		//adhoc!!! slow!!!
+		if(boxFilled){
+			unsigned char p=boxPos;
+			for(int j=0;j<boxHeight;j++,p+=16){
+				for(int i=0;i<boxWidth;i++) mapData[(unsigned char)(p+i)]=0x2;
+			}
 		}
 
 #ifdef _DEBUG

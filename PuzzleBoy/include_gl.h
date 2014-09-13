@@ -1,5 +1,7 @@
 #pragma once
 
+#include <SDL_platform.h>
+
 #if defined(ANDROID) || defined(__IPHONEOS__)
 #ifndef USE_OPENGLES
 #define USE_OPENGLES
