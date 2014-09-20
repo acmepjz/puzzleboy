@@ -1,10 +1,11 @@
 #include "TestSolver.h"
 #include "MyFormat.h"
+#include "PooledAllocator.h"
+#include "SimpleHashAVLTree.h"
 
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <map>
 #include <vector>
 
 //#define SOLVER_PROFILING
@@ -27,17 +28,20 @@ struct TestRotateBlock{
 	unsigned char mask; //0(type=0xA) or 1(type=0x8) or 3(else)
 };
 
-#define FORCE_64BIT_SOLVER_STATE
-
-#ifdef FORCE_64BIT_SOLVER_STATE
 typedef unsigned long long TestSolverStateType;
-#else
-typedef uintptr_t TestSolverStateType;
-#endif
 
 struct TestSolverNode{
-	int parent;
+	TestSolverNode* parent;
+	TestSolverNode* next; //the queue
 	TestSolverStateType state;
+
+	unsigned int HashValue() const{
+		return (unsigned int)state;
+	}
+
+	char Compare(const TestSolverNode& other) const{
+		return (state<other.state)?-1:((state>other.state)?1:0);
+	}
 };
 
 static const unsigned char HitTestLUT[16]={
@@ -49,31 +53,6 @@ static const unsigned char HitTestLUT[16]={
 
 static const char dirLUT[4]={-16,-1,16,1};
 static const char dirName[4]={'W','A','S','D'};
-
-//assume key type is integral
-template<int S,class K,class T>
-class SimpleHashMap{
-public:
-	static const int map_shift=S;
-	static const int map_count=1<<S;
-	static const int map_mask=map_count-1;
-	static int hash(const K& k){
-		unsigned int kk=(unsigned int)k;
-		return (((kk>>3)^(kk>>11))+kk)&map_mask;
-	}
-	T& operator[](const K& k){
-		return maps[hash(k)][k];
-	}
-	bool find(const K& k){
-		int index=hash(k);
-		return maps[index].find(k)!=maps[index].end();
-	}
-	bool end(){
-		return false;
-	}
-private:
-	std::map<K,T> maps[map_count];
-};
 
 //return value: bit0-5: index, bit6-7: direction, bit8-11: current type
 //-1=none
@@ -577,31 +556,20 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 	//debug
 #ifdef  _DEBUG
 	printf("[TestSolver] Debug: StateSize=%d (XSize=%d,YSize=%d), InitState="
-#ifdef FORCE_64BIT_SOLVER_STATE
 #ifdef WIN32
 		"%016I64X"
 #else
 		"%016LX"
 #endif
-#else
-		"%p"
-#endif
 		"\n",stateSize,playerXSize,playerYSize,
-#ifdef FORCE_64BIT_SOLVER_STATE
 		initState
-#else
-		(void*)initState
-#endif
 		);
 #endif
 
 	//================ run solver
-	//use hashmap (??? experimental) no, it runs slower
-	//TODO: don't use vector at all
-	//SimpleHashMap<10,TestSolverStateType,int> nodeMap;
-	std::map<TestSolverStateType,int> nodeMap;
-	std::vector<TestSolverNode> nodes;
-	size_t currentIndex=0;
+	AllocateOnlyHashAVLTree<TestSolverNode,8> nodeMap;
+	int currentIndex=0,nodeCount=0;
+	TestSolverNode* currentNode=NULL,*tail=NULL;
 
 	if(rec) rec->clear();
 
@@ -630,13 +598,13 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 
 		initState=TestSolver_SortPlayerPosition(level.m_nPlayerCount,playerXSize+playerYSize,initState);
 
-		TestSolverNode node={-1,initState};
-		nodes.push_back(node);
-		nodeMap[initState]=0;
+		TestSolverNode node={NULL,NULL,initState};
+		nodeMap.find_or_insert(node,&currentNode);
+		tail=currentNode;
 	}
 
 	do{
-		TestSolverNode node=nodes[currentIndex];
+		const TestSolverNode &node=*currentNode;
 
 		unsigned char playerRemaining=level.m_nPlayerCount;
 
@@ -774,9 +742,9 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 							PlayerPosition newPos={exitPos,exitPos,exitPos,exitPos};
 							positions.push_back(newPos);
 
-							int idx=currentIndex;
+							TestSolverNode *p=currentNode;
 							do{
-								TestSolverNode node=nodes[idx];
+								const TestSolverNode& node=*p;
 
 								PlayerPosition pos;
 								unsigned char shift=0;
@@ -818,8 +786,8 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 								newPos[newIndex]=pos[index];
 								positions.push_back(newPos);
 
-								idx=node.parent;
-							}while(idx>=0);
+								p=node.parent;
+							}while(p);
 
 							//generate solution
 							if(rec){
@@ -866,7 +834,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 							if(ed){
 								char blockUsed[TestSolver_MaxBlockCount]={};
 
-								int idx=currentIndex;
+								TestSolverNode *p=currentNode;
 								TestSolverStateType st=newState;
 								ed->moves=positions.size()-1;
 								ed->pushes=0;
@@ -874,7 +842,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 								unsigned char shift=(playerXSize+playerYSize)*level.m_nPlayerCount;
 
 								do{
-									TestSolverNode node=nodes[idx];
+									const TestSolverNode& node=*p;
 
 									//check if some block is moved
 									st^=node.state;
@@ -888,23 +856,23 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 										}
 									}
 
-									idx=node.parent;
+									p=node.parent;
 									st=node.state;
-								}while(idx>=0);
+								}while(p);
 
-								idx=0;
+								int count=0;
 								for(int i=0;i<blockCount;i++){
-									if(blockUsed[i]) idx++;
+									if(blockUsed[i]) count++;
 								}
 
-								ed->state.nAllNodeCount=nodes.size();
+								ed->state.nAllNodeCount=nodeCount;
 								ed->state.nOpenedNodeCount=currentIndex;
-								ed->blockUsed=idx;
+								ed->blockUsed=count;
 							}
 
 							//debug
 #ifdef _DEBUG
-							printf("[TestSolver] Debug: Solution found. Nodes=%d (Opened=%d), Step=%d\n",nodes.size(),currentIndex,positions.size()-1);
+							printf("[TestSolver] Debug: Solution found. Nodes=%d (Opened=%d), Step=%d\n",nodeCount,currentIndex,positions.size()-1);
 #endif
 
 #ifdef SOLVER_PROFILING
@@ -925,10 +893,11 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 							newState=(newState&~TestSolverStateType(((unsigned int)(boxXMask)<<boxXShift)|((unsigned int)(boxYMask)<<boxYShift)))
 								|((unsigned int)(newBoxPos&boxXMask)<<boxXShift)|((unsigned int)((newBoxPos>>4)&boxYMask)<<boxYShift);
 						}
-						if(nodeMap.find(newState)==nodeMap.end()){
-							TestSolverNode newNode={currentIndex,newState};
-							nodes.push_back(newNode);
-							nodeMap[newState]=nodes.size()-1;
+						TestSolverNode newNode={currentNode,NULL,newState},*p=NULL;
+						if(!nodeMap.find_or_insert(newNode,&p)){
+							tail->next=p;
+							tail=p;
+							nodeCount++;
 						}
 					}
 				}
@@ -957,17 +926,20 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 #define PROGRESS_MASK 0x7FFF
 #endif
 
-		//next node
+		//show progress
 		if(((++currentIndex) & PROGRESS_MASK)==0 && callback){
 #ifndef SOLVER_PROFILING
 			LevelSolverState progress={
-				nodes.size(),
+				nodeCount,
 				currentIndex,
 			};
 			if(callback(userData,progress)) return -1;
 #endif
 		}
-	}while(currentIndex<nodes.size());
+
+		//next node
+		currentNode=currentNode->next;
+	}while(currentNode);
 
 	//generate extended data
 	if(ed){
@@ -977,7 +949,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 
 	//debug
 #ifdef _DEBUG
-	printf("[TestSolver] Debug: Solution not found. Nodes=%d\n",nodes.size());
+	printf("[TestSolver] Debug: Solution not found. Nodes=%d\n",nodeCount);
 #endif
 
 #ifdef SOLVER_PROFILING
