@@ -9,7 +9,7 @@
 #include <string.h>
 #include <vector>
 
-#define SOLVER_PROFILING
+//#define SOLVER_PROFILING
 
 #ifdef SOLVER_PROFILING
 #include <SDL.h>
@@ -184,9 +184,9 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 		printf("[TestSolver] Error: Invalid player count\n");
 		return -2;
 	}
-	
-	int width=level.m_nWidth;
-	int height=level.m_nHeight;
+
+	const int width=level.m_nWidth;
+	const int height=level.m_nHeight;
 
 	const unsigned char playerXSize=(width<=4)?((width<=2)?1:2):((width<=8)?3:4);
 	const unsigned char playerYSize=(height<=4)?((height<=2)?1:2):((height<=8)?3:4);
@@ -204,8 +204,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 	//bit0=player is movable
 	//bit1=block is movable
 	//bit2=exit?
-	unsigned char mapData[256];
-	memset(mapData,0,sizeof(mapData));
+	unsigned char mapData[256]={};
 
 	for(int j=0;j<level.m_nHeight;j++){
 		for(int i=0;i<level.m_nWidth;i++){
@@ -569,7 +568,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 
 	//================ run solver
 	AllocateOnlyHashRedBlackTree<TestSolverNode,8> nodeMap;
-	int currentIndex=0,nodeCount=0;
+	int currentIndex=0;
 	TestSolverNode* currentNode=NULL,*tail=NULL;
 
 	if(rec) rec->clear();
@@ -866,14 +865,14 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 									if(blockUsed[i]) count++;
 								}
 
-								ed->state.nAllNodeCount=nodeCount;
+								ed->state.nAllNodeCount=nodeMap.alloc.size();
 								ed->state.nOpenedNodeCount=currentIndex;
 								ed->blockUsed=count;
 							}
 
 							//debug
 #ifdef _DEBUG
-							printf("[TestSolver] Debug: Solution found. Nodes=%d (Opened=%d), Step=%d\n",nodeCount,currentIndex,positions.size()-1);
+							printf("[TestSolver] Debug: Solution found. Nodes=%d (Opened=%d), Step=%d\n",nodeMap.alloc.size(),currentIndex,positions.size()-1);
 #endif
 
 #ifdef SOLVER_PROFILING
@@ -898,7 +897,6 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 						if(!nodeMap.find_or_insert(newNode,&p)){
 							tail->next=p;
 							tail=p;
-							nodeCount++;
 						}
 					}
 				}
@@ -931,7 +929,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 		if(((++currentIndex) & PROGRESS_MASK)==0 && callback){
 #ifndef SOLVER_PROFILING
 			LevelSolverState progress={
-				nodeCount,
+				nodeMap.alloc.size(),
 				currentIndex,
 			};
 			if(callback(userData,progress)) return -1;
@@ -950,7 +948,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 
 	//debug
 #ifdef _DEBUG
-	printf("[TestSolver] Debug: Solution not found. Nodes=%d\n",nodeCount);
+	printf("[TestSolver] Debug: Solution not found. Nodes=%d\n",nodeMap.alloc.size());
 #endif
 
 #ifdef SOLVER_PROFILING

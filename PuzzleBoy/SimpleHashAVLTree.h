@@ -46,8 +46,8 @@ public:
 	enum{
 		HashTableSize=1<<N,
 	};
-protected:
 	A alloc;
+protected:
 	SimpleHashAVLTreeNode<T>* HashTable[HashTableSize];
 private:
 	static inline void pRotateL(SimpleHashAVLTreeNode<T>*& lp){

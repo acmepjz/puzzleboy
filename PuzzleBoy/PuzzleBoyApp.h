@@ -29,7 +29,7 @@ public:
 	bool LoadLocale();
 
 	void DestroyGame();
-	bool StartGame(int nPlayerCount,bool bEditMode=false,bool bTestMode=false);
+	bool StartGame(int nPlayerCount,bool bEditMode=false,bool bTestMode=false,int currentLevel2=-1);
 
 	bool OnTimer();
 	bool OnKeyDown(int nChar,int nFlags);

@@ -646,7 +646,14 @@ public:
 			break;
 		case TestFeatureStart+4:
 			//start multiplayer!!! TEST!!
-			return 2;
+			{
+				int level1,level2;
+				level1=level2=theApp->m_nCurrentLevel;
+				if(StartMultiplayerScreen(level1,level2)){
+					theApp->m_nCurrentLevel=level1;
+					return 2|(level2<<8);
+				}
+			}
 			break;
 		}
 
@@ -1042,10 +1049,10 @@ static bool OnKeyDown(int nChar,int nFlags){
 		}else{
 			ret=MainMenuScreen().DoModal();
 		}
-		switch(ret){
+		switch(ret&0xFF){
 		case 1: //single player
 		case 2: //multiplayer
-			theApp->StartGame(ret);
+			theApp->StartGame(ret&0xFF,false,false,ret>>8);
 			break;
 		case 3: //edit
 			theApp->StartGame(1,true);

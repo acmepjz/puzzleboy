@@ -51,8 +51,8 @@ public:
 		RED=0,
 		BLACK=1,
 	};
-protected:
 	A alloc;
+protected:
 	SimpleHashRedBlackTreeNode<T>* HashTable[HashTableSize];
 public:
 	SimpleHashRedBlackTreeBase(){
