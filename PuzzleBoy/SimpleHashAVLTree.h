@@ -101,7 +101,9 @@ public:
 	//return value: true means found, otherwise not found
 	bool find_or_insert(const T& data,T** ret=0){
 		unsigned int h=((unsigned int)data.HashValue())&(unsigned int)(HashTableSize-1);
-		SimpleHashAVLTreeNode<T> *p,*pr=0,*st[sizeof(void*)*8];
+		SimpleHashAVLTreeNode<T> *p,*pr=0;
+		//An AVL tree's height is strictly less than 1.44*log2(n+2)-0.328, see Wikipedia
+		SimpleHashAVLTreeNode<T> *st[sizeof(void*)*12];
 		int stIndex=0;
 		char d=0;
 
@@ -158,7 +160,7 @@ public:
 	}
 };
 
-template <class T> class PooledAllocator;
+//template <class T> class PooledAllocator;
 template <class T> class AllocateOnlyPooledAllocator;
 
 /*template <class T,unsigned int N>

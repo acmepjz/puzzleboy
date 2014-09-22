@@ -441,6 +441,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SimpleHashRedBlackTree.h"
+				>
+			</File>
+			<File
 				RelativePath=".\SimpleListScreen.h"
 				>
 			</File>

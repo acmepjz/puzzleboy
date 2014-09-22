@@ -2,13 +2,14 @@
 #include "MyFormat.h"
 #include "PooledAllocator.h"
 #include "SimpleHashAVLTree.h"
+#include "SimpleHashRedBlackTree.h"
 
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <vector>
 
-//#define SOLVER_PROFILING
+#define SOLVER_PROFILING
 
 #ifdef SOLVER_PROFILING
 #include <SDL.h>
@@ -567,7 +568,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 #endif
 
 	//================ run solver
-	AllocateOnlyHashAVLTree<TestSolverNode,8> nodeMap;
+	AllocateOnlyHashRedBlackTree<TestSolverNode,8> nodeMap;
 	int currentIndex=0,nodeCount=0;
 	TestSolverNode* currentNode=NULL,*tail=NULL;
 
