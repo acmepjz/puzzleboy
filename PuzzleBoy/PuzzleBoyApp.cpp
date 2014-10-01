@@ -352,7 +352,7 @@ void PuzzleBoyApp::DestroyGame(){
 	m_view.clear();
 }
 
-bool PuzzleBoyApp::StartGame(int nPlayerCount,bool bEditMode,bool bTestMode){
+bool PuzzleBoyApp::StartGame(int nPlayerCount,bool bEditMode,bool bTestMode,int currentLevel2){
 	DestroyGame();
 
 	m_nMyResizeTime=-1;
@@ -431,7 +431,8 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount,bool bEditMode,bool bTestMode){
 		view->m_scrollView.OnTimer();
 
 		view->m_pDocument=m_pDocument;
-		view->m_nCurrentLevel=m_nCurrentLevel;
+		view->m_nCurrentLevel=(currentLevel2>=0
+			&& currentLevel2<(int)m_pDocument->m_objLevels.size())?currentLevel2:m_nCurrentLevel;
 		view->StartGame();
 
 		m_view.push_back(view);

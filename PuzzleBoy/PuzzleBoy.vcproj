@@ -389,6 +389,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PooledAllocator.h"
+				>
+			</File>
+			<File
 				RelativePath=".\PushableBlock.h"
 				>
 			</File>
@@ -430,6 +434,14 @@
 			</File>
 			<File
 				RelativePath=".\SimpleFont.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SimpleHashAVLTree.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SimpleHashRedBlackTree.h"
 				>
 			</File>
 			<File

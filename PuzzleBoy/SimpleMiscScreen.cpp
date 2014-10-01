@@ -2,6 +2,7 @@
 #include "SimpleTitleBar.h"
 #include "SimpleText.h"
 #include "PuzzleBoyApp.h"
+#include "PuzzleBoyLevelFile.h"
 #include "SimpleTextBox.h"
 #include "MyFormat.h"
 #include "main.h"
@@ -569,6 +570,192 @@ bool ChangeSizeScreen::DoModal(){
 		if(sscanf(s.c_str(),"%d",&n)!=1) ret=false;
 		if(n<-255) n=-255; else if(n>255) n=255;
 		m_nYOffset=n;
+	}
+
+	delete m_txtPrompt;
+
+	m_nIdleTime=0;
+
+	return ret;
+}
+
+bool StartMultiplayerScreen(int& level1,int& level2){
+	bool b=true,ret=false;
+
+	int buttonSize=theApp->m_nButtonSize;
+
+	SimpleText *m_txtPrompt=new SimpleText;
+
+	SimpleTitleBar titleBar;
+	MultiTouchManager mgr;
+	SimpleTextBox txt[2];
+
+	//create title bar, text box, etc.
+	{
+		titleBar.m_sTitle=_("Start Multiplayer");
+		titleBar.m_LeftButtons.assign(1,SCREEN_KEYBOARD_LEFT);
+		titleBar.m_RightButtons.assign(1,SCREEN_KEYBOARD_YES);
+
+		u8string text[2];
+		text[0]=str(MyFormat("%d")<<(level1+1));
+		text[1]=str(MyFormat("%d")<<(level2+1));
+
+		int y=buttonSize+32;
+		const int h1=48;
+
+		for(int i=0;i<2;i++){
+
+			//label
+			m_txtPrompt->AddString(mainFont,
+				str(MyFormat(_("Start Level of Player %d"))<<(i+1)),
+				64,float(y),240,float(h1),
+				1.0f,DrawTextFlags::VCenter|DrawTextFlags::AutoSize);
+
+			//textbox
+			txt[i].m_scrollView.m_flags|=SimpleScrollViewFlags::AutoResize;
+			txt[i].m_scrollView.m_fAutoResizeScale[2]=1.0f;
+			txt[i].m_scrollView.m_nAutoResizeOffset[0]=320;
+			txt[i].m_scrollView.m_nAutoResizeOffset[1]=y;
+			txt[i].m_scrollView.m_nAutoResizeOffset[2]=-192;
+			txt[i].m_scrollView.m_nAutoResizeOffset[3]=y+h1;
+			txt[i].SetAllowedChars("01234\n56789");
+			txt[i].SetText(text[i]);
+
+			//two buttons
+			titleBar.m_AdditionalButtons.push_back(
+				SimpleTitleBarButton(0x1000+i*2,SCREEN_KEYBOARD_EMPTY,"-",
+				-176,y,-128,y+h1,1.0f,0.0f,1.0f,0.0f));
+			titleBar.m_AdditionalButtons.push_back(
+				SimpleTitleBarButton(0x1001+i*2,SCREEN_KEYBOARD_EMPTY,"+",
+				-112,y,-64,y+h1,1.0f,0.0f,1.0f,0.0f));
+
+			y+=h1+16;
+		}
+	}
+
+	while(m_bRun && b){
+		bool bDirty=titleBar.OnTimer();
+
+		for(int i=0;i<2;i++) bDirty|=txt[i].OnTimer();
+
+		for(int i=0;i<2;i++) txt[i].RegisterView(mgr);
+
+		UpdateIdleTime(bDirty);
+
+		if(NeedToDrawScreen()){
+			//clear and draw
+			ClearScreen();
+
+			SetProjectionMatrix(1);
+
+			glDisable(GL_LIGHTING);
+
+			//title bar
+			titleBar.Draw();
+
+			//draw prompt text
+			if(m_txtPrompt && !m_txtPrompt->empty()){
+				mainFont->DrawString(*m_txtPrompt,SDL_MakeColor(255,255,255,255));
+			}
+
+			//draw textbox
+			for(int i=0;i<2;i++) txt[i].Draw();
+
+			//draw overlay
+			for(int i=0;i<2;i++) txt[i].DrawOverlay();
+
+			//over
+			ShowScreen();
+		}
+
+		while(SDL_PollEvent(&event)){
+			if(mgr.OnEvent()) continue;
+			{
+				bool bProcessed=false;
+				for(int i=0;i<4;i++){
+					if(txt[i].OnEvent()){
+						bProcessed=true;
+						break;
+					}
+				}
+				if(bProcessed) continue;
+			}
+
+			if(event.type==SDL_MOUSEBUTTONDOWN){
+				SimpleTextBox::ClearFocus(); //???
+			}
+
+			int titleBarResult=titleBar.OnEvent();
+			if(titleBarResult>=-1){
+				m_nIdleTime=0;
+				switch(titleBarResult){
+				case SCREEN_KEYBOARD_LEFT:
+					b=false;
+					break;
+				case SCREEN_KEYBOARD_YES:
+					b=false;
+					ret=true;
+					break;
+				case 0x1000: case 0x1001: case 0x1002: case 0x1003:
+					{
+						u8string s;
+						int n;
+
+						txt[(titleBarResult&0xF)>>1].GetText(s);
+						if(sscanf(s.c_str(),"%d",&n)==1){
+							if(titleBarResult&1) n++;
+							else n--;
+
+							if(n<1) n=1;
+							else if(n>(int)theApp->m_pDocument->m_objLevels.size()){
+								n=theApp->m_pDocument->m_objLevels.size();
+							}
+
+							txt[(titleBarResult&0xF)>>1].SetText(str(MyFormat("%d")<<n));
+						}
+					}
+					break;
+				}
+				continue;
+			}
+
+			switch(event.type){
+			case SDL_KEYDOWN:
+				switch(event.key.keysym.sym){
+				case SDLK_AC_BACK:
+				case SDLK_ESCAPE:
+					m_bKeyDownProcessed=true;
+					b=false;
+					break;
+				}
+				break;
+			}
+		}
+
+		WaitForNextFrame();
+	}
+
+	SDL_StopTextInput();
+
+	if(ret){
+		u8string s;
+		int n;
+
+		txt[0].GetText(s);
+		if(sscanf(s.c_str(),"%d",&n)!=1) ret=false;
+		if(n<1) n=1;
+		else if(n>(int)theApp->m_pDocument->m_objLevels.size()){
+			n=theApp->m_pDocument->m_objLevels.size();
+		}
+		level1=n-1;
+
+		txt[1].GetText(s);
+		if(sscanf(s.c_str(),"%d",&n)!=1) ret=false;
+		if(n<1) n=1;
+		else if(n>(int)theApp->m_pDocument->m_objLevels.size()){
+			n=theApp->m_pDocument->m_objLevels.size();
+		}
+		level2=n-1;
 	}
 
 	delete m_txtPrompt;

@@ -16,3 +16,5 @@ public:
 	int m_nXOffset,m_nYOffset,m_nWidth,m_nHeight;
 	bool m_bPreserve;
 };
+
+bool StartMultiplayerScreen(int& level1,int& level2);
