@@ -85,9 +85,9 @@ void SimpleListScreen::EnsureVisible(int index){
 	}
 }
 
-const unsigned short i013032[]={0,1,3,0,3,2};
-
 int SimpleListScreen::DoModal(){
+	const unsigned short m_idx[]={0,1,3,0,3,2};
+
 	bool b=true;
 
 	//???
@@ -111,6 +111,9 @@ int SimpleListScreen::DoModal(){
 
 	Uint32 lastSwipeTime=SDL_GetTicks();
 	float dy=0.0f;
+
+	std::vector<float> m_vGridLine;
+	std::vector<unsigned short> m_idxGridLine;
 
 	while(m_bRun && b){
 		//update list
@@ -187,7 +190,7 @@ int SimpleListScreen::DoModal(){
 				glColor4f(1.0f,1.0f,1.0f,0.25f);
 				glEnableClientState(GL_VERTEX_ARRAY);
 				glVertexPointer(2,GL_FLOAT,0,v);
-				glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,i013032);
+				glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,m_idx);
 				glDisableClientState(GL_VERTEX_ARRAY);
 			}
 
@@ -209,16 +212,51 @@ int SimpleListScreen::DoModal(){
 				glColor4f(1.0f,1.0f,1.0f,transparency);
 				glEnableClientState(GL_VERTEX_ARRAY);
 				glVertexPointer(2,GL_FLOAT,0,v);
-				glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,i013032);
+				glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,m_idx);
 				glDisableClientState(GL_VERTEX_ARRAY);
 			}
 
 			//draw list box
 			if(m_txtList && !m_txtList->empty()){
-				glTranslatef(0.0f,float(theApp->m_nButtonSize-y02),0.0f);
-				mainFont->DrawString(*m_txtList,SDL_MakeColor(255,255,255,255),
-					y02/theApp->m_nMenuHeight,screenHeight/theApp->m_nMenuHeight+1);
-				glLoadIdentity();
+				int start=y02/theApp->m_nMenuHeight,count=screenHeight/theApp->m_nMenuHeight+1;
+				if(start<0){
+					count+=start;
+					start=0;
+				}
+				if(start+count>m_nListCount){
+					count=m_nListCount-start;
+				}
+
+				if(count>0){
+					glTranslatef(0.0f,float(theApp->m_nButtonSize-y02),0.0f);
+					mainFont->DrawString(*m_txtList,SDL_MakeColor(255,255,255,255),start,count);
+
+					//draw grid line
+					count++;
+					if(theApp->m_bShowMenuGrid){
+						if(count*2>(int)m_idxGridLine.size()){
+							m_vGridLine.resize(count*4);
+							m_idxGridLine.resize(count*2);
+							for(int i=0;i<count*2;i++){
+								m_idxGridLine[i]=i;
+							}
+						}
+						for(int i=0;i<count;i++){
+							float y=float((start+i)*theApp->m_nMenuHeight);
+							m_vGridLine[i*4]=0;
+							m_vGridLine[i*4+1]=y;
+							m_vGridLine[i*4+2]=float(screenWidth);
+							m_vGridLine[i*4+3]=y;
+						}
+						glColor4f(1.0f,1.0f,1.0f,0.5f);
+						glEnableClientState(GL_VERTEX_ARRAY);
+						glVertexPointer(2,GL_FLOAT,0,&(m_vGridLine[0]));
+						glDrawElements(GL_LINES,count*2,GL_UNSIGNED_SHORT,&(m_idxGridLine[0]));
+						glDisableClientState(GL_VERTEX_ARRAY);
+					}
+
+					glLoadIdentity();
+				}
 			}
 
 			//draw scrollbar (experimental)
@@ -254,7 +292,7 @@ int SimpleListScreen::DoModal(){
 
 				glEnableClientState(GL_VERTEX_ARRAY);
 				glVertexPointer(2,GL_FLOAT,0,v);
-				glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,i013032);
+				glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,m_idx);
 				glDisableClientState(GL_VERTEX_ARRAY);
 			}
 

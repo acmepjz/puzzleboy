@@ -23,6 +23,7 @@ enum ConfigType{
 	ConfigButtonSize,
 	ConfigMenuTextSize,
 	ConfigMenuHeightFactor,
+	ConfigShowMenuGrid,
 	ConfigTouchscreen,
 #ifndef __IPHONEOS__
 	ConfigShowMainMenuButton,
@@ -101,6 +102,9 @@ void ConfigScreen::OnDirty(){
 
 	//menu height
 	AddItem(str(MyFormat(_("Menu Height")+": %d%%")<<(theApp->m_nMenuHeightFactor*25)));
+
+	//show menu grid
+	AddItem(_("Show Grid In Menu: ")+yesno[theApp->m_bShowMenuGrid?1:0]);
 
 	//touchscreen mode
 	{
@@ -385,6 +389,12 @@ int ConfigScreen::OnClick(int index){
 				m_bDirty=true;
 			}
 		}
+		break;
+	case ConfigShowMenuGrid:
+		//show menu grid
+		theApp->m_bShowMenuGrid=!theApp->m_bShowMenuGrid;
+		m_bConfigDirty=true;
+		m_bDirty=true;
 		break;
 	case ConfigTouchscreen:
 		{

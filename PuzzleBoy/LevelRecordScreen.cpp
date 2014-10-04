@@ -22,10 +22,9 @@ public:
 	void OnDirty() override{
 		ResetList();
 		for(int i=0,m=theApp->m_view[0]->m_tCurrentBestRecord.size();i<m;i++){
-			char s[32];
-			AddItem(toUTF8(theApp->m_view[0]->m_tCurrentBestRecord[i].sPlayerName));
-			sprintf(s,"%d",theApp->m_view[0]->m_tCurrentBestRecord[i].nStep);
-			AddItem(s,false,float(screenWidth),0,DrawTextFlags::Right);
+			char s[16];
+			sprintf(s,": %d",theApp->m_view[0]->m_tCurrentBestRecord[i].nStep);
+			AddItem(toUTF8(theApp->m_view[0]->m_tCurrentBestRecord[i].sPlayerName)+s);
 		}
 	}
 	int OnClick(int index) override{
