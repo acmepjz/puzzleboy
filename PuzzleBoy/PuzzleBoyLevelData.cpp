@@ -214,29 +214,54 @@ static int PushableBlockAndIndexCompare(const void* lp1,const void* lp2){
 }
 
 void PuzzleBoyLevelData::MySerialize(MySerializer& ar){
-	ar.PutVUInt32(m_nWidth);
-	ar.PutVUInt32(m_nHeight);
+	if(ar.IsStoring()){
+		//saving
+		ar.PutVUInt32(m_nWidth);
+		ar.PutVUInt32(m_nHeight);
 
-	assert(m_nWidth*m_nHeight==m_bMapData.size());
-	for(unsigned int i=0;i<m_bMapData.size();i++){
-		ar.PutIntN(m_bMapData[i],4);
-	}
-	ar.PutFlush();
-
-	ar.PutVUInt32(m_objBlocks.size());
-
-	int m=m_objBlocks.size();
-	if(m>0){
-		PushableBlockAndIndex* arr=(PushableBlockAndIndex*)malloc(m*sizeof(PushableBlockAndIndex));
-		for(int i=0;i<m;i++){
-			PushableBlockAndIndex t={i,m_objBlocks[i]};
-			arr[i]=t;
+		assert(m_nWidth*m_nHeight==m_bMapData.size());
+		for(unsigned int i=0;i<m_bMapData.size();i++){
+			ar.PutIntN(m_bMapData[i],4);
 		}
-		qsort(arr,m,sizeof(PushableBlockAndIndex),PushableBlockAndIndexCompare);
-		for(int i=0;i<m;i++){
-			arr[i].block->MySerialize(ar);
+		ar.PutFlush();
+
+		ar.PutVUInt32(m_objBlocks.size());
+
+		int m=m_objBlocks.size();
+		if(m>0){
+			PushableBlockAndIndex* arr=(PushableBlockAndIndex*)malloc(m*sizeof(PushableBlockAndIndex));
+			for(int i=0;i<m;i++){
+				PushableBlockAndIndex t={i,m_objBlocks[i]};
+				arr[i]=t;
+			}
+			qsort(arr,m,sizeof(PushableBlockAndIndex),PushableBlockAndIndexCompare);
+			for(int i=0;i<m;i++){
+				arr[i].block->MySerialize(ar);
+			}
+			free(arr);
 		}
-		free(arr);
+	}else{
+		//loading. experimental!!!
+		for(unsigned int i=0;i<m_objBlocks.size();i++) delete m_objBlocks[i];
+		m_objBlocks.clear();
+
+		m_nWidth=ar.GetVUInt32();
+		m_nHeight=ar.GetVUInt32();
+		m_bMapData.resize(m_nWidth*m_nHeight);
+
+		for(unsigned int i=0;i<m_bMapData.size();i++){
+			m_bMapData[i]=ar.GetIntN(4);
+		}
+		ar.GetFlush();
+
+		int sz=ar.GetVUInt32();
+		if(sz>0){
+			m_objBlocks.resize(sz);
+			for(int i=0;i<sz;i++){
+				m_objBlocks[i]=new PushableBlock;
+				m_objBlocks[i]->MySerialize(ar);
+			}
+		}
 	}
 }
 

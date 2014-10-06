@@ -193,12 +193,6 @@ bool RecordManager::LoadWholeFile(u8file* f,RecordFile& ret){
 	return true;
 }
 
-bool RecordManager::LoadWholeFileAndClose(RecordFile& ret){
-	bool b=LoadWholeFile(m_pFile,ret);
-	CloseFile();
-	return b;
-}
-
 bool RecordManager::SaveWholeFile(u8file* f,RecordFile& ret){
 	//some sanity check
 	if(f==NULL) return false;

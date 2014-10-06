@@ -54,8 +54,15 @@ public:
 	bool LoadFile(const char* fileName=NULL);
 	void CloseFile();
 
+	const char* GetFileName() const{return m_sFileName;}
+	u8file* GetFile() {return m_pFile;}
+
 	static bool LoadWholeFile(u8file* f,RecordFile& ret);
-	bool LoadWholeFileAndClose(RecordFile& ret);
+	bool LoadWholeFileAndClose(RecordFile& ret){
+		bool b=LoadWholeFile(m_pFile,ret);
+		CloseFile();
+		return b;
+	}
 
 	static bool SaveWholeFile(u8file* f,RecordFile& ret);
 	bool SaveWholeFile(RecordFile& ret,const char* fileName=NULL);

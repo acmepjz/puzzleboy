@@ -203,6 +203,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\LevelDatabaseScreen.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\LevelRecordScreen.cpp"
 				>
 			</File>
@@ -358,6 +362,10 @@
 			</File>
 			<File
 				RelativePath=".\include_sdl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\LevelDatabaseScreen.h"
 				>
 			</File>
 			<File

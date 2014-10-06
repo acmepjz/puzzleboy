@@ -13,6 +13,7 @@
 #include "SimpleFont.h"
 #include "ChooseLevelScreen.h"
 #include "LevelRecordScreen.h"
+#include "LevelDatabaseScreen.h"
 #include "SimpleMessageBox.h"
 #include "SimpleMiscScreen.h"
 #include "SimpleProgressScreen.h"
@@ -552,9 +553,10 @@ public:
 
 		AddItem(_("Level Solver"));
 		AddItem(_("Random Map"));
-		AddItem("Random Map x10");
+		AddItem(_("Random Map")+" x10");
 		AddItem(_("Save Temp Level File"));
 		AddItem(_("Start Multiplayer"));
+		AddItem(_("Level Database"));
 	}
 
 	int OnClick(int index) override{
@@ -654,6 +656,10 @@ public:
 					return 2|(level2<<8);
 				}
 			}
+			break;
+		case TestFeatureStart+5:
+			//level database TEST
+			if(LevelDatabaseScreen().DoModal()) return 1;
 			break;
 		}
 
@@ -863,7 +869,7 @@ public:
 			delete m_msgBox;
 			m_msgBox=new SimpleMessageBox();
 
-			m_msgBox->m_prompt=_("Are you sure?");
+			m_msgBox->m_prompt=_("Do you want to remove this level?");
 			m_msgBox->m_buttons.push_back(_("Yes"));
 			m_msgBox->m_buttons.push_back(_("No"));
 			m_msgBox->Create();
@@ -1383,6 +1389,7 @@ int main(int argc,char** argv){
 
 			//check multi-touch event
 			if(theApp->touchMgr.OnEvent()){
+				//FIXME: don't update on every mouse move event
 				m_nIdleTime=0;
 				continue;
 			}

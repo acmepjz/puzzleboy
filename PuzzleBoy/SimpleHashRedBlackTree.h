@@ -58,6 +58,9 @@ public:
 	SimpleHashRedBlackTreeBase(){
 		memset(HashTable,0,sizeof(HashTable));
 	}
+	intptr_t size() const{
+		return alloc.size();
+	}
 	void clear(){
 		alloc.clear();
 		memset(HashTable,0,sizeof(HashTable));

@@ -363,22 +363,46 @@ bool PushableBlock::MFCSerialize(MFCSerializer& ar)
 }
 
 void PushableBlock::MySerialize(MySerializer& ar){
-	ar.PutVUInt32(m_nType);
-	ar.PutVUInt32(m_x);
-	ar.PutVUInt32(m_y);
+	if(ar.IsStoring()){
+		//saving
+		ar.PutVUInt32(m_nType);
+		ar.PutVUInt32(m_x);
+		ar.PutVUInt32(m_y);
 
-	if(m_nType!=ROTATE_BLOCK){
-		ar.PutVUInt32(m_w);
-		ar.PutVUInt32(m_h);
-		assert(m_w*m_h==m_bData.size());
-		for(unsigned int i=0;i<m_bData.size();i++){
-			ar.PutIntN(m_bData[i],1);
+		if(m_nType!=ROTATE_BLOCK){
+			ar.PutVUInt32(m_w);
+			ar.PutVUInt32(m_h);
+			assert(m_w*m_h==m_bData.size());
+			for(unsigned int i=0;i<m_bData.size();i++){
+				ar.PutIntN(m_bData[i],1);
+			}
+			ar.PutFlush();
+		}else{
+			assert(4==m_bData.size());
+			for(unsigned int i=0;i<m_bData.size();i++){
+				ar.PutInt8(m_bData[i]);
+			}
 		}
-		ar.PutFlush();
 	}else{
-		assert(4==m_bData.size());
-		for(unsigned int i=0;i<m_bData.size();i++){
-			ar.PutInt8(m_bData[i]);
+		//loading. experimental!!!
+		m_nType=ar.GetVUInt32();
+		m_x=ar.GetVUInt32();
+		m_y=ar.GetVUInt32();
+
+		if(m_nType!=ROTATE_BLOCK){
+			m_w=ar.GetVUInt32();
+			m_h=ar.GetVUInt32();
+			m_bData.resize(m_w*m_h);
+
+			for(unsigned int i=0;i<m_bData.size();i++){
+				m_bData[i]=ar.GetIntN(1);
+			}
+			ar.GetFlush();
+		}else{
+			m_bData.resize(4);
+			for(unsigned int i=0;i<m_bData.size();i++){
+				m_bData[i]=ar.GetInt8();
+			}
 		}
 	}
 }

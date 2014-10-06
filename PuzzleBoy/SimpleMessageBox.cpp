@@ -14,7 +14,8 @@ extern SDL_Event event;
 extern bool m_bKeyDownProcessed;
 
 SimpleMessageBox::SimpleMessageBox()
-:m_nDefaultValue(-1)
+:m_nUserData(0)
+,m_nDefaultValue(-1)
 ,m_nCancelValue(-1)
 ,m_nValue(-1)
 ,m_txtPrompt(NULL)

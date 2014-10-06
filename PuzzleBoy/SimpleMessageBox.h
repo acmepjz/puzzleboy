@@ -14,6 +14,7 @@ public:
 	bool OnEvent();
 	void Draw();
 public:
+	intptr_t m_nUserData;
 	int m_nDefaultValue;
 	int m_nCancelValue;
 	int m_nValue;

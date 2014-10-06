@@ -1,8 +1,18 @@
 #include "TestSolver.h"
 #include "MyFormat.h"
 #include "PooledAllocator.h"
+
+//unfortunately, it breaks in Android
+#ifndef ANDROID
+#define USE_CUSTOM_HASHTREE
+#endif
+
+#ifdef USE_CUSTOM_HASHTREE
 #include "SimpleHashAVLTree.h"
 #include "SimpleHashRedBlackTree.h"
+#else
+#include <map>
+#endif
 
 #include <assert.h>
 #include <stdio.h>
@@ -567,7 +577,11 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 #endif
 
 	//================ run solver
+#ifdef USE_CUSTOM_HASHTREE
 	AllocateOnlyHashRedBlackTree<TestSolverNode,8> nodeMap;
+#else
+	std::map<TestSolverStateType,TestSolverNode> nodeMap;
+#endif
 	int currentIndex=0;
 	TestSolverNode* currentNode=NULL,*tail=NULL;
 
@@ -599,7 +613,12 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 		initState=TestSolver_SortPlayerPosition(level.m_nPlayerCount,playerXSize+playerYSize,initState);
 
 		TestSolverNode node={NULL,NULL,initState};
+#ifdef USE_CUSTOM_HASHTREE
 		nodeMap.find_or_insert(node,&currentNode);
+#else
+		currentNode=&(nodeMap.insert(
+			std::pair<TestSolverStateType,TestSolverNode>(initState,node)).first->second);
+#endif
 		tail=currentNode;
 	}
 
@@ -865,14 +884,14 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 									if(blockUsed[i]) count++;
 								}
 
-								ed->state.nAllNodeCount=nodeMap.alloc.size();
+								ed->state.nAllNodeCount=nodeMap.size();
 								ed->state.nOpenedNodeCount=currentIndex;
 								ed->blockUsed=count;
 							}
 
 							//debug
 #ifdef _DEBUG
-							printf("[TestSolver] Debug: Solution found. Nodes=%d (Opened=%d), Step=%d\n",nodeMap.alloc.size(),currentIndex,positions.size()-1);
+							printf("[TestSolver] Debug: Solution found. Nodes=%d (Opened=%d), Step=%d\n",nodeMap.size(),currentIndex,positions.size()-1);
 #endif
 
 #ifdef SOLVER_PROFILING
@@ -894,7 +913,13 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 								|((unsigned int)(newBoxPos&boxXMask)<<boxXShift)|((unsigned int)((newBoxPos>>4)&boxYMask)<<boxYShift);
 						}
 						TestSolverNode newNode={currentNode,NULL,newState},*p=NULL;
+#ifdef USE_CUSTOM_HASHTREE
 						if(!nodeMap.find_or_insert(newNode,&p)){
+#else
+						if(nodeMap.find(newState)==nodeMap.end()){
+							p=&(nodeMap.insert(
+								std::pair<TestSolverStateType,TestSolverNode>(newState,newNode)).first->second);
+#endif
 							tail->next=p;
 							tail=p;
 						}
@@ -929,7 +954,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 		if(((++currentIndex) & PROGRESS_MASK)==0 && callback){
 #ifndef SOLVER_PROFILING
 			LevelSolverState progress={
-				nodeMap.alloc.size(),
+				nodeMap.size(),
 				currentIndex,
 			};
 			if(callback(userData,progress)) return -1;
@@ -948,7 +973,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 
 	//debug
 #ifdef _DEBUG
-	printf("[TestSolver] Debug: Solution not found. Nodes=%d\n",nodeMap.alloc.size());
+	printf("[TestSolver] Debug: Solution not found. Nodes=%d\n",nodeMap.size());
 #endif
 
 #ifdef SOLVER_PROFILING

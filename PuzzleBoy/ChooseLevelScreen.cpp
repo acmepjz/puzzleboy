@@ -12,9 +12,6 @@
 #include <stdio.h>
 #include <string.h>
 
-//ad-hoc
-extern SDL_Event event;
-
 void ChooseLevelFileScreen::OnDirty(){
 	int count=m_files.size();
 
@@ -102,17 +99,26 @@ void ChooseLevelScreen::OnDirty(){
 
 	ResetList();
 
+	const int w1=theApp->m_nMenuTextSize*5; //160
+	const int w2=88+theApp->m_nMenuTextSize*5; //256
+
 	for(int index=0;index<count;index++){
 		int i=m_searchFilter.empty()?index:m_searchResult[index];
 
 		char s[32];
+
+		//index
 		sprintf(s,"%d",i+1);
-		AddItem(s);
+		AddItem(s,true,0,76,DrawTextFlags::AutoSize);
+
+		//name
 		AddItem(toUTF8(theApp->m_pDocument->m_objLevels[i]->m_sLevelName),false,
-			80,float(screenWidth-256),DrawTextFlags::AutoSize);
+			80,float(screenWidth-w2),DrawTextFlags::AutoSize);
+
+		//size
 		sprintf(s,"%dx%d",theApp->m_pDocument->m_objLevels[i]->m_nWidth,
 			theApp->m_pDocument->m_objLevels[i]->m_nHeight);
-		AddItem(s,false,float(screenWidth-160));
+		AddItem(s,false,float(screenWidth-w1));
 
 		//get record (???)
 		int st=m_bestStep[i];

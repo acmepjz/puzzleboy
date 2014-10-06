@@ -38,6 +38,7 @@ PuzzleBoyApp::PuzzleBoyApp()
 ,m_bShowFPS(false)
 ,m_bShowMainMenuButton(true)
 ,m_bAutoSaveRandomMap(true)
+,m_bShowMenuGrid(false)
 ,m_pDocument(NULL)
 ,m_nCurrentLevel(0)
 ,m_nMyResizeTime(-1)
@@ -242,6 +243,7 @@ void PuzzleBoyApp::LoadConfig(const u8string& fileName){
 	m_fMenuTextScale=m_nMenuTextSize/32.0f;
 	m_nMenuHeightFactor=GetConfig(cfg,"MenuHeightFactor",4);
 	m_nMenuHeight=(m_nMenuTextSize*m_nMenuHeightFactor)>>2;
+	m_bShowMenuGrid=GetConfig(cfg,"ShowMenuGrid",0)!=0;
 
 	m_nTouchConfig=GetConfig(cfg,"IsTouchscreen",2);
 	if(m_nTouchConfig<0 || m_nTouchConfig>2) m_nTouchConfig=2;
@@ -284,6 +286,7 @@ void PuzzleBoyApp::SaveConfig(const u8string& fileName){
 	PutConfig(cfg,"ButtonSize",m_nButtonSize);
 	PutConfig(cfg,"MenuTextSize",m_nMenuTextSize);
 	PutConfig(cfg,"MenuHeightFactor",m_nMenuHeightFactor);
+	PutConfig(cfg,"ShowMenuGrid",m_bShowMenuGrid?1:0);
 
 	PutConfig(cfg,"IsTouchscreen",m_nTouchConfig);
 
