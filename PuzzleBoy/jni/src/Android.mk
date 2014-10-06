@@ -18,6 +18,7 @@ LOCAL_SRC_FILES := \
 ../../FileSystem.cpp \
 ../../GNUGetText.cpp \
 ../../Level_PathFinding.cpp \
+../../LevelDatabaseScreen.cpp \
 ../../LevelRecordScreen.cpp \
 ../../main.cpp \
 ../../MFCSerializer.cpp \

@@ -7,6 +7,13 @@
 #include <assert.h>
 
 template <class T>
+struct PooledAllocatorChunk{
+	PooledAllocatorChunk* next;
+	intptr_t size;
+	T item[1];
+};
+
+template <class T>
 class PooledAllocatorBase{
 public:
 	PooledAllocatorBase():chunks(NULL),m_size(0),m_capacity(0){
@@ -16,7 +23,7 @@ public:
 	}
 	void clear(){
 		while(chunks){
-			Chunk *nextChunk=chunks->next;
+			PooledAllocatorChunk<T> *nextChunk=chunks->next;
 			free(chunks);
 			chunks=nextChunk;
 		}
@@ -46,20 +53,16 @@ public:
 		}
 	}
 protected:
-	struct Chunk{
-		Chunk* next;
-		intptr_t size;
-		T item[1];
-	};
-	Chunk* chunks;
+	PooledAllocatorChunk<T>* chunks;
 	intptr_t m_size,m_capacity;
 
 	//internal function
-	virtual Chunk* addChunk(intptr_t size){
-		Chunk* newChunk=NULL;
+	virtual PooledAllocatorChunk<T>* addChunk(intptr_t size){
+		PooledAllocatorChunk<T>* newChunk=NULL;
 
 		for(;;){
-			if((newChunk=(Chunk*)malloc(sizeof(Chunk*)+sizeof(intptr_t)+sizeof(T)*size))!=NULL) break;
+			if((newChunk=(PooledAllocatorChunk<T>*)malloc(sizeof(void*)
+				+sizeof(intptr_t)+sizeof(T)*size))!=NULL) break;
 
 			//out of memory?
 			size/=2;
@@ -79,6 +82,11 @@ protected:
 		chunks=newChunk;
 		return newChunk;
 	}
+
+	//ad-hoc fix for stupid GCC
+	PooledAllocatorChunk<T>* do_addChunk(intptr_t size){
+		return addChunk(size);
+	}
 };
 
 /** A simple memory pooled chunk allocator.
@@ -92,20 +100,22 @@ public:
 	PooledAllocator():firstUnused(NULL){
 	}
 	void clear(){
-		PooledAllocatorBase::clear();
+		PooledAllocatorBase<T>::clear();
 
 		firstUnused=NULL;
 	}
 	/** Allocate an item. */
 	T* allocate(){
 		if(firstUnused==NULL){
-			reserve(m_capacity<16?16:m_capacity*2);
+			PooledAllocatorBase<T>::reserve(
+				PooledAllocatorBase<T>::m_capacity<16?
+				16:PooledAllocatorBase<T>::m_capacity*2);
 		}
 
 		T *node=firstUnused;
 		firstUnused=*(T**)node;
 
-		m_size++;
+		PooledAllocatorBase<T>::m_size++;
 
 		return node;
 	}
@@ -118,15 +128,15 @@ public:
 		*(T**)node=firstUnused;
 		firstUnused=node;
 
-		m_size--;
+		PooledAllocatorBase<T>::m_size--;
 	}
 protected:
 	T* firstUnused;
 
 	//internal function
-	virtual Chunk* addChunk(intptr_t size) override{
+	virtual PooledAllocatorChunk<T>* addChunk(intptr_t size) override{
 		assert(sizeof(T)>=sizeof(T*));
-		Chunk* newChunk=PooledAllocatorBase::addChunk(size);
+		PooledAllocatorChunk<T>* newChunk=PooledAllocatorBase<T>::addChunk(size);
 		size=newChunk->size;
 
 		for(intptr_t i=0;i<size-1;i++){
@@ -144,27 +154,31 @@ class AllocateOnlyPooledAllocator:public PooledAllocatorBase<T>{
 public:
 	/// Allocate an item.
 	T* allocate(){
-		if(m_size>=m_capacity){
-			reserve(m_capacity<16?16:m_capacity*2);
+		if(PooledAllocatorBase<T>::m_size>=PooledAllocatorBase<T>::m_capacity){
+			reserve(
+				PooledAllocatorBase<T>::m_capacity<16?
+				16:PooledAllocatorBase<T>::m_capacity*2);
 		}
 
 		//FIXME: need specified reserve function to make it work
-		T *node=chunks->item+(m_capacity-(++m_size));
+		T *node=PooledAllocatorBase<T>::chunks->item+(PooledAllocatorBase<T>::m_capacity
+			-(++PooledAllocatorBase<T>::m_size));
 
 		return node;
 	}
 	//we need this specified reserve function
 	void reserve(intptr_t size){
 		intptr_t i=0,i2=0;
-		if(chunks){
-			i=chunks->size;
+		if(PooledAllocatorBase<T>::chunks){
+			i=PooledAllocatorBase<T>::chunks->size;
 			i2=i*2;
 		}else{
 			i=16;
 			i2=1024;
 		}
-		if(i<size-m_capacity) i=size-m_capacity;
+		if(i<size-PooledAllocatorBase<T>::m_capacity)
+			i=size-PooledAllocatorBase<T>::m_capacity;
 		if(i>i2) i=i2;
-		addChunk(i);
+		PooledAllocatorBase<T>::do_addChunk(i);
 	}
 };
