@@ -4,32 +4,32 @@ Set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/"
 
 # check if "override" is supported
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
-        message(WARNING "GCC version < 4.7, override unsupported")
-        add_definitions(-Doverride=)
-    else()
-        add_definitions(-std=c++11)
-    endif()
+	if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
+		message(WARNING "GCC version < 4.7, override unsupported")
+		add_definitions(-Doverride=)
+	else()
+		add_definitions(-std=c++11)
+	endif()
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.0)
-        message(WARNING "Clang version < 3.0, override unsupported")
-        add_definitions(-Doverride=)
-    else()
-        add_definitions(-std=c++11)
-    endif()
+	if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.0)
+		message(WARNING "Clang version < 3.0, override unsupported")
+		add_definitions(-Doverride=)
+	else()
+		add_definitions(-std=c++11)
+	endif()
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.0)
-        message(WARNING "MSVC version < 2003, override unsupported")
-        add_definitions(-Doverride=)
-    endif()
+	if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.0)
+		message(WARNING "MSVC version < 2003, override unsupported")
+		add_definitions(-Doverride=)
+	endif()
 else()
-    message(WARNING "You are using an unsupported compiler! Compilation has only been tested with MSVC, GCC and Clang.")
+	message(WARNING "You are using an unsupported compiler! Compilation has only been tested with MSVC, GCC and Clang.")
 endif()
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
-    Set (WIN32_LIBRARIES shlwapi)
+	Set (WIN32_LIBRARIES shlwapi ws2_32 winmm)
 else()
-    Set (WIN32_LIBRARIES )
+	Set (WIN32_LIBRARIES )
 endif()
 
 Find_Package (SDL2 REQUIRED)
@@ -52,16 +52,21 @@ else()
 	endif()
 endif()
 
+Set (ENET_DIR ${PROJECT_SOURCE_DIR}/external/enet)
+Set (ENET_INCLUDE_DIR ${ENET_DIR}/include)
+
 Include_Directories(
 	${CMAKE_SOURCE_DIR}
 	${MY_OPENGL_INCLUDE_DIR}
 	${SDL2_INCLUDE_DIR}
 	${FREETYPE_INCLUDE_DIRS}
+	${ENET_INCLUDE_DIR}
 )
 
 File (GLOB SOURCES ${PROJECT_SOURCE_DIR}/*.cpp)
+File (GLOB ENET_SOURCES ${ENET_DIR}/*.c)
 
-Add_Executable (puzzleboy ${SOURCES})
+Add_Executable (puzzleboy ${SOURCES} ${ENET_SOURCES})
 
 Target_Link_Libraries (
 	puzzleboy

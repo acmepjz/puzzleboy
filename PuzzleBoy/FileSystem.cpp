@@ -358,19 +358,21 @@ std::vector<u8string> enumAllDirs(u8string path,bool containsPath){
 }
 
 void initPaths(){
+	if(externalStoragePath.empty()){
 #if defined(ANDROID)
-	externalStoragePath=SDL_AndroidGetExternalStoragePath();
+		externalStoragePath=SDL_AndroidGetExternalStoragePath();
 #elif defined(__WIN32__)
-	const int size=65536;
-	wchar_t *s=new wchar_t[size];
-	SHGetSpecialFolderPathW(NULL,s,CSIDL_PERSONAL,1);
-	externalStoragePath=toUTF8((const unsigned short*)s)+"/My Games/PuzzleBoy";
-	delete[] s;
+		const int size=65536;
+		wchar_t *s=new wchar_t[size];
+		SHGetSpecialFolderPathW(NULL,s,CSIDL_PERSONAL,1);
+		externalStoragePath=toUTF8((const unsigned short*)s)+"/My Games/PuzzleBoy";
+		delete[] s;
 #else
-	const char *env=getenv("HOME");
-	if(env==NULL) externalStoragePath="local";
-	else externalStoragePath=u8string(env)+"/.PuzzleBoy";
+		const char *env=getenv("HOME");
+		if(env==NULL) externalStoragePath="local";
+		else externalStoragePath=u8string(env)+"/.PuzzleBoy";
 #endif
+	}
 	if(externalStoragePath.empty()) return;
 
 	//Create subfolders.

@@ -1007,7 +1007,7 @@ void PuzzleBoyLevel::OptimizeRecord(u8string& rec)
 			break;
 		}
 
-		while(IsAnimating()) OnTimer();
+		while(IsAnimating()) OnTimer(8);
 
 		if(currentMove.empty()) continue;
 

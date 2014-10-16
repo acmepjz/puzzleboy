@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;F:\Projects\SDL2-2.0.0\include&quot;;&quot;F:\Projects\freetype-2.5.3\include&quot;"
+				AdditionalIncludeDirectories="&quot;F:\Projects\SDL2-2.0.0\include&quot;;&quot;F:\Projects\freetype-2.5.3\include&quot;;F:\MyProjects\PuzzleBoy\external\enet\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL2.lib SDL2main.lib opengl32.lib glu32.lib freetype.lib"
+				AdditionalDependencies="SDL2.lib SDL2main.lib opengl32.lib glu32.lib freetype.lib ws2_32.lib winmm.lib"
 				OutputFile="$(SolutionDir)\$(ProjectName)_d.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;F:\Projects\SDL-1.2.14\lib&quot;;&quot;F:\Projects\freetype-2.5.3\vs2008\Release&quot;"
@@ -118,7 +118,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;F:\Projects\SDL2-2.0.0\include&quot;;&quot;F:\Projects\freetype-2.5.3\include&quot;"
+				AdditionalIncludeDirectories="&quot;F:\Projects\SDL2-2.0.0\include&quot;;&quot;F:\Projects\freetype-2.5.3\include&quot;;F:\MyProjects\PuzzleBoy\external\enet\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -137,7 +137,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL2.lib SDL2main.lib opengl32.lib glu32.lib freetype.lib"
+				AdditionalDependencies="SDL2.lib SDL2main.lib opengl32.lib glu32.lib freetype.lib ws2_32.lib winmm.lib"
 				OutputFile="$(SolutionDir)\$(ProjectName).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;F:\Projects\SDL-1.2.14\lib&quot;;&quot;F:\Projects\freetype-2.5.3\vs2008\Release&quot;"
@@ -215,6 +215,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MainMenuScreen.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\MFCSerializer.cpp"
 				>
 			</File>
@@ -232,6 +236,10 @@
 			</File>
 			<File
 				RelativePath=".\MySerializer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\NetworkManager.cpp"
 				>
 			</File>
 			<File
@@ -326,6 +334,46 @@
 				RelativePath=".\VertexList.cpp"
 				>
 			</File>
+			<Filter
+				Name="enet"
+				>
+				<File
+					RelativePath=".\external\enet\callbacks.c"
+					>
+				</File>
+				<File
+					RelativePath=".\external\enet\compress.c"
+					>
+				</File>
+				<File
+					RelativePath=".\external\enet\host.c"
+					>
+				</File>
+				<File
+					RelativePath=".\external\enet\list.c"
+					>
+				</File>
+				<File
+					RelativePath=".\external\enet\packet.c"
+					>
+				</File>
+				<File
+					RelativePath=".\external\enet\peer.c"
+					>
+				</File>
+				<File
+					RelativePath=".\external\enet\protocol.c"
+					>
+				</File>
+				<File
+					RelativePath=".\external\enet\unix.c"
+					>
+				</File>
+				<File
+					RelativePath=".\external\enet\win32.c"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Í·ÎÄ¼þ"
@@ -377,6 +425,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MainMenuScreen.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MFCSerializer.h"
 				>
 			</File>
@@ -394,6 +446,10 @@
 			</File>
 			<File
 				RelativePath=".\MySerializer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\NetworkManager.h"
 				>
 			</File>
 			<File
