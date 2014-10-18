@@ -33,8 +33,10 @@ public:
 
 	bool IsNetworkMultiplayer() const{return _host!=NULL;}
 	bool IsConnected() const{return _peer!=NULL;}
+	bool IsServer() const{return isServer;}
 	void GetPeerDescription(std::vector<u8string>& desc);
 
+	void SendQueryLevels(unsigned char flags);
 	void SendSetCurrentLevel(unsigned char flags);
 	void SendPlayerMove(const NetworkMove& move);
 	void SendUpdateLevels();
@@ -69,6 +71,7 @@ private:
 	SimpleProgressScreen* progress;
 	void *_host,*_peer;
 	unsigned char m_address[20];
+	unsigned int m_nNextRetryTime;
 	bool isServer;
 	std::queue<NetworkMove> m_receivedMoves;
 private:

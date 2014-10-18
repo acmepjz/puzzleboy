@@ -690,7 +690,7 @@ bool PuzzleBoyLevelView::OnTimer(){
 				FinishGame();
 				return true;
 			}else if(m_sRecord.empty()){
-				m_bPlayFromRecord=false;
+				if(m_nMode!=READONLY_MODE || !netMgr->IsNetworkMultiplayer()) m_bPlayFromRecord=false;
 
 				//get continuous key event
 				if(m_nKey && theApp->m_bContinuousKey){
@@ -754,6 +754,10 @@ bool PuzzleBoyLevelView::OnTimer(){
 							break;
 						case 6:
 							m_objPlayingLevel->SwitchPlayer(move.x,move.y,true);
+							bDirty=true;
+							break;
+						case 8:
+							m_bPlayFromRecord=true;
 							bDirty=true;
 							break;
 						default:

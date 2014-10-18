@@ -34,8 +34,13 @@ const int CHANNELS_USED=2;
 //packet type: 1 byte
 enum PuzzleBoyNetworkPacketType{
 	//send when peer want to make sure the levels are up to date
-	//format: player name (u16string), level count (vuint32), checksums...
-	//if level=0 then doesn't perform level update
+	//format: flags (uint8) 0x1=player name present 0x2=checksum present
+	//0x4=sender's current level present (used when client auto-reconnect)
+	//player name: (u16string)
+	//checksum: count (vuint32), checksums...
+	//if count=0 then doesn't perform level update
+	//sender's current level: index (vuint32), data (PuzzleBoyLevel::SerializeHistory)
+	//receiver should update history if this level's checksum is match
 	PACKET_QUERY_LEVELS,
 
 	//send when peer want to update level pack or level
@@ -59,7 +64,8 @@ enum PuzzleBoyNetworkPacketType{
 
 	//send when sender moves
 	//format: sesson id (int32)
-	//type (uint8) 0-7 up,down,left,right,undo,redo,switch,restart
+	//type (uint8) 0-7=up,down,left,right,undo,redo,switch,restart
+	//8=set play from record flag
 	//if type==switch (6) then there are also x (vuint32), y (vuint32)
 	PACKET_PLAYER_MOVE,
 
@@ -73,6 +79,7 @@ NetworkManager::NetworkManager()
 ,progress(NULL)
 ,_host(NULL)
 ,_peer(NULL)
+,m_nNextRetryTime(0)
 ,isServer(false)
 {
 	assert(sizeof(m_address)>=sizeof(ENetAddress));
@@ -83,12 +90,16 @@ static void SendPacket(ENetPeer *peer,const std::vector<unsigned char>& data){
 	enet_peer_send(peer,0,packet);
 }
 
-static void SendQueryLevelsPacket(ENetPeer *peer,bool updateLevels=true){
+static void SendQueryLevelsPacket(ENetPeer *peer,unsigned char flags){
 	MySerializer ar;
 	ar.PutInt8(PACKET_QUERY_LEVELS);
-	ar.PutU16String(theApp->m_sPlayerName[0]);
+	ar.PutInt8(flags);
 
-	if(updateLevels){
+	//player name
+	if(flags & 0x1) ar.PutU16String(theApp->m_sPlayerName[0]);
+
+	//check sum
+	if(flags & 0x2){
 		PuzzleBoyLevelFile *pDoc=theApp->m_pDocument;
 		const size_t m=pDoc->m_objLevels.size();
 
@@ -104,8 +115,12 @@ static void SendQueryLevelsPacket(ENetPeer *peer,bool updateLevels=true){
 				checksum.bChecksum,
 				checksum.bChecksum+PuzzleBoyLevelData::ChecksumSize);
 		}
-	}else{
-		ar.PutVUInt32(0);
+	}
+
+	//current level
+	if(flags & 0x4){
+		ar.PutVUInt32(theApp->m_view[0]->m_nCurrentLevel);
+		theApp->m_view[0]->m_objPlayingLevel->SerializeHistory(ar,true,true);
 	}
 
 	SendPacket(peer,ar.GetData());
@@ -172,8 +187,8 @@ static void SendUpdateLevelsPacket(ENetPeer *peer,int sessionID,const std::vecto
 	//send packets
 	MySerializer ar;
 	ar.PutInt8(PACKET_QUERY_LEVELS);
+	ar.PutInt8(0x1); //flags
 	ar.PutU16String(theApp->m_sPlayerName[0]);
-	ar.PutVUInt32(0);
 	SendPacket(peer,ar.GetData());
 
 	ar.Clear();
@@ -184,6 +199,8 @@ static void SendUpdateLevelsPacket(ENetPeer *peer,int sessionID,const std::vecto
 	ar.PutU16String(pDoc->m_sLevelPackName);
 	if(m!=m2) ar.PutVUInt32(m);
 	SendPacket(peer,ar.GetData());
+
+	printf("[SendUpdateLevelsPacket] There are %d levels need to transfer\n",levelsNeedToUpdate.size());
 
 	for(size_t i=0;i<levelsNeedToUpdate.size();i++){
 		LevelNeedToUpdate *lv=levelsNeedToUpdate[i];
@@ -234,16 +251,52 @@ static void SendGeneratingRandomMapPacket(ENetPeer *peer){
 	SendPacket(peer,ar.GetData());
 }
 
-static void ProcessQueryLevelsPacket(MySerializer& ar0,ENetPeer *peer,int sessionID){
-	theApp->m_sPlayerName[2]=ar0.GetU16String();
+static void ProcessQueryLevelsPacket(MySerializer& ar0,ENetPeer *peer,NetworkManager* mgr){
+	unsigned char flags=ar0.GetInt8();
 
-	size_t m=ar0.GetVUInt32();
-	if(m){
-		std::vector<RecordLevelChecksum> checksums;
-		checksums.resize(m);
-		memcpy(&(checksums[0]),&(ar0.GetData()[ar0.GetOffset()]),m*PuzzleBoyLevelData::ChecksumSize);
-		SendUpdateLevelsPacket(peer,sessionID,&checksums);
+	//player name
+	if(flags & 0x1) theApp->m_sPlayerName[2]=ar0.GetU16String();
+
+	//checksum
+	std::vector<RecordLevelChecksum> checksums;
+	if(flags & 0x2){
+		size_t m=ar0.GetVUInt32();
+		if(m){
+			checksums.resize(m);
+			int count=m*PuzzleBoyLevelData::ChecksumSize;
+			memcpy(&(checksums[0]),&(ar0.GetData()[ar0.GetOffset()]),count);
+			ar0.SkipOffset(count);
+		}
 	}
+
+	//receive their current level
+	if(flags & 0x4){
+		int index=ar0.GetVUInt32();
+
+		//DEBGU
+		//printf("%d %d %d\n",index,theApp->m_pDocument->m_objLevels.size(),checksums.size());
+
+		if(index>=0 && index<(int)theApp->m_pDocument->m_objLevels.size() && index<(int)checksums.size()){
+			//calculate checksum and check if it matches
+			RecordLevelChecksum checksum;
+
+			MySerializer ar2;
+			theApp->m_pDocument->m_objLevels[index]->MySerialize(ar2);
+			ar2.CalculateBlake2s(&checksum,PuzzleBoyLevelData::ChecksumSize);
+
+			if(checksum==checksums[index]){
+				//OK, we can update history
+				theApp->m_view[1]->m_nCurrentLevel=index;
+				theApp->m_view[1]->StartGame();
+				theApp->m_view[1]->m_objPlayingLevel->SerializeHistory(ar0,true,true);
+
+				mgr->ClearReceivedMove();
+			}
+		}
+	}
+
+	//reply packet
+	if(!checksums.empty()) SendUpdateLevelsPacket(peer,mgr->m_nSessionID,&checksums);
 }
 
 static void ProcessUpdateLevelsPacket(MySerializer& ar0,int *maxProgress=NULL,int *currentProgress=NULL){
@@ -384,6 +437,7 @@ bool NetworkManager::CreateServer(int port){
 	if(!InitializeENet()) return false;
 
 	Disconnect();
+	m_nNextRetryTime=0;
 	isServer=true;
 
 	ENetAddress address={ENET_HOST_ANY /*ENET_HOST_LOCALHOST*/,port};
@@ -403,6 +457,7 @@ bool NetworkManager::ConnectToServer(const u8string& hostName,int port){
 	if(!InitializeENet()) return false;
 
 	Disconnect();
+	m_nNextRetryTime=0;
 	isServer=false;
 
 	ENetAddress address;
@@ -461,7 +516,7 @@ bool NetworkManager::ConnectToServer(const u8string& hostName,int port){
 
 	if(ret){
 		//download maps, etc.
-		SendQueryLevelsPacket(m_peer);
+		SendQueryLevelsPacket(m_peer,0x3);
 		enet_host_flush(m_host);
 
 		ret=DownloadLevel(true);
@@ -499,7 +554,7 @@ bool NetworkManager::DownloadLevel(bool firstTime){
 
 					switch(type){
 					case PACKET_QUERY_LEVELS:
-						ProcessQueryLevelsPacket(ar0,m_peer,m_nSessionID);
+						ProcessQueryLevelsPacket(ar0,m_peer,this);
 						break;
 					case PACKET_UPDATE_LEVELS:
 						ProcessUpdateLevelsPacket(ar0,&maxProgress,&currentProgress);
@@ -608,6 +663,22 @@ NetworkManager::~NetworkManager(){
 void NetworkManager::OnTimer(bool discardAll){
 	if(m_host==NULL) return;
 
+	//try to auto-reconnect
+	if(m_peer==NULL && m_nNextRetryTime && !isServer && SDL_GetTicks()>m_nNextRetryTime){
+		m_nNextRetryTime+=15000; //retry after 15 sec ???
+
+		ENetAddress *a=(ENetAddress*)m_address;
+		ENetPeer *p=enet_host_connect(m_host,a,CHANNELS_USED,0);
+		if(p==NULL){
+			//FIXME: maybe maximal connection count reached
+			printf("[NetworkManager] Error: Can't create ENet peer!\n");
+		}
+
+		char s[64];
+		enet_address_get_host_ip(a,s,sizeof(s));
+		theApp->ShowToolTip(str(MyFormat(_("Connecting to %s..."))<<s));
+	}
+
 	ENetEvent event;
 
 	while(enet_host_service(m_host,&event,0)>0){
@@ -621,7 +692,7 @@ void NetworkManager::OnTimer(bool discardAll){
 
 				switch(type){
 				case PACKET_QUERY_LEVELS:
-					ProcessQueryLevelsPacket(ar0,m_peer,m_nSessionID);
+					ProcessQueryLevelsPacket(ar0,m_peer,this);
 					break;
 				case PACKET_UPDATE_LEVELS:
 					ProcessUpdateLevelsPacket(ar0);
@@ -652,14 +723,21 @@ void NetworkManager::OnTimer(bool discardAll){
 
 				if(m_peer) enet_peer_disconnect(m_peer,0);
 				m_peer=event.peer;
+
+				//send download maps packet (i.e. auto-reconnect feature)
+				if(!isServer){
+					SendQueryLevelsPacket(m_peer,0x7);
+				}
 			}
-			//TODO: download maps, etc. (now we don't have auto-reconnect feature)
 			break;
 		case ENET_EVENT_TYPE_DISCONNECT:
 			printf("[NetworkManager] Peer %p disconnected\n",event.peer);
 			if(event.peer==m_peer){
 				theApp->ShowToolTip(_("Disconnected"));
 				m_peer=NULL;
+
+				//retry after 3 sec ???
+				m_nNextRetryTime=SDL_GetTicks()+3000;
 			}
 			break;
 		}
@@ -706,4 +784,8 @@ void NetworkManager::SendGeneratingRandomMap(){
 
 void NetworkManager::NewSessionID(){
 	m_nSessionID=theApp->m_objMainRnd.Rnd();
+}
+
+void NetworkManager::SendQueryLevels(unsigned char flags){
+	if(m_peer) SendQueryLevelsPacket(m_peer,flags);
 }

@@ -477,10 +477,20 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount,int mode,int currentLevel2){
 }
 
 void PuzzleBoyApp::ApplyRecord(const u8string& record,bool animationDemo,bool testMode){
-	StartGame(1,false,testMode);
+	if(netMgr->IsNetworkMultiplayer()){
+		m_view[0]->StartGame();
+
+		//send moves
+		NetworkMove move={7,0,0}; //restart
+		netMgr->SendPlayerMove(move);
+		move.type=8; //play from record
+		netMgr->SendPlayerMove(move);
+	}else{
+		StartGame(1,testMode?TEST_MODE:PLAY_MODE);
+	}
 
 	m_view[0]->m_bPlayFromRecord=true;
-	if(animationDemo){
+	if(animationDemo || netMgr->IsNetworkMultiplayer()){
 		m_view[0]->m_sRecord=record;
 		m_view[0]->m_nRecordIndex=0;
 	}else{

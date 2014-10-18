@@ -67,10 +67,13 @@ enum TestMenuScreenButtons{
 enum NetworkMainMenuScreenButtons{
 	NetworkMainMenu_ChooseLevel,
 	NetworkMainMenu_ChooseLevelFile,
+	NetworkMainMenu_LevelRecord,
+	NetworkMainMenu_Config,
 	NetworkMainMenu_Disconnect,
 	NetworkMainMenu_Empty,
 	NetworkMainMenu_RandomMap10,
 	NetworkMainMenu_SaveTempLevelFile,
+	NetworkMainMenu_LevelDatabase,
 };
 
 static int SolveLevelCallback(void* userData,const LevelSolverState& progress){
@@ -675,6 +678,8 @@ void NetworkMainMenuScreen::OnDirty(){
 
 	AddItem(_("Choose Level"));
 	AddItem(_("Choose Level File"));
+	AddItem(_("Level Record"));
+	AddItem(_("Config"));
 	AddItem(_("Disconnect"));
 
 	//test feature
@@ -682,6 +687,7 @@ void NetworkMainMenuScreen::OnDirty(){
 
 	AddItem(_("Random Map")+" x10");
 	AddItem(_("Save Temp Level File"));
+	AddItem(_("Level Database"));
 
 	//show status
 	AddEmptyItem();
@@ -711,6 +717,32 @@ int NetworkMainMenuScreen::OnClick(int index){
 			updateLevel=true;
 		}
 		break;
+	case NetworkMainMenu_LevelRecord:
+		//level record
+		if(!theApp->m_view.empty()
+			&& theApp->m_view[0]->m_objPlayingLevel)
+		{
+			u8string s=theApp->m_view[0]->m_objPlayingLevel->GetRecord();
+			int ret=LevelRecordScreen(_("Level Record"),
+				_("Copy record here or paste record\nand click 'Apply' button"),
+				s);
+			if(ret>0){
+				theApp->ApplyRecord(s,ret==2); //in fact in network mode the only supported mode is animation demo
+				return 0;
+			}
+		}
+		break;
+	case NetworkMainMenu_Config:
+		//config
+		ConfigScreen().DoModal();
+		m_bDirty=true;
+		//recreate header in case of button size changed
+		RecreateTitleBar();
+		//resize the game screen in case of button size changed
+		m_nResizeTime++;
+		//send change player name event
+		netMgr->SendQueryLevels(0x1);
+		break;
 	case NetworkMainMenu_Disconnect:
 		//disconnect
 		netMgr->Disconnect();
@@ -738,6 +770,10 @@ int NetworkMainMenuScreen::OnClick(int index){
 		//save temp file
 		SaveUserLevelFile("tmp-%Y%m%d%H%M%S.lev",true);
 		return 0;
+		break;
+	case NetworkMainMenu_LevelDatabase:
+		//level database
+		if(LevelDatabaseScreen().DoModal()) updateLevel=true;
 		break;
 	}
 
