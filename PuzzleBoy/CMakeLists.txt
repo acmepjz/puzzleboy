@@ -55,6 +55,9 @@ endif()
 Set (ENET_DIR ${PROJECT_SOURCE_DIR}/external/enet)
 Set (ENET_INCLUDE_DIR ${ENET_DIR}/include)
 
+# for enet
+add_definitions(-DHAS_SOCKLEN_T)
+
 Include_Directories(
 	${CMAKE_SOURCE_DIR}
 	${MY_OPENGL_INCLUDE_DIR}

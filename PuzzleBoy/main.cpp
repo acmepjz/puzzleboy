@@ -908,7 +908,7 @@ int main(int argc,char** argv){
 				//chcek exit event (Android only)
 				else if(event.key.keysym.sym==SDLK_ESCAPE){
 					bool b=(!theApp->m_view.empty() && theApp->m_view[0]);
-					if(b && theApp->m_view[0]->m_bEditMode){
+					if(b && theApp->m_view[0]->m_nMode==EDIT_MODE){
 						//exit edit mode
 						if(theApp->m_pDocument->m_bModified){
 							delete msgBox;
@@ -916,7 +916,7 @@ int main(int argc,char** argv){
 						}else{
 							theApp->StartGame(1);
 						}
-					}else if(b && theApp->m_view[0]->m_bTestMode){
+					}else if(b && theApp->m_view[0]->m_nMode==TEST_MODE){
 						//exit test mode
 						theApp->StartGame(1,true);
 					}else if(theApp->m_bToolTipIsExit){

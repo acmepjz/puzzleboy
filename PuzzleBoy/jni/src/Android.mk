@@ -21,6 +21,9 @@ LOCAL_SRC_FILES := \
 	$(wildcard $(ENET_PATH)/*.c) \
 	)
 
+# for enet
+LOCAL_CFLAGS += -DHAS_SOCKLEN_T
+
 # If the GCC version of NDK is >=4.7 then comment next line
 LOCAL_CFLAGS += -Doverride= 
 
