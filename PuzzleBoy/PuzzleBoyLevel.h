@@ -76,10 +76,13 @@ public:
 
 	void SaveUndo(PuzzleBoyLevelUndo* objUndo);
 
-	u8string GetRecord() const;
-	bool ApplyRecord(const u8string& rec);
+	//mode: 0=normal 1=get all record including redo history 2=redo history only
+	u8string GetRecord(int mode=0) const;
+	//rec: the record
+	//redoHistory: only save record to redo history
+	bool ApplyRecord(const u8string& rec,bool redoHistory=false);
 
-	void SerializeHistory(MySerializer& ar,bool hasRecord,bool hasRedo);
+	void SerializeHistory(MySerializer& ar);
 
 	int GetCurrentPlayerX() const {return m_nPlayerX;}
 	int GetCurrentPlayerY() const {return m_nPlayerY;}

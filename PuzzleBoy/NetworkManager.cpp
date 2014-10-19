@@ -120,7 +120,7 @@ static void SendQueryLevelsPacket(ENetPeer *peer,unsigned char flags){
 	//current level
 	if(flags & 0x4){
 		ar.PutVUInt32(theApp->m_view[0]->m_nCurrentLevel);
-		theApp->m_view[0]->m_objPlayingLevel->SerializeHistory(ar,true,true);
+		theApp->m_view[0]->m_objPlayingLevel->SerializeHistory(ar);
 	}
 
 	SendPacket(peer,ar.GetData());
@@ -134,13 +134,13 @@ static void SendSetCurrentLevelPacket(ENetPeer *peer,unsigned char flags,int ses
 	//send our level
 	if(flags & 0x1){
 		ar.PutVUInt32(theApp->m_view[0]->m_nCurrentLevel);
-		theApp->m_view[0]->m_objPlayingLevel->SerializeHistory(ar,true,true);
+		theApp->m_view[0]->m_objPlayingLevel->SerializeHistory(ar);
 	}
 
 	//send their level
 	if(flags & 0x2){
 		ar.PutVUInt32(theApp->m_view[1]->m_nCurrentLevel);
-		theApp->m_view[1]->m_objPlayingLevel->SerializeHistory(ar,true,true);
+		theApp->m_view[1]->m_objPlayingLevel->SerializeHistory(ar);
 	}
 
 	//send session ID
@@ -294,7 +294,7 @@ static void ProcessQueryLevelsPacket(MySerializer& ar0,ENetPeer *peer,NetworkMan
 				theApp->m_view[1]->m_sPlayerName=theApp->m_sPlayerName[2];
 				theApp->m_view[1]->m_nCurrentLevel=index;
 				theApp->m_view[1]->StartGame();
-				theApp->m_view[1]->m_objPlayingLevel->SerializeHistory(ar0,true,true);
+				theApp->m_view[1]->m_objPlayingLevel->SerializeHistory(ar0);
 
 				mgr->ClearReceivedMove();
 			}
@@ -371,7 +371,7 @@ static void ProcessSetCurrentLevelPacket(MySerializer& ar0,ENetPeer *peer,Networ
 		theApp->m_view[1]->m_sPlayerName=theApp->m_sPlayerName[2];
 		theApp->m_view[1]->m_nCurrentLevel=index;
 		theApp->m_view[1]->StartGame();
-		theApp->m_view[1]->m_objPlayingLevel->SerializeHistory(ar0,true,true);
+		theApp->m_view[1]->m_objPlayingLevel->SerializeHistory(ar0);
 
 		mgr->ClearReceivedMove();
 	}
@@ -387,7 +387,7 @@ static void ProcessSetCurrentLevelPacket(MySerializer& ar0,ENetPeer *peer,Networ
 		theApp->m_view[0]->m_sPlayerName=theApp->m_sPlayerName[0];
 		theApp->m_view[0]->m_nCurrentLevel=index;
 		theApp->m_view[0]->StartGame();
-		theApp->m_view[0]->m_objPlayingLevel->SerializeHistory(ar0,true,true);
+		theApp->m_view[0]->m_objPlayingLevel->SerializeHistory(ar0);
 	}
 
 	if(flags & 0x4){

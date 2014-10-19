@@ -1430,11 +1430,23 @@ void PuzzleBoyLevel::OnTimer(int animationTime)
 	}
 }
 
-u8string PuzzleBoyLevel::GetRecord() const
+u8string PuzzleBoyLevel::GetRecord(int mode) const
 {
 	u8string s;
 
-	for(int i=0;i<m_nCurrentUndo;i++){
+	int i=0,m=m_nCurrentUndo;
+
+	switch(mode){
+	case 1: //full history
+		m=m_objUndo.size();
+		break;
+	case 2: //redo only
+		i=m_nCurrentUndo;
+		m=m_objUndo.size();
+		break;
+	}
+
+	for(;i<m;i++){
 		PuzzleBoyLevelUndo *obj=m_objUndo[i];
 
 		switch(obj->m_nType){
@@ -1456,25 +1468,27 @@ u8string PuzzleBoyLevel::GetRecord() const
 	return s;
 }
 
-bool PuzzleBoyLevel::ApplyRecord(const u8string& rec)
+bool PuzzleBoyLevel::ApplyRecord(const u8string& rec,bool redoHistory)
 {
+	int count=0;
+
 	for(int i=0,m=rec.size();i<m;i++){
 		switch(rec[i]){
 		case 'A':
 		case 'a':
-			MovePlayer(-1,0,true);
+			if(MovePlayer(-1,0,true)) count++;
 			break;
 		case 'W':
 		case 'w':
-			MovePlayer(0,-1,true);
+			if(MovePlayer(0,-1,true)) count++;
 			break;
 		case 'D':
 		case 'd':
-			MovePlayer(1,0,true);
+			if(MovePlayer(1,0,true)) count++;
 			break;
 		case 'S':
 		case 's':
-			MovePlayer(0,1,true);
+			if(MovePlayer(0,1,true)) count++;
 			break;
 		case '(':
 			{
@@ -1497,7 +1511,7 @@ bool PuzzleBoyLevel::ApplyRecord(const u8string& rec)
 					}
 				}
 				if(i>=m || y<=0 || y>m_nHeight) return false;
-				SwitchPlayer(x-1,y-1,true);
+				if(SwitchPlayer(x-1,y-1,true)) count++;
 			}
 			break;
 		default:
@@ -1509,44 +1523,38 @@ bool PuzzleBoyLevel::ApplyRecord(const u8string& rec)
 		if(IsWin()) break;
 	}
 
+	if(redoHistory){
+		//extremely stupid code
+		for(int i=0;i<count;i++){
+			Undo();
+
+			while(IsAnimating()) OnTimer(8);
+		}
+	}
+
 	return true;
 }
 
-void PuzzleBoyLevel::SerializeHistory(MySerializer& ar,bool hasRecord,bool hasRedo){
+void PuzzleBoyLevel::SerializeHistory(MySerializer& ar){
 	bool bak=m_bSendNetworkMove;
 	m_bSendNetworkMove=false;
 
 	//serialize record
-	if(hasRecord){
-		if(ar.IsStoring()){
-			RecordManager::ConvertStringToRecordData(ar,GetRecord());
-		}else{
-			u8string rec;
-			RecordManager::ConvertRecordDataToString(ar,rec);
-			ApplyRecord(rec);
-		}
+	if(ar.IsStoring()){
+		RecordManager::ConvertStringToRecordData(ar,GetRecord());
+	}else{
+		u8string rec;
+		RecordManager::ConvertRecordDataToString(ar,rec);
+		ApplyRecord(rec);
 	}
 
 	//serialize redo
-	if(hasRedo){
-		if(ar.IsStoring()){
-			int m=m_objUndo.size()-m_nCurrentUndo;
-			if(m<0) m=0;
-
-			ar.PutVUInt32(m);
-
-			for(int i=0;i<m;i++){
-				m_objUndo[m_nCurrentUndo+i]->MySerialize(ar);
-			}
-		}else{
-			int m=ar.GetVUInt32();
-
-			for(int i=0;i<m;i++){
-				PuzzleBoyLevelUndo *undo=new PuzzleBoyLevelUndo;
-				undo->MySerialize(ar);
-				m_objUndo.push_back(undo);
-			}
-		}
+	if(ar.IsStoring()){
+		RecordManager::ConvertStringToRecordData(ar,GetRecord(2));
+	}else{
+		u8string rec;
+		RecordManager::ConvertRecordDataToString(ar,rec);
+		ApplyRecord(rec,true);
 	}
 
 	m_bSendNetworkMove=bak;
