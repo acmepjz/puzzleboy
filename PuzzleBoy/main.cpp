@@ -832,9 +832,31 @@ int main(int argc,char** argv){
 						}
 					}
 				}else if(m>=2){
-					fmt("\nLevel: %d vs %d\nMoves: %d vs %d")<<(theApp->m_view[0]->m_nCurrentLevel+1)
+					fmt("\nPlayer: %s vs %s\nLevel: %d vs %d\nMoves: %d vs %d")
+						<<toUTF8(theApp->m_view[0]->m_sPlayerName)
+						<<toUTF8(theApp->m_view[1]->m_sPlayerName)
+						<<(theApp->m_view[0]->m_nCurrentLevel+1)
 						<<(theApp->m_view[1]->m_nCurrentLevel+1)
 						<<(theApp->m_view[0]->m_objPlayingLevel->m_nMoves)<<(theApp->m_view[1]->m_objPlayingLevel->m_nMoves);
+
+					if(theApp->m_view[0]->m_nCurrentBestStep>0 || theApp->m_view[1]->m_nCurrentBestStep>0){
+						fmt(" - Best: ");
+						if(theApp->m_view[0]->m_nCurrentBestStep>0){
+							fmt("%d (%s)")<<theApp->m_view[0]->m_nCurrentBestStep
+								<<theApp->m_view[0]->m_sCurrentBestStepOwner;
+						}else{
+							fmt("---");
+						}
+						if(theApp->m_view[1]->m_nCurrentLevel!=theApp->m_view[0]->m_nCurrentLevel){
+							fmt(" vs ");
+							if(theApp->m_view[1]->m_nCurrentBestStep>0){
+								fmt("%d (%s)")<<theApp->m_view[1]->m_nCurrentBestStep
+									<<theApp->m_view[1]->m_sCurrentBestStepOwner;
+							}else{
+								fmt("---");
+							}
+						}
+					}
 				}
 
 				mainFont->DrawString(str(fmt),0.0f,0.0f,float(screenWidth-theApp->m_nButtonSize*4),float(screenHeight),1.0f,

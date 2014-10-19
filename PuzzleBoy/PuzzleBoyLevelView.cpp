@@ -487,22 +487,7 @@ bool PuzzleBoyLevelView::StartGame(){
 		m_toolbar->m_scrollView.CenterView(0,0,0,0);
 	}else{
 		//get the best record of current level
-		int st=theApp->m_objRecordMgr.FindAllRecordsOfLevel(*(pDoc->GetLevel(m_nCurrentLevel)),m_tCurrentBestRecord,m_bCurrentChecksum);
-		if(st!=-2){
-			m_nCurrentBestStep=st;
-			m_sCurrentBestStepOwner.clear();
-			if(st>0){
-				for(unsigned int i=0;i<m_tCurrentBestRecord.size();i++){
-					if(st==m_tCurrentBestRecord[i].nStep){
-						if(!m_sCurrentBestStepOwner.empty()){
-							m_sCurrentBestStepOwner.push_back(',');
-							m_sCurrentBestStepOwner.push_back(' ');
-						}
-						m_sCurrentBestStepOwner+=toUTF8(m_tCurrentBestRecord[i].sPlayerName);
-					}
-				}
-			}
-		}
+		ReloadBestRecord();
 	}
 
 	//create graphics
@@ -521,6 +506,28 @@ bool PuzzleBoyLevelView::StartGame(){
 	}
 
 	return true;
+}
+
+void PuzzleBoyLevelView::ReloadBestRecord(){
+	if(m_pDocument==NULL) return;
+	if(m_nCurrentLevel<0 || m_nCurrentLevel>=(int)m_pDocument->m_objLevels.size()) return;
+
+	int st=theApp->m_objRecordMgr.FindAllRecordsOfLevel(*(m_pDocument->GetLevel(m_nCurrentLevel)),m_tCurrentBestRecord,m_bCurrentChecksum);
+	if(st!=-2){
+		m_nCurrentBestStep=st;
+		m_sCurrentBestStepOwner.clear();
+		if(st>0){
+			for(unsigned int i=0;i<m_tCurrentBestRecord.size();i++){
+				if(st==m_tCurrentBestRecord[i].nStep){
+					if(!m_sCurrentBestStepOwner.empty()){
+						m_sCurrentBestStepOwner.push_back(',');
+						m_sCurrentBestStepOwner.push_back(' ');
+					}
+					m_sCurrentBestStepOwner+=toUTF8(m_tCurrentBestRecord[i].sPlayerName);
+				}
+			}
+		}
+	}
 }
 
 void PuzzleBoyLevelView::SaveEdit(){
@@ -607,6 +614,13 @@ void PuzzleBoyLevelView::FinishGame(){
 			m_objPlayingLevel->m_nMoves,
 			m_objPlayingLevel->GetRecord(),
 			m_sPlayerName.empty()?(const unsigned short*)NULL:m_sPlayerName.c_str());
+
+		//reload level record of other views (??)
+		for(size_t i=0,m=theApp->m_view.size();i<m;i++){
+			if(theApp->m_view[i]!=this && theApp->m_view[i]->m_nCurrentLevel==m_nCurrentLevel){
+				theApp->m_view[i]->ReloadBestRecord();
+			}
+		}
 	}
 
 	//next level

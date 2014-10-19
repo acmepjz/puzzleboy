@@ -476,6 +476,12 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount,int mode,int currentLevel2){
 	return true;
 }
 
+void PuzzleBoyApp::ReloadBestRecord(){
+	for(size_t i=0;i<m_view.size();i++){
+		m_view[i]->ReloadBestRecord();
+	}
+}
+
 void PuzzleBoyApp::ApplyRecord(const u8string& record,bool animationDemo,bool testMode){
 	if(netMgr->IsNetworkMultiplayer()){
 		m_view[0]->StartGame();

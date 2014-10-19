@@ -255,7 +255,12 @@ static void ProcessQueryLevelsPacket(MySerializer& ar0,ENetPeer *peer,NetworkMan
 	unsigned char flags=ar0.GetInt8();
 
 	//player name
-	if(flags & 0x1) theApp->m_sPlayerName[2]=ar0.GetU16String();
+	if(flags & 0x1){
+		theApp->m_sPlayerName[2]=ar0.GetU16String();
+		if(theApp->m_view.size()>=2 && theApp->m_view[1]){
+			theApp->m_view[1]->m_sPlayerName=theApp->m_sPlayerName[2];
+		}
+	}
 
 	//checksum
 	std::vector<RecordLevelChecksum> checksums;
@@ -286,6 +291,7 @@ static void ProcessQueryLevelsPacket(MySerializer& ar0,ENetPeer *peer,NetworkMan
 
 			if(checksum==checksums[index]){
 				//OK, we can update history
+				theApp->m_view[1]->m_sPlayerName=theApp->m_sPlayerName[2];
 				theApp->m_view[1]->m_nCurrentLevel=index;
 				theApp->m_view[1]->StartGame();
 				theApp->m_view[1]->m_objPlayingLevel->SerializeHistory(ar0,true,true);
@@ -362,6 +368,7 @@ static void ProcessSetCurrentLevelPacket(MySerializer& ar0,ENetPeer *peer,Networ
 			return;
 		}
 
+		theApp->m_view[1]->m_sPlayerName=theApp->m_sPlayerName[2];
 		theApp->m_view[1]->m_nCurrentLevel=index;
 		theApp->m_view[1]->StartGame();
 		theApp->m_view[1]->m_objPlayingLevel->SerializeHistory(ar0,true,true);
@@ -377,6 +384,7 @@ static void ProcessSetCurrentLevelPacket(MySerializer& ar0,ENetPeer *peer,Networ
 		}
 
 		theApp->m_nCurrentLevel=index;
+		theApp->m_view[0]->m_sPlayerName=theApp->m_sPlayerName[0];
 		theApp->m_view[0]->m_nCurrentLevel=index;
 		theApp->m_view[0]->StartGame();
 		theApp->m_view[0]->m_objPlayingLevel->SerializeHistory(ar0,true,true);
@@ -491,8 +499,8 @@ bool NetworkManager::ConnectToServer(const u8string& hostName,int port){
 	ENetEvent event;
 	bool ret=false;
 
-	//wait for 10 seconds
-	for(int i=0;i<200 && m_peer && !ret;i++){
+	//wait for 15 seconds
+	for(int i=0;i<300 && m_peer && !ret;i++){
 		SDL_Delay(50);
 
 		while(m_peer && !ret && enet_host_service(m_host,&event,0)>0){

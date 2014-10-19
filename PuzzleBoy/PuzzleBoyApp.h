@@ -30,6 +30,7 @@ public:
 
 	void DestroyGame();
 	bool StartGame(int nPlayerCount,int mode=0,int currentLevel2=-1);
+	void ReloadBestRecord();
 
 	bool OnTimer();
 	bool OnKeyDown(int nChar,int nFlags);

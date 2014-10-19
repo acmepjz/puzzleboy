@@ -19,6 +19,7 @@ public:
 	void Draw();
 
 	bool StartGame();
+	void ReloadBestRecord();
 	void SaveEdit();
 	void FinishGame();
 
