@@ -86,3 +86,4 @@ void WaitForNextFrame();
 class SimpleMessageBox;
 
 SimpleMessageBox* CreateLevelChangedMsgBox();
+void ReloadCurrentLevel();

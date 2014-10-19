@@ -2,8 +2,11 @@
 #include "MySerializer.h"
 #include "PushableBlock.h"
 #include "FileSystem.h"
+
 #include <SDL_stdinc.h>
 #include <SDL_endian.h>
+
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -518,43 +521,11 @@ void RecordManager::AddLevelAndRecord(const PuzzleBoyLevelData& lev,int nStep,co
 		}
 	}
 
-	//get record data
-	int m=rec.size();
+	//write record data
 	ar2.Clear();
 	ar2.PutVUInt32(idxName); //index of string represents player name.
 	ar2.PutVUInt32(nStep); //steps
-	ar2.PutVUInt32((m+1)>>1); //solution length (in bytes)
-
-	for(int i=0;i<m;i++){
-		int d=0,ch=rec[i];
-		switch(ch){
-		case 'A':
-		case 'a':
-			d=10;
-			break;
-		case 'W':
-		case 'w':
-			d=11;
-			break;
-		case 'D':
-		case 'd':
-			d=12;
-			break;
-		case 'S':
-		case 's':
-			d=13;
-			break;
-		case '(':
-		case ',':
-		case ')':
-			d=14;
-			break;
-		default:
-			if(ch>='0' && ch<='9') d=ch-'0';
-		}
-		ar2.PutIntN(d,4);
-	}
-	ar2.PutFlush();
+	ConvertStringToRecordData(ar2,rec);
 
 	//check if we should overwrite old record
 	ar3.SetFile(m_pFile,false,0);
@@ -576,7 +547,6 @@ void RecordManager::AddLevelAndRecord(const PuzzleBoyLevelData& lev,int nStep,co
 		int st=ar3.GetVUInt32(); //steps
 		int sz=ar3.GetVUInt32(); //solution length (in bytes)
 
-		//FIXME: process player name
 		if(playerName==NULL || (idxName>=0 && idxName<(int)m_Strings.size() && playerName==m_Strings[idxName])){
 			//check if there is a better record already in database
 			if(nStep>=st){
@@ -716,18 +686,20 @@ void RecordManager::ConvertRecordDataToString(const std::vector<unsigned char>& 
 	rec.clear();
 	if(bSolution.empty()) return;
 
-	MySerializer ar3;
-	ar3.SetData(&(bSolution[0]),bSolution.size());
-	ConvertRecordDataToString(ar3,bSolution.size()*2,rec);
+	MySerializer ar;
+	ar.SetData(&(bSolution[0]),bSolution.size());
+	ConvertRecordDataToString(ar,bSolution.size()*2,rec);
 }
 
-void RecordManager::ConvertRecordDataToString(MySerializer& ar3,int sz,u8string& rec){
+void RecordManager::ConvertRecordDataToString(MySerializer& ar,int sz,u8string& rec){
 	int state=0;
 	u8string strSwitch;
 
+	assert(sz%2==0);
+
 	rec.clear();
 	for(int i=0;i<sz;i++){
-		int ch=ar3.GetIntN(4);
+		int ch=ar.GetIntN(4);
 		switch(ch){
 		case 10:
 			if(state==0) rec.push_back('A');
@@ -761,6 +733,47 @@ void RecordManager::ConvertRecordDataToString(MySerializer& ar3,int sz,u8string&
 			break;
 		}
 	}
+}
+
+void RecordManager::ConvertRecordDataToString(MySerializer& ar,u8string& rec){
+	int sz=ar.GetVUInt32();
+	ConvertRecordDataToString(ar,sz*2,rec);
+}
+
+void RecordManager::ConvertStringToRecordData(MySerializer& ar,const u8string& rec){
+	int m=rec.size();
+	ar.PutVUInt32((m+1)>>1); //solution length (in bytes)
+
+	for(int i=0;i<m;i++){
+		int d=0,ch=rec[i];
+		switch(ch){
+		case 'A':
+		case 'a':
+			d=10;
+			break;
+		case 'W':
+		case 'w':
+			d=11;
+			break;
+		case 'D':
+		case 'd':
+			d=12;
+			break;
+		case 'S':
+		case 's':
+			d=13;
+			break;
+		case '(':
+		case ',':
+		case ')':
+			d=14;
+			break;
+		default:
+			if(ch>='0' && ch<='9') d=ch-'0';
+		}
+		ar.PutIntN(d,4);
+	}
+	ar.PutFlush();
 }
 
 int RecordManager::FindAllRecordsOfLevel(const PuzzleBoyLevelData& lev,std::vector<RecordItem>& ret,unsigned char* lastChecksum){

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PuzzleBoyLevelData.h"
+#include "MySerializer.h"
 
 class PushableBlock;
 class PuzzleBoyLevelUndo;
@@ -78,6 +79,8 @@ public:
 	u8string GetRecord() const;
 	bool ApplyRecord(const u8string& rec);
 
+	void SerializeHistory(MySerializer& ar,bool hasRecord,bool hasRedo);
+
 	int GetCurrentPlayerX() const {return m_nPlayerX;}
 	int GetCurrentPlayerY() const {return m_nPlayerY;}
 
@@ -94,6 +97,7 @@ private:
 	void UpdateMoveableData();
 
 public:
+	bool m_bSendNetworkMove;
 	int m_nMoves;
 	std::vector<unsigned char> m_bMoveableData,m_bTargetData;
 	int m_nPlayerCount;

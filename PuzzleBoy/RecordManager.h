@@ -73,14 +73,20 @@ public:
 	//return value: steps, -1=not found, -2=level unchanged
 	int FindLevelAndRecord(const PuzzleBoyLevelData& lev,const unsigned short* playerName,u8string* rec,unsigned char* lastChecksum=NULL,u16string* returnName=NULL);
 
+	//These two function accpets data without the data length field
 	static void ConvertRecordDataToString(const std::vector<unsigned char>& bSolution,u8string& rec);
+	static void ConvertRecordDataToString(MySerializer& ar,int sz,u8string& rec);
+
+	//This function accepts data with data length field
+	static void ConvertRecordDataToString(MySerializer& ar,u8string& rec);
+
+	//This function writes data with data length field
+	static void ConvertStringToRecordData(MySerializer& ar,const u8string& rec);
 
 	//return value: best steps, -1=not found, -2=level unchanged
 	int FindAllRecordsOfLevel(const PuzzleBoyLevelData& lev,std::vector<RecordItem>& ret,unsigned char* lastChecksum=NULL);
 
 	int GetLevelCount();
-private:
-	static void ConvertRecordDataToString(MySerializer& ar3,int sz,u8string& rec);
 private:
 	/*void LoadStrings();
 	void LoadUnusedBlocks();*/

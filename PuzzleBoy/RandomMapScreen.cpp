@@ -6,6 +6,7 @@
 #include "MT19937.h"
 #include "MyFormat.h"
 #include "main.h"
+#include "NetworkManager.h"
 
 #include <stdio.h>
 
@@ -148,6 +149,7 @@ static int TestRandomLevelCallback(void* userData,float progress){
 		if(*(t->lpbAbort)) return 1;
 	}else{
 		//single-threaded
+		netMgr->OnTimer(true);
 		t->progressScreen->progress=(float(*(t->lpCurrent))+progress)/float(t->nCount);
 		if(!t->progressScreen->DrawAndDoEvents()){
 			*(t->lpbAbort)=true;
@@ -253,6 +255,8 @@ PuzzleBoyLevelFile* RandomMapScreen::DoRandomLevels(int type,int levelCount){
 
 		for(;;){
 			SDL_Delay(30);
+
+			netMgr->OnTimer(true);
 
 			if(nCurrent>=levelCount) break;
 

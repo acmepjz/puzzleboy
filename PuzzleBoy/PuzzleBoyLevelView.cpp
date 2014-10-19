@@ -6,6 +6,7 @@
 #include "RecordManager.h"
 #include "VertexList.h"
 #include "main.h"
+#include "NetworkManager.h"
 
 #include <string.h>
 
@@ -211,8 +212,7 @@ PuzzleBoyLevelView::PuzzleBoyLevelView()
 ,m_nScreenKeyboardPressedIndex(-1)
 ,m_pDocument(NULL)
 ,m_nCurrentLevel(0)
-,m_bEditMode(false)
-,m_bTestMode(false)
+,m_nMode(PLAY_MODE)
 ,m_bPlayFromRecord(false)
 ,m_bSkipRecord(false)
 ,m_nEditingBlockIndex(-1)
@@ -222,6 +222,9 @@ PuzzleBoyLevelView::PuzzleBoyLevelView()
 ,m_nKey(m_nDefaultKey)
 {
 }
+
+#define m_bEditMode (m_nMode==EDIT_MODE)
+#define m_bTestMode (m_nMode==TEST_MODE)
 
 PuzzleBoyLevelView::~PuzzleBoyLevelView(){
 	delete m_toolbar;
@@ -474,6 +477,7 @@ bool PuzzleBoyLevelView::StartGame(){
 	if(m_nCurrentLevel<0) return false;
 
 	m_objPlayingLevel=new PuzzleBoyLevel(*(pDoc->GetLevel(m_nCurrentLevel)));
+	m_objPlayingLevel->m_bSendNetworkMove=(m_nMode==PLAY_MODE && netMgr && netMgr->IsNetworkMultiplayer());
 	m_objPlayingLevel->m_view=this;
 	m_objPlayingLevel->StartGame();
 
@@ -483,22 +487,7 @@ bool PuzzleBoyLevelView::StartGame(){
 		m_toolbar->m_scrollView.CenterView(0,0,0,0);
 	}else{
 		//get the best record of current level
-		int st=theApp->m_objRecordMgr.FindAllRecordsOfLevel(*(pDoc->GetLevel(m_nCurrentLevel)),m_tCurrentBestRecord,m_bCurrentChecksum);
-		if(st!=-2){
-			m_nCurrentBestStep=st;
-			m_sCurrentBestStepOwner.clear();
-			if(st>0){
-				for(unsigned int i=0;i<m_tCurrentBestRecord.size();i++){
-					if(st==m_tCurrentBestRecord[i].nStep){
-						if(!m_sCurrentBestStepOwner.empty()){
-							m_sCurrentBestStepOwner.push_back(',');
-							m_sCurrentBestStepOwner.push_back(' ');
-						}
-						m_sCurrentBestStepOwner+=toUTF8(m_tCurrentBestRecord[i].sPlayerName);
-					}
-				}
-			}
-		}
+		ReloadBestRecord();
 	}
 
 	//create graphics
@@ -517,6 +506,28 @@ bool PuzzleBoyLevelView::StartGame(){
 	}
 
 	return true;
+}
+
+void PuzzleBoyLevelView::ReloadBestRecord(){
+	if(m_pDocument==NULL) return;
+	if(m_nCurrentLevel<0 || m_nCurrentLevel>=(int)m_pDocument->m_objLevels.size()) return;
+
+	int st=theApp->m_objRecordMgr.FindAllRecordsOfLevel(*(m_pDocument->GetLevel(m_nCurrentLevel)),m_tCurrentBestRecord,m_bCurrentChecksum);
+	if(st!=-2){
+		m_nCurrentBestStep=st;
+		m_sCurrentBestStepOwner.clear();
+		if(st>0){
+			for(unsigned int i=0;i<m_tCurrentBestRecord.size();i++){
+				if(st==m_tCurrentBestRecord[i].nStep){
+					if(!m_sCurrentBestStepOwner.empty()){
+						m_sCurrentBestStepOwner.push_back(',');
+						m_sCurrentBestStepOwner.push_back(' ');
+					}
+					m_sCurrentBestStepOwner+=toUTF8(m_tCurrentBestRecord[i].sPlayerName);
+				}
+			}
+		}
+	}
 }
 
 void PuzzleBoyLevelView::SaveEdit(){
@@ -561,8 +572,7 @@ void PuzzleBoyLevelView::FinishGame(){
 	}
 
 	if (m_bTestMode) {
-		m_bEditMode=true;
-		m_bTestMode=false;
+		m_nMode=EDIT_MODE;
 		StartGame();
 		return;
 	}
@@ -604,6 +614,13 @@ void PuzzleBoyLevelView::FinishGame(){
 			m_objPlayingLevel->m_nMoves,
 			m_objPlayingLevel->GetRecord(),
 			m_sPlayerName.empty()?(const unsigned short*)NULL:m_sPlayerName.c_str());
+
+		//reload level record of other views (??)
+		for(size_t i=0,m=theApp->m_view.size();i<m;i++){
+			if(theApp->m_view[i]!=this && theApp->m_view[i]->m_nCurrentLevel==m_nCurrentLevel){
+				theApp->m_view[i]->ReloadBestRecord();
+			}
+		}
 	}
 
 	//next level
@@ -687,9 +704,10 @@ bool PuzzleBoyLevelView::OnTimer(){
 				FinishGame();
 				return true;
 			}else if(m_sRecord.empty()){
-				m_bPlayFromRecord=false;
+				if(m_nMode!=READONLY_MODE || !netMgr->IsNetworkMultiplayer()) m_bPlayFromRecord=false;
+
 				//get continuous key event
-				if(theApp->m_bContinuousKey){
+				if(m_nKey && theApp->m_bContinuousKey){
 					const Uint8 *bKey=SDL_GetKeyboardState(NULL);
 					bool b=false;
 
@@ -733,6 +751,31 @@ bool PuzzleBoyLevelView::OnTimer(){
 							}
 						}else{
 							m_nScreenKeyboardPressedIndex=-1;
+						}
+					}
+				}
+
+				//get network move
+				if(m_nMode==READONLY_MODE && netMgr->IsNetworkMultiplayer()){
+					NetworkMove move;
+
+					if(netMgr->GetNextReceivedMove(move)){
+						switch(move.type){
+						case 0: case 1: case 2: case 3:
+						case 4: case 5: case 7:
+							InternalKeyDown(move.type);
+							bDirty=true;
+							break;
+						case 6:
+							m_objPlayingLevel->SwitchPlayer(move.x,move.y,true);
+							bDirty=true;
+							break;
+						case 8:
+							m_bPlayFromRecord=true;
+							bDirty=true;
+							break;
+						default:
+							break;
 						}
 					}
 				}
@@ -857,10 +900,10 @@ bool PuzzleBoyLevelView::OnKeyDown(int nChar,int nFlags){
 				break;
 			}
 		}*/
-	}else if(m_objPlayingLevel){
+	}else if(m_nKey && m_objPlayingLevel){
 		if(nFlags){
 			if(nChar==SDLK_r && (nFlags & KMOD_CTRL)!=0){
-				StartGame();
+				InternalKeyDown(7);
 				return true;
 			}
 			return false;
@@ -919,8 +962,7 @@ bool PuzzleBoyLevelView::InternalKeyDown(int keyIndex){
 			break;
 		case 34: //test play
 			SaveEdit();
-			m_bEditMode=false;
-			m_bTestMode=true;
+			m_nMode=TEST_MODE;
 			StartGame();
 			return true;
 			break;
@@ -956,6 +998,11 @@ bool PuzzleBoyLevelView::InternalKeyDown(int keyIndex){
 
 	if(!m_bEditMode && m_objPlayingLevel){
 		if(keyIndex==7){
+			if(m_nMode==PLAY_MODE && netMgr->IsNetworkMultiplayer()){
+				NetworkMove move={7,0,0};
+				netMgr->SendPlayerMove(move);
+			}
+
 			StartGame();
 			return true;
 		}
@@ -1099,7 +1146,7 @@ bool PuzzleBoyLevelView::InternalKeyDown(int keyIndex){
 }
 
 void PuzzleBoyLevelView::OnKeyUp(int nChar,int nFlags){
-	//TODO: key up
+	//key up. currently nothing to do
 }
 
 void PuzzleBoyLevelView::OnMultiGesture(float fx,float fy,float dx,float dy,float zoom){
@@ -1107,6 +1154,9 @@ void PuzzleBoyLevelView::OnMultiGesture(float fx,float fy,float dx,float dy,floa
 }
 
 void PuzzleBoyLevelView::OnMouseEvent(int which,int state,int xMouse,int yMouse,int nFlags,int nType){
+	//in read-only mode no mouse event are processed (multi-touch event isn't processed here)
+	if(m_nMode==READONLY_MODE) return;
+
 	//process mouse move event
 	if(nType==SDL_MOUSEMOTION &&
 		(state==-42 ||

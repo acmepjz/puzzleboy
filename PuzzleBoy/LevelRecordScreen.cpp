@@ -5,6 +5,7 @@
 #include "SimpleListScreen.h"
 #include "PuzzleBoyLevelView.h"
 #include "main.h"
+#include "NetworkManager.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -82,6 +83,9 @@ int LevelRecordScreen(const u8string& title,const u8string& prompt,u8string& rec
 	txt.SetText(record);
 
 	while(m_bRun && b){
+		//do network (????)
+		netMgr->OnTimer();
+
 		//create title bar buttons
 		bool bDirty=titleBar.OnTimer();
 

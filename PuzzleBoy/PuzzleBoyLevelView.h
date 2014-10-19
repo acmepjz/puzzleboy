@@ -19,6 +19,7 @@ public:
 	void Draw();
 
 	bool StartGame();
+	void ReloadBestRecord();
 	void SaveEdit();
 	void FinishGame();
 
@@ -75,7 +76,14 @@ private:
 
 public:
 	int m_nCurrentLevel;
-	bool m_bEditMode,m_bTestMode,m_bPlayFromRecord;
+
+#define PLAY_MODE 0
+#define EDIT_MODE 1
+#define TEST_MODE 2
+#define READONLY_MODE 3
+	short m_nMode;
+
+	bool m_bPlayFromRecord;
 	bool m_bSkipRecord;
 
 	int m_nEditingBlockIndex;

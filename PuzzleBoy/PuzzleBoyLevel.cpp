@@ -5,6 +5,8 @@
 #include "VertexList.h"
 #include "PuzzleBoyLevelView.h"
 #include "main.h"
+#include "RecordManager.h"
+#include "NetworkManager.h"
 
 #include <math.h>
 #include <assert.h>
@@ -104,7 +106,8 @@ inline int GetAnimationTime(){
 // PuzzleBoyLevel
 
 PuzzleBoyLevel::PuzzleBoyLevel()
-: m_nPlayerX(-1)
+: m_bSendNetworkMove(false)
+, m_nPlayerX(-1)
 , m_nPlayerY(-1)
 , m_objCurrentUndo(NULL)
 , m_nMoves(0)
@@ -115,6 +118,7 @@ PuzzleBoyLevel::PuzzleBoyLevel()
 
 PuzzleBoyLevel::PuzzleBoyLevel(const PuzzleBoyLevelData& obj)
 : PuzzleBoyLevelData(obj)
+, m_bSendNetworkMove(false)
 , m_nPlayerX(-1)
 , m_nPlayerY(-1)
 , m_objCurrentUndo(NULL)
@@ -770,6 +774,11 @@ bool PuzzleBoyLevel::Undo(){
 	if(IsAnimating()) return true;
 
 	if(CanUndo()){
+		if(m_bSendNetworkMove){
+			NetworkMove move={4,0,0};
+			netMgr->SendPlayerMove(move);
+		}
+
 		m_objCurrentUndo=NULL;
 		PuzzleBoyLevelUndo *objUndo=m_objUndo[m_nCurrentUndo-1];
 
@@ -857,6 +866,11 @@ bool PuzzleBoyLevel::Redo(){
 	if(IsAnimating()) return true;
 
 	if(CanRedo()){
+		if(m_bSendNetworkMove){
+			NetworkMove move={5,0,0};
+			netMgr->SendPlayerMove(move);
+		}
+
 		m_objCurrentUndo=NULL;
 		PuzzleBoyLevelUndo *objUndo=m_objUndo[m_nCurrentUndo];
 
@@ -995,6 +1009,11 @@ bool PuzzleBoyLevel::SwitchPlayer(int x,int y,bool bSaveUndo)
 				objUndo->m_dx=x;
 				objUndo->m_dy=y;
 				SaveUndo(objUndo);
+
+				if(m_bSendNetworkMove){
+					NetworkMove move={6,x,y};
+					netMgr->SendPlayerMove(move);
+				}
 			}
 
 			m_nPlayerX=x;
@@ -1031,6 +1050,11 @@ bool PuzzleBoyLevel::SwitchPlayer(int x,int y,bool bSaveUndo)
 				objUndo->m_dx=x;
 				objUndo->m_dy=y;
 				SaveUndo(objUndo);
+
+				if(m_bSendNetworkMove){
+					NetworkMove move={6,x,y};
+					netMgr->SendPlayerMove(move);
+				}
 			}
 
 			m_nPlayerX=x;
@@ -1183,6 +1207,13 @@ bool PuzzleBoyLevel::MovePlayer(int dx,int dy,bool bSaveUndo){
 					objUndo->m_dy=dy;
 					objUndo->m_nMovedBlockIndex=m_nBlockAnimationIndex;
 					SaveUndo(objUndo);
+
+					if(m_bSendNetworkMove){
+						NetworkMove move={
+							dy<0?0:dy>0?1:dx<0?2:3,
+							0,0};
+						netMgr->SendPlayerMove(move);
+					}
 				}
 
 				m_bMapData[idx]=FLOOR_TILE;
@@ -1235,6 +1266,8 @@ bool PuzzleBoyLevel::CheckIfCurrentPlayerCanMove(int dx,int dy,int x0,int y0){
 	if(x0<0 || x0>=m_nWidth || y0<0 || y0>=m_nHeight) return false;
 
 	//backup
+	bool networkBackup=m_bSendNetworkMove;
+	m_bSendNetworkMove=false;
 	int idx=-1;
 	int backup=-1;
 	int oldX=m_nPlayerX;
@@ -1253,11 +1286,12 @@ bool PuzzleBoyLevel::CheckIfCurrentPlayerCanMove(int dx,int dy,int x0,int y0){
 
 	//try to move
 	bool ret=MovePlayer(dx,dy,true);
-	while(IsAnimating()) OnTimer();
+	while(IsAnimating()) OnTimer(8);
 	if(ret) Undo();
-	while(IsAnimating()) OnTimer();
+	while(IsAnimating()) OnTimer(8);
 
 	//restore
+	m_bSendNetworkMove=networkBackup;
 	m_nPlayerX=oldX;
 	m_nPlayerY=oldY;
 	m_bMapData[idx2]=backup2;
@@ -1476,4 +1510,44 @@ bool PuzzleBoyLevel::ApplyRecord(const u8string& rec)
 	}
 
 	return true;
+}
+
+void PuzzleBoyLevel::SerializeHistory(MySerializer& ar,bool hasRecord,bool hasRedo){
+	bool bak=m_bSendNetworkMove;
+	m_bSendNetworkMove=false;
+
+	//serialize record
+	if(hasRecord){
+		if(ar.IsStoring()){
+			RecordManager::ConvertStringToRecordData(ar,GetRecord());
+		}else{
+			u8string rec;
+			RecordManager::ConvertRecordDataToString(ar,rec);
+			ApplyRecord(rec);
+		}
+	}
+
+	//serialize redo
+	if(hasRedo){
+		if(ar.IsStoring()){
+			int m=m_objUndo.size()-m_nCurrentUndo;
+			if(m<0) m=0;
+
+			ar.PutVUInt32(m);
+
+			for(int i=0;i<m;i++){
+				m_objUndo[m_nCurrentUndo+i]->MySerialize(ar);
+			}
+		}else{
+			int m=ar.GetVUInt32();
+
+			for(int i=0;i<m;i++){
+				PuzzleBoyLevelUndo *undo=new PuzzleBoyLevelUndo;
+				undo->MySerialize(ar);
+				m_objUndo.push_back(undo);
+			}
+		}
+	}
+
+	m_bSendNetworkMove=bak;
 }

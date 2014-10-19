@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MFCSerializer.h"
+#include "MySerializer.h"
 
 class PushableBlock;
 
@@ -11,6 +12,7 @@ public:
 	virtual ~PuzzleBoyLevelUndo();
 
 	bool MFCSerialize(MFCSerializer& ar);
+	void MySerialize(MySerializer& ar);
 
 public:
 	//event type. 0=switch player, only m_x, m_y, m_dx, m_dy are used.

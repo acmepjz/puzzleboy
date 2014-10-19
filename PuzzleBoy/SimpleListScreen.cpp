@@ -3,6 +3,7 @@
 #include "SimpleMessageBox.h"
 #include "PuzzleBoyApp.h"
 #include "main.h"
+#include "NetworkManager.h"
 
 #include <string.h>
 #include <math.h>
@@ -116,6 +117,9 @@ int SimpleListScreen::DoModal(){
 	std::vector<unsigned short> m_idxGridLine;
 
 	while(m_bRun && b){
+		//do network (????)
+		netMgr->OnTimer();
+
 		//update list
 		if(m_bDirty){
 			OnDirty();

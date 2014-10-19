@@ -4,52 +4,25 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := main
 
-SDL_PATH := ../SDL
-FREETYPE_PATH := ../freetype
+SDL_PATH := $(LOCAL_PATH)/../SDL
+FREETYPE_PATH := $(LOCAL_PATH)/../freetype
+ENET_PATH := $(LOCAL_PATH)/../../external/enet
 
-LOCAL_C_INCLUDES := $(LOCAL_PATH)/$(SDL_PATH)/include \
-$(LOCAL_PATH)/$(FREETYPE_PATH)/include
+LOCAL_C_INCLUDES := \
+	$(SDL_PATH)/include \
+	$(FREETYPE_PATH)/include \
+	$(ENET_PATH)/include
 
 # Add your application source files here...
 LOCAL_SRC_FILES := \
-../../blake2s-ref.cpp \
-../../ChooseLevelScreen.cpp \
-../../ConfigScreen.cpp \
-../../FileSystem.cpp \
-../../GNUGetText.cpp \
-../../Level_PathFinding.cpp \
-../../LevelDatabaseScreen.cpp \
-../../LevelRecordScreen.cpp \
-../../main.cpp \
-../../MFCSerializer.cpp \
-../../MT19937.cpp \
-../../MultiTouchManager.cpp \
-../../MyFormat.cpp \
-../../MySerializer.cpp \
-../../PushableBlock.cpp \
-../../PuzzleBoyApp.cpp \
-../../PuzzleBoyLevel.cpp \
-../../PuzzleBoyLevelData.cpp \
-../../PuzzleBoyLevelFile.cpp \
-../../PuzzleBoyLevelUndo.cpp \
-../../PuzzleBoyLevelView.cpp \
-../../RandomMapScreen.cpp \
-../../RecordManager.cpp \
-../../SimpleBitmapFont.cpp \
-../../SimpleFont.cpp \
-../../SimpleListScreen.cpp \
-../../SimpleMessageBox.cpp \
-../../SimpleMiscScreen.cpp \
-../../SimpleProgressScreen.cpp \
-../../SimpleScrollView.cpp \
-../../SimpleText.cpp \
-../../SimpleTextBox.cpp \
-../../SimpleTitleBar.cpp \
-../../TestRandomLevel.cpp \
-../../TestSolver.cpp \
-../../UTF8-16.cpp \
-../../VertexList.cpp \
-$(SDL_PATH)/src/main/android/SDL_android_main.c
+	$(subst $(LOCAL_PATH)/,, \
+	$(wildcard $(LOCAL_PATH)/../../*.cpp) \
+	$(SDL_PATH)/src/main/android/SDL_android_main.c \
+	$(wildcard $(ENET_PATH)/*.c) \
+	)
+
+# for enet
+LOCAL_CFLAGS += -DHAS_SOCKLEN_T
 
 # If the GCC version of NDK is >=4.7 then comment next line
 LOCAL_CFLAGS += -Doverride= 

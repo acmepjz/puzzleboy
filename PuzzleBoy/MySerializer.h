@@ -61,6 +61,16 @@ public:
 		return m_bData[idx];
 	}
 
+	int GetOffset() const{
+		return m_nOffset;
+	}
+	void SetOffset(int offset){
+		m_nOffset=offset;
+	}
+	void SkipOffset(int count){
+		m_nOffset+=count;
+	}
+
 	void SetData(const std::vector<unsigned char>& data,int offset=0);
 	void SetData(const void* data,int size);
 	void SetFile(u8file* file,bool isStoring,int nChunkSize=4096);

@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PuzzleBoy 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-10-05 00:04+0800\n"
-"PO-Revision-Date: 2014-10-05 00:05+0800\n"
+"POT-Creation-Date: 2014-10-16 21:07+0800\n"
+"PO-Revision-Date: 2014-10-16 21:08+0800\n"
 "Last-Translator: acme_pjz <acme_pjz@hotmail.com>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -19,7 +19,7 @@ msgstr ""
 "X-Poedit-Country: CHINA\n"
 
 #: ChooseLevelScreen.cpp:32
-#: LevelDatabaseScreen.cpp:125
+#: LevelDatabaseScreen.cpp:128
 #, c-format
 msgid "Failed to load file %s"
 msgstr "打开文件 %s 失败"
@@ -29,50 +29,52 @@ msgid "User level: "
 msgstr "用户关卡: "
 
 #: ChooseLevelScreen.cpp:74
-#: main.cpp:545
-#: main.cpp:682
+#: MainMenuScreen.cpp:182
+#: MainMenuScreen.cpp:356
+#: MainMenuScreen.cpp:677
 msgid "Choose Level File"
 msgstr "选择关卡文件"
 
 #: ChooseLevelScreen.cpp:91
-#: main.cpp:544
-#: main.cpp:681
+#: MainMenuScreen.cpp:181
+#: MainMenuScreen.cpp:355
+#: MainMenuScreen.cpp:676
 msgid "Choose Level"
 msgstr "选择关卡"
 
 #: ChooseLevelScreen.cpp:94
-#: LevelDatabaseScreen.cpp:333
+#: LevelDatabaseScreen.cpp:353
 msgid "Search Result"
 msgstr "搜索结果"
 
 #: ChooseLevelScreen.cpp:163
-#: LevelDatabaseScreen.cpp:415
+#: LevelDatabaseScreen.cpp:435
 msgid "Search Level"
 msgstr "搜索关卡"
 
 #: ChooseLevelScreen.cpp:164
-#: LevelDatabaseScreen.cpp:416
+#: LevelDatabaseScreen.cpp:436
 msgid "Please input the keyword"
 msgstr "请输入关键字"
 
 #: ConfigScreen.cpp:43
 #: ConfigScreen.cpp:404
-#: LevelDatabaseScreen.cpp:232
-#: LevelDatabaseScreen.cpp:265
-#: LevelDatabaseScreen.cpp:442
-#: main.cpp:476
-#: main.cpp:874
+#: LevelDatabaseScreen.cpp:243
+#: LevelDatabaseScreen.cpp:285
+#: LevelDatabaseScreen.cpp:462
+#: main.cpp:420
+#: MainMenuScreen.cpp:548
 #: SimpleMiscScreen.cpp:305
 msgid "No"
 msgstr "否"
 
 #: ConfigScreen.cpp:44
 #: ConfigScreen.cpp:405
-#: LevelDatabaseScreen.cpp:231
-#: LevelDatabaseScreen.cpp:264
-#: LevelDatabaseScreen.cpp:441
-#: main.cpp:475
-#: main.cpp:873
+#: LevelDatabaseScreen.cpp:242
+#: LevelDatabaseScreen.cpp:284
+#: LevelDatabaseScreen.cpp:461
+#: main.cpp:419
+#: MainMenuScreen.cpp:547
 #: SimpleMiscScreen.cpp:306
 msgid "Yes"
 msgstr "是"
@@ -248,90 +250,95 @@ msgid "Please input the new name of player %d"
 msgstr "请输入玩家 %d 的新名字"
 
 #: ConfigScreen.cpp:476
-#: main.cpp:548
-#: main.cpp:686
-#: main.cpp:950
+#: MainMenuScreen.cpp:185
+#: MainMenuScreen.cpp:360
+#: MainMenuScreen.cpp:619
 msgid "Config"
 msgstr "设置"
 
-#: LevelDatabaseScreen.cpp:24
+#: LevelDatabaseScreen.cpp:27
 msgid "Choose level database to be merged."
 msgstr "选择要合并的关卡数据库。"
 
-#: LevelDatabaseScreen.cpp:26
+#: LevelDatabaseScreen.cpp:29
 msgid "Note: PuzzleBoyRecord.dat is our main database."
 msgstr "注意: PuzzleBoyRecord.dat 是我们的主数据库。"
 
-#: LevelDatabaseScreen.cpp:28
+#: LevelDatabaseScreen.cpp:31
 #, c-format
 msgid "These files can be found at %s."
 msgstr "这些文件可以在 %s 找到。"
 
-#: LevelDatabaseScreen.cpp:122
+#: LevelDatabaseScreen.cpp:125
 #, c-format
 msgid "Successfully added %d levels and %d best records"
 msgstr "成功新增 %d 关卡和 %d 最佳纪录"
 
-#: LevelDatabaseScreen.cpp:135
+#: LevelDatabaseScreen.cpp:138
 msgid "Merge Level Database"
 msgstr "合并关卡数据库"
 
-#: LevelDatabaseScreen.cpp:153
-#: main.cpp:693
-#: main.cpp:779
+#: LevelDatabaseScreen.cpp:156
+#: MainMenuScreen.cpp:367
+#: MainMenuScreen.cpp:453
 msgid "Level Name"
 msgstr "关卡名称"
 
-#: LevelDatabaseScreen.cpp:157
+#: LevelDatabaseScreen.cpp:160
 msgid "Level Size"
 msgstr "关卡大小"
 
-#: LevelDatabaseScreen.cpp:161
+#: LevelDatabaseScreen.cpp:164
 msgid "Checksum"
 msgstr "校验和"
 
-#: LevelDatabaseScreen.cpp:176
+#: LevelDatabaseScreen.cpp:179
 msgid "Best Record"
 msgstr "最佳纪录"
 
-#: LevelDatabaseScreen.cpp:178
+#: LevelDatabaseScreen.cpp:181
 msgid "Doesn't Exist"
 msgstr "不存在"
 
-#: LevelDatabaseScreen.cpp:203
+#: LevelDatabaseScreen.cpp:206
 msgid "Show Level"
 msgstr "查看关卡"
 
-#: LevelDatabaseScreen.cpp:204
-#: main.cpp:698
+#: LevelDatabaseScreen.cpp:207
+#: MainMenuScreen.cpp:372
 msgid "Remove Level"
 msgstr "删除关卡"
 
-#: LevelDatabaseScreen.cpp:209
+#: LevelDatabaseScreen.cpp:212
 #: LevelRecordScreen.cpp:35
 msgid "List of Records"
 msgstr "纪录列表"
 
-#: LevelDatabaseScreen.cpp:230
-#: main.cpp:872
+#: LevelDatabaseScreen.cpp:241
+#: MainMenuScreen.cpp:546
 msgid "Do you want to remove this level?"
 msgstr "你是否想删除本关卡？"
 
-#: LevelDatabaseScreen.cpp:262
+#: LevelDatabaseScreen.cpp:268
+#: SimpleTextBox.cpp:355
+msgid "Copied to clipboard"
+msgstr "已复制到剪贴板"
+
+#: LevelDatabaseScreen.cpp:282
 #, c-format
 msgid "Do you want to remove level record for '%s'?"
 msgstr "你是否想删除 '%s' 的关卡纪录？"
 
-#: LevelDatabaseScreen.cpp:282
+#: LevelDatabaseScreen.cpp:302
 msgid "Level Information"
 msgstr "关卡信息"
 
-#: LevelDatabaseScreen.cpp:331
-#: main.cpp:559
+#: LevelDatabaseScreen.cpp:351
+#: MainMenuScreen.cpp:197
 msgid "Level Database"
 msgstr "关卡数据库"
 
-#: LevelDatabaseScreen.cpp:440
+#: LevelDatabaseScreen.cpp:460
 msgid ""
 "Editing level database is an experimental feature.\n"
 "Please backup your level database first.\n"
@@ -343,11 +350,11 @@ msgstr ""
 "\n"
 "是否继续？"
 
-#: LevelDatabaseScreen.cpp:519
+#: LevelDatabaseScreen.cpp:539
 msgid "Level database saved"
 msgstr "关卡数据库已保存"
 
-#: LevelDatabaseScreen.cpp:522
+#: LevelDatabaseScreen.cpp:542
 msgid "Failed to save level database"
 msgstr "保存关卡数据库失败"
 
@@ -359,17 +366,7 @@ msgstr "应用"
 msgid "Animation Demo"
 msgstr "动画演示"
 
-#: main.cpp:452
-#, c-format
-msgid "File saved to %s"
-msgstr "文件已保存到 %s"
-
-#: main.cpp:454
-#, c-format
-msgid "Failed to save file %s"
-msgstr "保存文件 %s 失败"
-
-#: main.cpp:474
+#: main.cpp:418
 msgid ""
 "Level has been edited.\n"
 "If you continue, unsaved changes will be lost.\n"
@@ -381,60 +378,106 @@ msgstr ""
 "\n"
 "是否继续？"
 
-#: main.cpp:515
-#: main.cpp:554
-#: main.cpp:956
+#: main.cpp:724
+msgid "Puzzle Boy"
+msgstr "Puzzle Boy"
+
+#: main.cpp:815
+#, c-format
+msgid "Pack: %s"
+msgstr "关卡包: %s"
+
+#: main.cpp:823
+#, c-format
+msgid "Level %d: %s"
+msgstr "第 %d 关: %s"
+
+#: main.cpp:827
+#, c-format
+msgid "Moves: %d"
+msgstr "步数: %d"
+
+#: main.cpp:830
+#, c-format
+msgid "Best: %d (%s)"
+msgstr "最佳纪录: %d (%s)"
+
+#: main.cpp:903
+msgid "Press again to exit"
+msgstr "再按一次退出"
+
+#: MainMenuScreen.cpp:107
+#: MainMenuScreen.cpp:191
+#: MainMenuScreen.cpp:625
 msgid "Level Solver"
 msgstr "关卡求解器"
 
-#: main.cpp:515
+#: MainMenuScreen.cpp:107
 msgid "The solution is:"
 msgstr "解答是:"
 
-#: main.cpp:522
+#: MainMenuScreen.cpp:114
 msgid "No solution"
 msgstr "无解"
 
-#: main.cpp:525
+#: MainMenuScreen.cpp:117
 msgid "Aborted"
 msgstr "已中止"
 
-#: main.cpp:528
+#: MainMenuScreen.cpp:120
 msgid "Can't solve this level"
 msgstr "无法求解本关卡"
 
-#: main.cpp:546
-#: main.cpp:581
-#: main.cpp:949
-#: main.cpp:967
+#: MainMenuScreen.cpp:169
+#, c-format
+msgid "File saved to %s"
+msgstr "文件已保存到 %s"
+
+#: MainMenuScreen.cpp:171
+#, c-format
+msgid "Failed to save file %s"
+msgstr "保存文件 %s 失败"
+
+#: MainMenuScreen.cpp:183
+#: MainMenuScreen.cpp:219
+#: MainMenuScreen.cpp:618
+#: MainMenuScreen.cpp:636
 msgid "Level Record"
 msgstr "关卡纪录"
 
-#: main.cpp:547
-#: main.cpp:935
+#: MainMenuScreen.cpp:184
+#: MainMenuScreen.cpp:611
 msgid "Edit Level"
 msgstr "编辑关卡"
 
-#: main.cpp:549
+#: MainMenuScreen.cpp:186
 msgid "Exit Game"
 msgstr "退出游戏"
 
-#: main.cpp:555
-#: RandomMapScreen.cpp:91
+#: MainMenuScreen.cpp:192
+#: MainMenuScreen.cpp:193
+#: MainMenuScreen.cpp:683
+#: RandomMapScreen.cpp:92
 msgid "Random Map"
 msgstr "随机地图"
 
-#: main.cpp:557
+#: MainMenuScreen.cpp:194
+#: MainMenuScreen.cpp:684
 msgid "Save Temp Level File"
 msgstr "保存临时关卡文件"
 
-#: main.cpp:558
+#: MainMenuScreen.cpp:195
 #: SimpleMiscScreen.cpp:595
 msgid "Start Multiplayer"
 msgstr "开始多人游戏"
 
-#: main.cpp:582
-#: main.cpp:968
+#: MainMenuScreen.cpp:196
+#: MainMenuScreen.cpp:306
+msgid "Network Multiplayer"
+msgstr "联机多人游戏"
+
+#: MainMenuScreen.cpp:220
+#: MainMenuScreen.cpp:637
 msgid ""
 "Copy record here or paste record\n"
 "and click 'Apply' button"
@@ -442,104 +485,165 @@ msgstr ""
 "在此复制关卡录像,\n"
 "或者粘贴录像后点击“应用”键"
 
-#: main.cpp:671
+#: MainMenuScreen.cpp:303
+msgid "Create server"
+msgstr "创建服务器"
+
+#: MainMenuScreen.cpp:304
+#: MainMenuScreen.cpp:324
+msgid "Connect to server"
+msgstr "连接到服务器"
+
+#: MainMenuScreen.cpp:314
+msgid "Server created successfully"
+msgstr "成功创建服务器"
+
+#: MainMenuScreen.cpp:317
+msgid "Can't create server"
+msgstr "无法创建服务器"
+
+#: MainMenuScreen.cpp:324
+msgid "Please input server address"
+msgstr "请输入服务器地址"
+
+#: MainMenuScreen.cpp:326
+#: NetworkManager.cpp:651
+#: NetworkManager.cpp:676
+#, c-format
+msgid "Connected to %s"
+msgstr "已连接到 %s"
+
+#: MainMenuScreen.cpp:329
+#, c-format
+msgid "Can't connect to %s"
+msgstr "无法连接到 %s"
+
+#: MainMenuScreen.cpp:348
 msgid "Main Menu"
 msgstr "主菜单"
 
-#: main.cpp:683
-#: main.cpp:1000
+#: MainMenuScreen.cpp:357
+#: MainMenuScreen.cpp:669
 msgid "Test Level"
 msgstr "测试关卡"
 
-#: main.cpp:684
+#: MainMenuScreen.cpp:358
 msgid "New Level File"
 msgstr "新建关卡文件"
 
-#: main.cpp:685
-#: main.cpp:738
+#: MainMenuScreen.cpp:359
+#: MainMenuScreen.cpp:411
 msgid "Save Level"
 msgstr "保存关卡"
 
-#: main.cpp:687
+#: MainMenuScreen.cpp:361
 msgid "Exit Editor"
 msgstr "退出编辑器"
 
-#: main.cpp:691
-#: main.cpp:768
+#: MainMenuScreen.cpp:365
+#: MainMenuScreen.cpp:442
 msgid "Level Pack Name"
 msgstr "关卡包名称"
 
-#: main.cpp:695
+#: MainMenuScreen.cpp:369
 #: SimpleMiscScreen.cpp:310
 msgid "Change Level Size"
 msgstr "改变关卡大小"
 
-#: main.cpp:696
+#: MainMenuScreen.cpp:370
 msgid "Add Level"
 msgstr "新增关卡"
 
-#: main.cpp:697
-#: main.cpp:836
+#: MainMenuScreen.cpp:371
+#: MainMenuScreen.cpp:510
 msgid "Move Level"
 msgstr "移动关卡"
 
-#: main.cpp:739
+#: MainMenuScreen.cpp:412
 msgid "Please input level file name"
 msgstr "请输入关卡文件名"
 
-#: main.cpp:769
+#: MainMenuScreen.cpp:443
 msgid "Please input level pack name"
 msgstr "请输入关卡包名称"
 
-#: main.cpp:780
+#: MainMenuScreen.cpp:454
 msgid "Please input level name"
 msgstr "请输入关卡名称"
 
-#: main.cpp:837
+#: MainMenuScreen.cpp:511
 msgid "Please input the destination level number"
 msgstr "请输入目标关卡编号"
 
-#: main.cpp:951
+#: MainMenuScreen.cpp:620
 msgid "Quit to Editor"
 msgstr "返回编辑器"
 
-#: main.cpp:1253
-msgid "Puzzle Boy"
-msgstr "Puzzle Boy"
+#: MainMenuScreen.cpp:678
+msgid "Disconnect"
+msgstr "断开连接"
 
-#: main.cpp:1338
+#: MainMenuScreen.cpp:717
+#: NetworkManager.cpp:522
+#: NetworkManager.cpp:661
+#: NetworkManager.cpp:678
+msgid "Disconnected"
+msgstr "连接已断开"
+
+#: MainMenuScreen.cpp:759
+msgid "Network Multiplayer Main Menu"
+msgstr "联机多人游戏主菜单"
+
+#: NetworkManager.cpp:363
+msgid "Remote host is generating random map..."
+msgstr "远程主机正在生成随机地图..."
+
+#: NetworkManager.cpp:435
 #, c-format
-msgid "Pack: %s"
-msgstr "关卡包: %s"
+msgid "Connecting to %s..."
+msgstr "正在连接到 %s..."
 
-#: main.cpp:1346
+#: NetworkManager.cpp:483
+msgid "Downloading maps..."
+msgstr "正在下载地图..."
+
+#: NetworkManager.cpp:554
+msgid "Disconnecting..."
+msgstr "正在断开连接..."
+
+#: NetworkManager.cpp:673
+msgid "Current Status"
+msgstr "当前状态"
+
+#: NetworkManager.cpp:684
 #, c-format
-msgid "Level %d: %s"
-msgstr "第 %d 关: %s"
+msgid "Ping: %'d ms"
+msgstr "Ping: %'d 毫秒"
 
-#: main.cpp:1350
+#: NetworkManager.cpp:685
 #, c-format
-msgid "Moves: %d"
-msgstr "步数: %d"
+msgid "Downloaded Data: %'d Bytes"
+msgstr "已下载数据: %'d 字节"
 
-#: main.cpp:1353
+#: NetworkManager.cpp:686
 #, c-format
-msgid "Best: %d (%s)"
-msgstr "最佳纪录: %d (%s)"
+msgid "Uploaded Data: %'d Bytes"
+msgstr "已上传数据: %'d 字节"
 
-#: main.cpp:1426
-msgid "Press again to exit"
-msgstr "再按一次退出"
+#: NetworkManager.cpp:687
+#, c-format
+msgid "Packet Loss: %0.2f%%"
+msgstr "丢包率: %0.2f%%"
 
-#: PuzzleBoyApp.cpp:182
+#: PuzzleBoyApp.cpp:183
 msgid "Player"
 msgstr "玩家"
 
-#: PuzzleBoyApp.cpp:183
+#: PuzzleBoyApp.cpp:184
 msgid "Player2"
 msgstr "玩家2"
 
-#: PuzzleBoyLevelData.cpp:299
+#: PuzzleBoyLevelData.cpp:324
 msgid "Unnamed level"
 msgstr "未命名关卡"
 
@@ -548,73 +652,73 @@ msgstr "未命名关卡"
 msgid "Unnamed level pack"
 msgstr "未命名关卡包"
 
-#: PuzzleBoyLevelView.cpp:514
+#: PuzzleBoyLevelView.cpp:518
 msgid "Start editing level"
 msgstr "开始编辑关卡"
 
-#: PuzzleBoyLevelView.cpp:516
+#: PuzzleBoyLevelView.cpp:520
 msgid "Start testing level"
 msgstr "开始测试关卡"
 
-#: PuzzleBoyLevelView.cpp:629
+#: PuzzleBoyLevelView.cpp:632
 msgid "Can't undo"
 msgstr "无法撤消"
 
-#: PuzzleBoyLevelView.cpp:633
+#: PuzzleBoyLevelView.cpp:636
 msgid "Failed to undo"
 msgstr "撤消失败"
 
-#: PuzzleBoyLevelView.cpp:643
+#: PuzzleBoyLevelView.cpp:646
 msgid "Can't redo"
 msgstr "无法重做"
 
-#: PuzzleBoyLevelView.cpp:647
+#: PuzzleBoyLevelView.cpp:650
 msgid "Failed to redo"
 msgstr "重做失败"
 
-#: PuzzleBoyLevelView.cpp:1050
-#: PuzzleBoyLevelView.cpp:1484
+#: PuzzleBoyLevelView.cpp:1079
+#: PuzzleBoyLevelView.cpp:1516
 msgid "Can't move to specified location"
 msgstr "无法移动到指定位置"
 
-#: PuzzleBoyLevelView.cpp:1241
-#: PuzzleBoyLevelView.cpp:1255
-#: PuzzleBoyLevelView.cpp:1306
+#: PuzzleBoyLevelView.cpp:1273
+#: PuzzleBoyLevelView.cpp:1287
+#: PuzzleBoyLevelView.cpp:1338
 msgid "Can't place block here"
 msgstr "无法在此放置方块"
 
-#: PuzzleBoyLevelView.cpp:1459
+#: PuzzleBoyLevelView.cpp:1491
 msgid "Start moving box"
 msgstr "开始移动箱子"
 
-#: RandomMapScreen.cpp:46
+#: RandomMapScreen.cpp:47
 msgid "Rotate block with a pushable block"
 msgstr "旋转砖块和一个箱子"
 
-#: RandomMapScreen.cpp:49
+#: RandomMapScreen.cpp:50
 msgid "Rotate block with a target block"
 msgstr "旋转砖块和一个目标箱子"
 
-#: RandomMapScreen.cpp:52
+#: RandomMapScreen.cpp:53
 msgid "Rotate block only"
 msgstr "只有旋转砖块"
 
-#: RandomMapScreen.cpp:57
+#: RandomMapScreen.cpp:58
 #, c-format
 msgid "(%d players)"
 msgstr "(%d 个玩家)"
 
-#: RandomMapScreen.cpp:69
+#: RandomMapScreen.cpp:70
 msgid "Random"
 msgstr "随机"
 
-#: RandomMapScreen.cpp:182
+#: RandomMapScreen.cpp:184
 #, c-format
 msgid "Random Level %d"
 msgstr "随机关卡 %d"
 
-#: RandomMapScreen.cpp:184
-#: RandomMapScreen.cpp:212
+#: RandomMapScreen.cpp:186
+#: RandomMapScreen.cpp:214
 msgid "Random Level"
 msgstr "随机关卡"
 
@@ -683,10 +787,6 @@ msgstr "下"
 #, c-format
 msgid "Start Level of Player %d"
 msgstr "玩家 %d 起始关卡"
-
-#: SimpleTextBox.cpp:355
-msgid "Copied to clipboard"
-msgstr "已复制到剪贴板"
 
 #~ msgid "Are you sure?"
 #~ msgstr "你确定吗？"

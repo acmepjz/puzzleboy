@@ -29,7 +29,8 @@ public:
 	bool LoadLocale();
 
 	void DestroyGame();
-	bool StartGame(int nPlayerCount,bool bEditMode=false,bool bTestMode=false,int currentLevel2=-1);
+	bool StartGame(int nPlayerCount,int mode=0,int currentLevel2=-1);
+	void ReloadBestRecord();
 
 	bool OnTimer();
 	bool OnKeyDown(int nChar,int nFlags);
@@ -58,7 +59,9 @@ public:
 	bool m_bShowMainMenuButton;
 	bool m_bAutoSaveRandomMap;
 	bool m_bShowMenuGrid;
-	u16string m_sPlayerName[2];
+
+	//0,1: local players, 2: used in network multiplayer
+	u16string m_sPlayerName[3];
 
 	//for saved progress
 	u8string m_sLastFile;

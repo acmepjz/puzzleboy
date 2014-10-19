@@ -6,6 +6,7 @@
 #include "SimpleTextBox.h"
 #include "MyFormat.h"
 #include "main.h"
+#include "NetworkManager.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -59,6 +60,9 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 	txt.SetFocus();
 
 	while(m_bRun && b){
+		//do network (????)
+		netMgr->OnTimer();
+
 		bool bDirty=titleBar.OnTimer();
 
 		bDirty|=txt.OnTimer();
@@ -177,6 +181,9 @@ int SimpleConfigKeyScreen(int key){
 	}
 
 	while(m_bRun && b){
+		//do network (????)
+		netMgr->OnTimer();
+
 		//get position of text box
 		SDL_Rect r={64,(screenHeight+buttonSize-64)/2,screenWidth-192,64};
 

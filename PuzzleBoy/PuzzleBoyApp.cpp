@@ -7,6 +7,7 @@
 #include "FileSystem.h"
 #include "VertexList.h"
 #include "main.h"
+#include "NetworkManager.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -355,7 +356,7 @@ void PuzzleBoyApp::DestroyGame(){
 	m_view.clear();
 }
 
-bool PuzzleBoyApp::StartGame(int nPlayerCount,bool bEditMode,bool bTestMode,int currentLevel2){
+bool PuzzleBoyApp::StartGame(int nPlayerCount,int mode,int currentLevel2){
 	DestroyGame();
 
 	m_nMyResizeTime=-1;
@@ -411,13 +412,19 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount,bool bEditMode,bool bTestMode,int 
 		//player 2
 		view=new PuzzleBoyLevelView();
 
-		view->m_sPlayerName=m_sPlayerName[1];
-		view->m_nKey=m_nKey+16;
+		if(netMgr->IsNetworkMultiplayer()){
+			view->m_sPlayerName=m_sPlayerName[2];
+			view->m_nKey=NULL;
+			view->m_nMode=READONLY_MODE;
+		}else{
+			view->m_sPlayerName=m_sPlayerName[1];
+			view->m_scrollView.m_nAutoResizeOffset[3]=-2*m_nButtonSize;
+			view->m_scrollView.m_nScissorOffset[3]=2*m_nButtonSize;
+			view->m_nKey=m_nKey+16;
+		}
 		view->m_scrollView.m_flags|=SimpleScrollViewFlags::AutoResize;
 		view->m_scrollView.m_fAutoResizeScale[2]=1.0f;
 		view->m_scrollView.m_fAutoResizeScale[3]=1.0f;
-		view->m_scrollView.m_nAutoResizeOffset[3]=-2*m_nButtonSize;
-		view->m_scrollView.m_nScissorOffset[3]=2*m_nButtonSize;
 		switch(m_nOrientation){
 		case 0:
 		case 1:
@@ -445,8 +452,7 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount,bool bEditMode,bool bTestMode,int 
 		//single player (or edit mode)
 		PuzzleBoyLevelView *view=new PuzzleBoyLevelView();
 
-		view->m_bEditMode=bEditMode;
-		view->m_bTestMode=bTestMode;
+		view->m_nMode=mode;
 		view->m_sPlayerName=m_sPlayerName[0];
 		view->m_nKey=m_nKey;
 		view->m_scrollView.m_flags|=SimpleScrollViewFlags::AutoResize;
@@ -470,11 +476,27 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount,bool bEditMode,bool bTestMode,int 
 	return true;
 }
 
+void PuzzleBoyApp::ReloadBestRecord(){
+	for(size_t i=0;i<m_view.size();i++){
+		m_view[i]->ReloadBestRecord();
+	}
+}
+
 void PuzzleBoyApp::ApplyRecord(const u8string& record,bool animationDemo,bool testMode){
-	StartGame(1,false,testMode);
+	if(netMgr->IsNetworkMultiplayer()){
+		m_view[0]->StartGame();
+
+		//send moves
+		NetworkMove move={7,0,0}; //restart
+		netMgr->SendPlayerMove(move);
+		move.type=8; //play from record
+		netMgr->SendPlayerMove(move);
+	}else{
+		StartGame(1,testMode?TEST_MODE:PLAY_MODE);
+	}
 
 	m_view[0]->m_bPlayFromRecord=true;
-	if(animationDemo){
+	if(animationDemo || netMgr->IsNetworkMultiplayer()){
 		m_view[0]->m_sRecord=record;
 		m_view[0]->m_nRecordIndex=0;
 	}else{
@@ -536,8 +558,10 @@ bool PuzzleBoyApp::OnTimer(){
 						view->right=screenAspectRatio;
 						view->bottom=1.0f;
 					}
-					m_view[i]->m_scrollView.m_nAutoResizeOffset[3]=-2*m_nButtonSize;
-					m_view[i]->m_scrollView.m_nScissorOffset[3]=2*m_nButtonSize;
+					if(!netMgr->IsNetworkMultiplayer()){
+						m_view[i]->m_scrollView.m_nAutoResizeOffset[3]=-2*m_nButtonSize;
+						m_view[i]->m_scrollView.m_nScissorOffset[3]=2*m_nButtonSize;
+					}
 				}
 			}
 		}

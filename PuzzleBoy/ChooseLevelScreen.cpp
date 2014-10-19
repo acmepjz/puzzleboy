@@ -43,7 +43,7 @@ int ChooseLevelFileScreen::OnMsgBoxClick(int index){
 
 int ChooseLevelFileScreen::DoModal(){
 	//show a warning dialog
-	if(!theApp->m_view.empty() && theApp->m_view[0]	&& theApp->m_view[0]->m_bEditMode
+	if(!theApp->m_view.empty() && theApp->m_view[0]	&& theApp->m_view[0]->m_nMode==EDIT_MODE
 		&& theApp->m_pDocument && theApp->m_pDocument->m_bModified)
 	{
 		delete m_msgBox;
