@@ -66,6 +66,7 @@ public:
 	//for saved progress
 	u8string m_sLastFile;
 	u8string m_sLastRecord;
+	u8string m_sLastRecord2; ///< Base64-encoded redo history
 
 	u8string m_sLocale; ///< empty means automatic, "?" means disabled
 

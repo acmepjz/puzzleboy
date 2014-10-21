@@ -9,6 +9,7 @@ PuzzleBoyLevelUndo::PuzzleBoyLevelUndo()
 , m_dy(0)
 , m_nMovedBlockIndex(-1)
 , m_objDeletedBlock(NULL)
+, m_nRecordIndex(-1)
 {
 }
 

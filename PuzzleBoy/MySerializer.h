@@ -12,6 +12,9 @@ public:
 	bool IsStoring() const{
 		return m_bIsStoring;
 	}
+	void SetStoring(bool b){
+		m_bIsStoring=b;
+	}
 
 	void Clear();
 

@@ -30,6 +30,9 @@ public:
 
 	//backup of deleted block after moved
 	PushableBlock* m_objDeletedBlock;
+
+	//only used in play from record, unreliable
+	int m_nRecordIndex;
 };
 
 

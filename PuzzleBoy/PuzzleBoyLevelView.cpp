@@ -7,6 +7,7 @@
 #include "VertexList.h"
 #include "main.h"
 #include "NetworkManager.h"
+#include "SimpleProgressScreen.h"
 
 #include <string.h>
 
@@ -214,6 +215,7 @@ PuzzleBoyLevelView::PuzzleBoyLevelView()
 ,m_nCurrentLevel(0)
 ,m_nMode(PLAY_MODE)
 ,m_bPlayFromRecord(false)
+,m_bPaused(false)
 ,m_bSkipRecord(false)
 ,m_nEditingBlockIndex(-1)
 ,m_objBackupBlock(NULL)
@@ -312,8 +314,10 @@ void PuzzleBoyLevelView::Draw(){
 			}
 		}
 
-		//enable fast forward/no screen kwyboard regardless of touchscreen mode
-		if(!m_sRecord.empty()) m_nScreenKeyboardType=2;
+		//enable fast forward/no screen keyboard regardless of touchscreen mode
+		if(!m_sRecord.empty()){
+			m_nScreenKeyboardType=(m_bPlayFromRecord && theApp->m_view.size()==1)?3:2;
+		}
 
 		//draw scroll bar
 		m_scrollView.Draw();
@@ -325,17 +329,28 @@ void PuzzleBoyLevelView::Draw(){
 
 		//draw screen keypad
 		SetProjectionMatrix(1);
-		{
-			int x1=m_scrollView.m_screen.x+m_scrollView.m_screen.w;
-			int y1=m_scrollView.m_screen.y+m_scrollView.m_screen.h;
-			int buttonSize=theApp->m_nButtonSize;
 
+		int x1=m_scrollView.m_screen.x+m_scrollView.m_screen.w;
+		int y1=m_scrollView.m_screen.y+m_scrollView.m_screen.h;
+		int buttonSize=theApp->m_nButtonSize;
+
+		{
 			std::vector<float> v;
 			std::vector<unsigned short> i;
 			v.reserve(64);
 			i.reserve(64);
 
-			if(m_bEditMode){
+			if(m_nScreenKeyboardType==3){
+				//rewind/fast forward/pause/no
+				AddScreenKeyboard(float(x1-4*buttonSize),float(y1+buttonSize),
+					float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_RESTART,v,i);
+				AddScreenKeyboard(float(x1-3*buttonSize),float(y1+buttonSize),
+					float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_FAST_FORWARD,v,i);
+				AddScreenKeyboard(float(x1-2*buttonSize),float(y1+buttonSize),
+					float(buttonSize),float(buttonSize),m_bPaused?SCREEN_KEYBOARD_PLAY:SCREEN_KEYBOARD_PAUSE,v,i);
+				AddScreenKeyboard(float(x1-buttonSize),float(y1+buttonSize),
+					float(buttonSize),float(buttonSize),SCREEN_KEYBOARD_NO,v,i);
+			}else if(m_bEditMode){
 				//add default screen keyboard
 				float v0[16]={
 					float(x1-3*buttonSize),float(y1+buttonSize),0.0f,SCREENKB_H,
@@ -444,6 +459,43 @@ void PuzzleBoyLevelView::Draw(){
 
 			DrawScreenKeyboard(v,i);
 		}
+
+		//draw progress bar
+		if(m_nScreenKeyboardType==3){
+			//background
+			float vv[8]={
+				0,float(y1),
+				0,float(y1+buttonSize),
+				float(screenWidth),float(y1),
+				float(screenWidth),float(y1+buttonSize),
+			};
+
+			unsigned short ii[6]={0,1,3,0,3,2};
+
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glVertexPointer(2,GL_FLOAT,0,vv);
+
+			glColor4f(0.25f, 0.25f, 0.25f, 0.5f);
+			glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,ii);
+
+			//bar background
+			vv[0]=vv[2]=float(buttonSize/2);
+			vv[4]=vv[6]=float(screenWidth-buttonSize/2);
+			vv[1]=vv[5]=float(y1+buttonSize/2-8);
+			vv[3]=vv[7]=vv[1]+16.0f;
+
+			glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+			glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,ii);
+
+			//bar foreground
+			vv[4]=vv[6]=float(buttonSize/2)+float(screenWidth-buttonSize)*float(m_nRecordIndex)/float(m_sRecord.size());
+
+			glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
+			glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,ii);
+
+			//over
+			glDisableClientState(GL_VERTEX_ARRAY);
+		}
 	}
 }
 
@@ -460,6 +512,7 @@ bool PuzzleBoyLevelView::StartGame(){
 	}
 
 	m_bPlayFromRecord=false;
+	m_bPaused=false;
 	m_bSkipRecord=false;
 	m_sRecord.clear();
 	m_nRecordIndex=-1;
@@ -779,36 +832,42 @@ bool PuzzleBoyLevelView::OnTimer(){
 						}
 					}
 				}
-			}else{
+			}else if(!m_bPaused){
 				//play from record
 				if(m_nRecordIndex<0) m_nRecordIndex=0;
 				int m=m_sRecord.size();
 
 				bool bSkip=m_bSkipRecord || (SDL_GetModState() & KMOD_SHIFT)!=0;
 
-				//TODO: SetHourglassCursor()
-				//if(bSkip) SetHourglassCursor();*/
+				SimpleProgressScreen *screen=NULL;
+
+				//show a busy screen
+				if(bSkip){
+					screen=new SimpleProgressScreen;
+					screen->Create();
+				}
 
 				for(;m_nRecordIndex<m;){
 					switch(m_sRecord[m_nRecordIndex]){
 					case 'A':
 					case 'a':
-						m_objPlayingLevel->MovePlayer(-1,0,true);
+						m_objPlayingLevel->MovePlayer(-1,0,true,m_nRecordIndex);
 						break;
 					case 'W':
 					case 'w':
-						m_objPlayingLevel->MovePlayer(0,-1,true);
+						m_objPlayingLevel->MovePlayer(0,-1,true,m_nRecordIndex);
 						break;
 					case 'D':
 					case 'd':
-						m_objPlayingLevel->MovePlayer(1,0,true);
+						m_objPlayingLevel->MovePlayer(1,0,true,m_nRecordIndex);
 						break;
 					case 'S':
 					case 's':
-						m_objPlayingLevel->MovePlayer(0,1,true);
+						m_objPlayingLevel->MovePlayer(0,1,true,m_nRecordIndex);
 						break;
 					case '(':
 						{
+							int oldIndex=m_nRecordIndex;
 							int x=0,y=0;
 							for(m_nRecordIndex++;m_nRecordIndex<m;m_nRecordIndex++){
 								int ch=m_sRecord[m_nRecordIndex];
@@ -834,7 +893,7 @@ bool PuzzleBoyLevelView::OnTimer(){
 								m=-1;
 								break;
 							}
-							m_objPlayingLevel->SwitchPlayer(x-1,y-1,true);
+							m_objPlayingLevel->SwitchPlayer(x-1,y-1,true,oldIndex);
 						}
 						break;
 					default:
@@ -843,13 +902,16 @@ bool PuzzleBoyLevelView::OnTimer(){
 					m_nRecordIndex++;
 					if(m_objPlayingLevel->IsAnimating()){
 						if(bSkip){
-							while(m_objPlayingLevel->IsAnimating()) m_objPlayingLevel->OnTimer();
+							while(m_objPlayingLevel->IsAnimating()) m_objPlayingLevel->OnTimer(8);
 							if(m_objPlayingLevel->IsWin()) break;
+							if(!screen->DrawAndDoEvents()) break;
 						}else{
 							break;
 						}
 					}
 				}
+
+				delete screen;
 
 				if(m_nRecordIndex>=m){
 					m_sRecord.clear();
@@ -1114,9 +1176,6 @@ bool PuzzleBoyLevelView::InternalKeyDown(int keyIndex){
 					return false;
 				}
 
-				if(!b){
-					//TODO: MessageBeep(0);
-				}
 				return true;
 			}
 		}else{
@@ -1124,19 +1183,40 @@ bool PuzzleBoyLevelView::InternalKeyDown(int keyIndex){
 			case 64:
 				//fast forward
 				if(!m_sRecord.empty()){
+					m_bPaused=false;
 					m_bSkipRecord=true;
 					return true;
 				}
 				break;
 			case 65:
 				//cancel demo
+				m_bPaused=false;
 				m_bPlayFromRecord=false;
 				m_sRecord.clear();
 				m_nRecordIndex=-1;
 				return true;
 				break;
+			case 66:
+				//replay record from start
+				if(!m_sRecord.empty()){
+					bool tmp=m_bPaused;
+					u8string record=m_sRecord;
+
+					StartGame();
+
+					m_bPlayFromRecord=true;
+					m_bPaused=tmp;
+					m_sRecord=record;
+					m_nRecordIndex=0;
+				}
+				return true;
+				break;
+			case 67:
+				//pause/resume
+				m_bPaused=!m_bPaused;
+				return true;
+				break;
 			default:
-				//TODO: MessageBeep(0);
 				break;
 			}
 		}
@@ -1405,15 +1485,52 @@ void PuzzleBoyLevelView::OnMouseEvent(int which,int state,int xMouse,int yMouse,
 				idx|=i;
 			}
 
-			switch(idx){
-			case 0x204: keyIndex=4; b=true; break;
-			case 0x203: keyIndex=0; b=true; break;
-			case 0x202: keyIndex=5; b=true; break;
-			case 0x201: keyIndex=7; break;
-			case 0x104: keyIndex=2; b=true; break;
-			case 0x103: keyIndex=1; b=true; break;
-			case 0x102: keyIndex=3; b=true; break;
-			case 0x101: keyIndex=6; break;
+			if(m_nScreenKeyboardType==3){
+				switch(idx){
+				case 0x104: keyIndex=66; break; //replay record from start
+				case 0x103: keyIndex=64; break; //fast forward
+				case 0x102: keyIndex=67; break; //pause/resume
+				case 0x101: keyIndex=65; break; //cancel
+				}
+
+				//check mouse down event on progress bar
+				if((idx>>8)==0x2 && !m_sRecord.empty()){
+					int newIndex=int(float(x-buttonSize/2)*float(m_sRecord.size())/float(m_scrollView.m_screen.w-buttonSize)+0.5f);
+					if(newIndex<=0){
+						keyIndex=66; //replay record from start
+					}else if(newIndex>=(int)m_sRecord.size()){
+						keyIndex=64; //fast forward
+					}else if(newIndex>m_nRecordIndex){
+						//fast forward to specified location
+						m_objPlayingLevel->ApplyRecord(m_sRecord,false,m_nRecordIndex,newIndex,&m_nRecordIndex);
+						b=true;
+					}else if(newIndex<m_nRecordIndex){
+						//rewind to specified location
+						m_objPlayingLevel->UndoToRecordIndex(newIndex,&m_nRecordIndex);
+						b=true;
+					}
+
+					if(b){
+						//ad-hoc: disable drag event temporarily
+						MultiTouchViewStruct *viewStruct=theApp->touchMgr.FindView(this);
+						if(viewStruct){
+							viewStruct->m_nDraggingState=3;
+							viewStruct->m_fMultitouchOldDistSquared=-1.0f;
+						}
+						return;
+					}
+				}
+			}else{
+				switch(idx){
+				case 0x204: keyIndex=4; b=true; break;
+				case 0x203: keyIndex=0; b=true; break;
+				case 0x202: keyIndex=5; b=true; break;
+				case 0x201: keyIndex=7; break;
+				case 0x104: keyIndex=2; b=true; break;
+				case 0x103: keyIndex=1; b=true; break;
+				case 0x102: keyIndex=3; b=true; break;
+				case 0x101: keyIndex=6; break;
+				}
 			}
 
 			switch(m_nScreenKeyboardType){

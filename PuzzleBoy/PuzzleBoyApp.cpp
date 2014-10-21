@@ -229,6 +229,7 @@ void PuzzleBoyApp::LoadConfig(const u8string& fileName){
 	m_sLastFile=GetConfig(cfg,"LastFile","");
 	m_nCurrentLevel=GetConfig(cfg,"LastLevel",0);
 	m_sLastRecord=GetConfig(cfg,"LastRecord","");
+	m_sLastRecord2=GetConfig(cfg,"LastRecord2","");
 
 	m_bContinuousKey=GetConfig(cfg,"ContinuousKey",1)!=0;
 	m_bShowFPS=GetConfig(cfg,"ShowFPS",0)!=0;
@@ -275,8 +276,11 @@ void PuzzleBoyApp::SaveConfig(const u8string& fileName){
 	PutConfig(cfg,"AutoSave",m_bAutoSave?1:0);
 	if(m_bAutoSave){
 		cfg["LastFile"]=m_sLastFile;
-		PutConfig(cfg,"LastLevel",m_nCurrentLevel);
-		cfg["LastRecord"]=m_sLastRecord;
+		if(!m_sLastFile.empty()){
+			PutConfig(cfg,"LastLevel",m_nCurrentLevel);
+			cfg["LastRecord"]=m_sLastRecord;
+			cfg["LastRecord2"]=m_sLastRecord2;
+		}
 	}
 
 	PutConfig(cfg,"ContinuousKey",m_bContinuousKey?1:0);

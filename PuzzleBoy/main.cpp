@@ -496,6 +496,7 @@ static bool OnKeyDown(int nChar,int nFlags){
 			theApp->m_nCurrentLevel=0;
 			theApp->m_sLastFile.clear();
 			theApp->m_sLastRecord.clear();
+			theApp->m_sLastRecord2.clear();
 			theApp->StartGame(1,EDIT_MODE);
 			break;
 		}
@@ -509,10 +510,90 @@ static void OnKeyUp(int nChar,int nFlags){
 	theApp->OnKeyUp(nChar,nFlags);
 }
 
+//unused
+/*static char FromBase64(char base64){
+	if(base64>='A' && base64<='Z') return base64-'A';
+	else if(base64>='a' && base64<='z') return base64-('a'-26);
+	else if(base64>='0' && base64<='9') return base64-('0'-52);
+	else if(base64=='+') return 62;
+	else if(base64=='/') return 63;
+	else if(base64=='=') return -1;
+
+	return -2;
+}
+
+static char ToBase64(char data){
+	data&=63;
+
+	if(data>=0 && data<26) return data+'A';
+	else if(data>=26 && data<52) return data+('a'-26);
+	else if(data>=52 && data<62) return data+('0'-52);
+	else if(data==62) return '+';
+	else return '/';
+}
+
+static bool FromBase64(const u8string& base64,std::vector<unsigned char>& data){
+	for(int i=0,m=base64.size();i<m-3;i+=4){
+		int e1=FromBase64(base64[i]);
+		int e2=FromBase64(base64[i+1]);
+
+		if(e1<0 || e2<0) return false;
+
+		int d=(e1<<18)|(e2<<12);
+
+		e1=FromBase64(base64[i+2]);
+		e2=FromBase64(base64[i+3]);
+
+		if(e1<-1 || e2<-1) return false;
+
+		data.push_back(d>>16);
+
+		if(e1<0) break;
+
+		d|=(e1<<6);
+		data.push_back(d>>8);
+
+		if(e2<0) break;
+
+		d|=(e2);
+		data.push_back(d);
+	}
+
+	return true;
+}
+
+static void ToBase64(u8string& base64,const std::vector<unsigned char>& data){
+	for(int i=0,m=data.size();i<m;i+=3){
+		int d=int(data[i])<<16;
+
+		base64.push_back(ToBase64(d>>18));
+
+		if(i+1>=m){
+			base64.push_back(ToBase64(d>>12));
+			base64.push_back('=');
+			base64.push_back('=');
+			break;
+		}
+
+		d|=int(data[i+1])<<8;
+		base64.push_back(ToBase64(d>>12));
+		if(i+2>=m){
+			base64.push_back(ToBase64(d>>6));
+			base64.push_back('=');
+			break;
+		}
+
+		d|=int(data[i+2]);
+		base64.push_back(ToBase64(d>>6));
+		base64.push_back(ToBase64(d));
+	}
+}*/
+
 static void OnAutoSave(){
 	if(theApp && theApp->m_bAutoSave && theApp->m_view[0] && !theApp->m_sLastFile.empty()){
 		theApp->m_nCurrentLevel=theApp->m_view[0]->m_nCurrentLevel;
 		theApp->m_sLastRecord=theApp->m_view[0]->m_objPlayingLevel->GetRecord();
+		theApp->m_sLastRecord2=theApp->m_view[0]->m_objPlayingLevel->GetRecord(2);
 		theApp->SaveConfig(externalStoragePath+"/PuzzleBoy.cfg");
 	}
 }
@@ -672,11 +753,13 @@ int main(int argc,char** argv){
 				}else{
 					printf("[main] Error: Level number specified by autosave out of range\n");
 					theApp->m_sLastRecord.clear();
+					theApp->m_sLastRecord2.clear();
 				}
 				break;
 			}else{
 				printf("[main] Error: Failed to load level file specified by autosave\n");
 				theApp->m_sLastRecord.clear();
+				theApp->m_sLastRecord2.clear();
 			}
 		}
 		theApp->m_nCurrentLevel=0;
@@ -780,8 +863,9 @@ int main(int argc,char** argv){
 	theApp->StartGame(1);
 
 	//load autosave
-	if(theApp->m_bAutoSave && !theApp->m_sLastRecord.empty()){
+	if(theApp->m_bAutoSave){
 		theApp->m_view[0]->m_objPlayingLevel->ApplyRecord(theApp->m_sLastRecord);
+		theApp->m_view[0]->m_objPlayingLevel->ApplyRecord(theApp->m_sLastRecord2,true);
 	}
 
 	//create ad-hoc main menu button
