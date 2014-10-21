@@ -862,6 +862,35 @@ bool PuzzleBoyLevel::Undo(){
 	return false;
 }
 
+bool PuzzleBoyLevel::UndoToRecordIndex(int nRecordIndex,int* ret){
+	while(IsAnimating()) OnTimer(8);
+
+	while(CanUndo()){
+		PuzzleBoyLevelUndo *objUndo=m_objUndo[m_nCurrentUndo-1];
+
+		//DEBGU
+		//printf("%d: %d, want %d\n",m_nCurrentUndo-1,objUndo->m_nRecordIndex,nRecordIndex);
+
+		//check if undo data doesn't contain record index
+		if(objUndo->m_nRecordIndex<0) return false;
+
+		//check if it's done
+		if(objUndo->m_nRecordIndex<nRecordIndex) return true;
+
+		//FIXME: there is something wrong which will corrupt the undo data and causes Undo() fail
+
+		//undo it
+		if(ret) *ret=objUndo->m_nRecordIndex;
+		if(!Undo()) return false;
+
+		while(IsAnimating()) OnTimer(8);
+	}
+
+	//undo to start
+	if(ret) *ret=0;
+	return true;
+}
+
 bool PuzzleBoyLevel::Redo(){
 	if(IsAnimating()) return true;
 
@@ -991,7 +1020,7 @@ void PuzzleBoyLevel::SaveUndo(PuzzleBoyLevelUndo* objUndo){
 	m_nCurrentUndo=m_objUndo.size();
 }
 
-bool PuzzleBoyLevel::SwitchPlayer(int x,int y,bool bSaveUndo)
+bool PuzzleBoyLevel::SwitchPlayer(int x,int y,bool bSaveUndo,int nRecordIndex)
 {
 	m_objCurrentUndo=NULL;
 
@@ -1008,6 +1037,7 @@ bool PuzzleBoyLevel::SwitchPlayer(int x,int y,bool bSaveUndo)
 				objUndo->m_y=m_nPlayerY;
 				objUndo->m_dx=x;
 				objUndo->m_dy=y;
+				objUndo->m_nRecordIndex=nRecordIndex;
 				SaveUndo(objUndo);
 
 				if(m_bSendNetworkMove){
@@ -1049,6 +1079,7 @@ bool PuzzleBoyLevel::SwitchPlayer(int x,int y,bool bSaveUndo)
 				objUndo->m_y=m_nPlayerY;
 				objUndo->m_dx=x;
 				objUndo->m_dy=y;
+				objUndo->m_nRecordIndex=nRecordIndex;
 				SaveUndo(objUndo);
 
 				if(m_bSendNetworkMove){
@@ -1071,7 +1102,7 @@ bool PuzzleBoyLevel::SwitchPlayer(int x,int y,bool bSaveUndo)
 	return false;
 }
 
-bool PuzzleBoyLevel::MovePlayer(int dx,int dy,bool bSaveUndo){
+bool PuzzleBoyLevel::MovePlayer(int dx,int dy,bool bSaveUndo,int nRecordIndex){
 	m_objCurrentUndo=NULL;
 
 	int x=m_nPlayerX;
@@ -1206,6 +1237,7 @@ bool PuzzleBoyLevel::MovePlayer(int dx,int dy,bool bSaveUndo){
 					objUndo->m_dx=dx;
 					objUndo->m_dy=dy;
 					objUndo->m_nMovedBlockIndex=m_nBlockAnimationIndex;
+					objUndo->m_nRecordIndex=nRecordIndex;
 					SaveUndo(objUndo);
 
 					if(m_bSendNetworkMove){
@@ -1468,30 +1500,34 @@ u8string PuzzleBoyLevel::GetRecord(int mode) const
 	return s;
 }
 
-bool PuzzleBoyLevel::ApplyRecord(const u8string& rec,bool redoHistory)
+bool PuzzleBoyLevel::ApplyRecord(const u8string& rec,bool redoHistory,int start,int end,int* ret_end)
 {
 	int count=0;
+	int i=start,m=rec.size();
 
-	for(int i=0,m=rec.size();i<m;i++){
+	if(end<0 || end>m) end=m;
+
+	for(;i<end;i++){
 		switch(rec[i]){
 		case 'A':
 		case 'a':
-			if(MovePlayer(-1,0,true)) count++;
+			if(MovePlayer(-1,0,true,i)) count++;
 			break;
 		case 'W':
 		case 'w':
-			if(MovePlayer(0,-1,true)) count++;
+			if(MovePlayer(0,-1,true,i)) count++;
 			break;
 		case 'D':
 		case 'd':
-			if(MovePlayer(1,0,true)) count++;
+			if(MovePlayer(1,0,true,i)) count++;
 			break;
 		case 'S':
 		case 's':
-			if(MovePlayer(0,1,true)) count++;
+			if(MovePlayer(0,1,true,i)) count++;
 			break;
 		case '(':
 			{
+				int oldIndex=i;
 				int x=0,y=0;
 				for(i++;i<m;i++){
 					int ch=rec[i];
@@ -1511,7 +1547,7 @@ bool PuzzleBoyLevel::ApplyRecord(const u8string& rec,bool redoHistory)
 					}
 				}
 				if(i>=m || y<=0 || y>m_nHeight) return false;
-				if(SwitchPlayer(x-1,y-1,true)) count++;
+				if(SwitchPlayer(x-1,y-1,true,oldIndex)) count++;
 			}
 			break;
 		default:
@@ -1522,6 +1558,8 @@ bool PuzzleBoyLevel::ApplyRecord(const u8string& rec,bool redoHistory)
 
 		if(IsWin()) break;
 	}
+
+	if(ret_end) *ret_end=i;
 
 	if(redoHistory){
 		//extremely stupid code

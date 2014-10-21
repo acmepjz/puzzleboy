@@ -46,7 +46,8 @@ public:
 private:
 	PuzzleBoyEditToolbar *m_toolbar;
 
-	//0=default, 1=with yes/no, 2=with fast forward/no
+	//0=default, 1=with yes/no, 2=with fast forward/no,
+	//3=rewind/fast forward/pause/no and a progress bar
 	int m_nScreenKeyboardType;
 
 	int m_nScreenKeyboardPressedIndex;
@@ -81,9 +82,9 @@ public:
 #define EDIT_MODE 1
 #define TEST_MODE 2
 #define READONLY_MODE 3
-	short m_nMode;
+	char m_nMode;
 
-	bool m_bPlayFromRecord;
+	bool m_bPlayFromRecord,m_bPaused;
 	bool m_bSkipRecord;
 
 	int m_nEditingBlockIndex;

@@ -45,8 +45,8 @@ public:
 	bool IsAnimating() const;
 	bool IsWin() const;
 	bool IsTargetFinished() const {return m_nTargetCount==m_nTargetFinished;}
-	bool MovePlayer(int dx,int dy,bool bSaveUndo);
-	bool SwitchPlayer(int x,int y,bool bSaveUndo);
+	bool MovePlayer(int dx,int dy,bool bSaveUndo,int nRecordIndex=-1);
+	bool SwitchPlayer(int x,int y,bool bSaveUndo,int nRecordIndex=-1);
 
 	//animationTime should be 0,1,2,4 or 8
 	void OnTimer(int animationTime=0);
@@ -74,13 +74,18 @@ public:
 	bool Undo();
 	bool Redo();
 
+	bool UndoToRecordIndex(int nRecordIndex,int* ret=0);
+
 	void SaveUndo(PuzzleBoyLevelUndo* objUndo);
 
 	//mode: 0=normal 1=get all record including redo history 2=redo history only
 	u8string GetRecord(int mode=0) const;
 	//rec: the record
 	//redoHistory: only save record to redo history
-	bool ApplyRecord(const u8string& rec,bool redoHistory=false);
+	//start: the start index
+	//end: the end index (not including this index)
+	//ret_end: returns the actual end index. only valid when this function returns true
+	bool ApplyRecord(const u8string& rec,bool redoHistory=false,int start=0,int end=-1,int* ret_end=0);
 
 	void SerializeHistory(MySerializer& ar);
 
