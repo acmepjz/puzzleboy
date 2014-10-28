@@ -1112,7 +1112,7 @@ bool PuzzleBoyLevelView::InternalKeyDown(int keyIndex){
 
 						if(objBlock->m_nType==ROTATE_BLOCK){
 							int dx=0,dy=0;
-							m_nEditingBlockX;m_nEditingBlockY;
+
 							if(m_nEditingBlockDX==objBlock->m_x){
 								if(m_nEditingBlockY==m_nEditingBlockDY){
 									switch(m_nEditingBlockX-objBlock->m_x){
