@@ -2,9 +2,11 @@
 #include "MyFormat.h"
 #include "PooledAllocator.h"
 
-//unfortunately, it breaks in Android
-#ifndef ANDROID
 #define USE_CUSTOM_HASHTREE
+
+//unfortunately, it breaks in Android (probably all ARM architecture)
+#if defined(ANDROID) || defined(__IPHONEOS__)
+#undef USE_CUSTOM_HASHTREE
 #endif
 
 #ifdef USE_CUSTOM_HASHTREE

@@ -21,6 +21,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 	endif()
 else()
 	message(WARNING "You are using an unsupported compiler! Compilation has only been tested with MSVC, GCC and Clang.")
+	add_definitions(-Doverride=)
 endif()
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")

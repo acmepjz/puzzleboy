@@ -46,7 +46,7 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 	txt.m_scrollView.m_flags|=SimpleScrollViewFlags::AutoResize;
 	txt.m_scrollView.m_fAutoResizeScale[2]=1.0f;
 	txt.m_scrollView.m_nAutoResizeOffset[0]=64;
-#ifdef ANDROID
+#if defined(ANDROID) || defined(__IPHONEOS__)
 	txt.m_scrollView.m_nAutoResizeOffset[1]=buttonSize+136;
 #else
 	txt.m_scrollView.m_fAutoResizeScale[1]=0.5f;

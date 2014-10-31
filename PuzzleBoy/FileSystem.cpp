@@ -361,6 +361,8 @@ void initPaths(){
 	if(externalStoragePath.empty()){
 #if defined(ANDROID)
 		externalStoragePath=SDL_AndroidGetExternalStoragePath();
+#elif defined(__IPHONEOS__)
+		externalStoragePath="../Documents";
 #elif defined(__WIN32__)
 		const int size=65536;
 		wchar_t *s=new wchar_t[size];
