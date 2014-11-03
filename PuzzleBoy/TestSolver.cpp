@@ -413,8 +413,8 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 	}
 
 	//ad-hoc: check additional exit point
+	unsigned char exitCount=level.m_nExitCount;
 	{
-		int e=level.m_nExitCount;
 		u8string s=toUTF8(level.m_sLevelName);
 		u8string::size_type lps=s.find("(E=");
 		if(lps!=u8string::npos){
@@ -424,11 +424,11 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 				if(x>=1 && x<=width && y>=1 && y<=height){
 					exitPos=p;
 					mapData[p]|=0x4;
-					e++;
+					exitCount++;
 				}
 			}
 		}
-		if(e<=0){
+		if(exitCount<=0 && !boxTarget){
 			printf("[TestSolver] Error: Invalid exit count\n");
 			return -2;
 		}
@@ -665,7 +665,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 
 	//create initial node
 	{
-		int playerRemaining=level.m_nPlayerCount;
+		unsigned char playerRemaining=level.m_nPlayerCount;
 
 		unsigned char shift=0;
 		for(int i=0;i<level.m_nPlayerCount;i++){
@@ -826,7 +826,8 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 					}
 
 					if(blockIdx==-1){
-						if((c&0x4)!=0 && playerRemaining==1){
+						//FIXME: in sokoban mode there is one more move
+						if(((c&0x4) && playerRemaining==1) || (exitCount==0 && boxTarget && playerRemaining<=level.m_nPlayerCount)){
 							//get player position of each step
 							std::vector<PlayerPosition> positions;
 							PlayerPosition newPos={exitPos,exitPos,exitPos,exitPos};
