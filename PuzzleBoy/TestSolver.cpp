@@ -274,17 +274,21 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 	unsigned char stateSize=0;
 	unsigned char exitPos=0; //position of one of exit (y+1)*16+(x+1)
 
-	//currently 0 or 1 boxes are supported (??? experimental)
-	//currently only rectangular boxes are supported
-	unsigned char boxWidth=0,boxHeight=0,boxXShift=0,boxYShift=0,boxXMask=0,boxYMask=0;
-	bool boxTarget=false;
+	//currently 0-4 boxes are supported (??? experimental)
+	//FIXME: completely wrong if there are at least 2 normal blocks and one is filling to the hole
+	//because filling order is not saved
+	//FIXME: currently only rectangular boxes are supported
+	unsigned char boxWidth[4]={},boxHeight[4]={},boxXShift[4]={},boxYShift[4]={},boxXMask[4]={},boxYMask[4]={};
+	unsigned char boxCount=0,boxTarget=0;
+	unsigned char boxStateSize=0; //>0 means all boxes are of same type, and this is the state size
 
 	TestSolverStateType initState=0;
 
 	//load map, format:
 	//bit0=player is movable
 	//bit1=block is movable
-	//bit2=exit?
+	//bit2=is exit
+	//bit3-5=block occupied (and block index) (??? experimental !!!)
 	unsigned char mapData[256]={};
 
 	for(int j=0;j<level.m_nHeight;j++){
@@ -324,27 +328,29 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 		if(obj.m_nType==ROTATE_BLOCK) continue;
 
 		if(obj.IsSolid()){
-			if(boxWidth==0){
-				boxWidth=obj.m_w;
-				boxHeight=obj.m_h;
-				boxTarget=(obj.m_nType==TARGET_BLOCK);
+			if(boxCount<4){
+				boxWidth[boxCount]=obj.m_w;
+				boxHeight[boxCount]=obj.m_h;
+				if(obj.m_nType==TARGET_BLOCK) boxTarget|=(1<<boxCount);
 
-				if(boxWidth==0 || boxHeight==0 || boxWidth>=width || boxHeight>=height){
+				if(obj.m_w==0 || obj.m_h==0 || obj.m_w>=width || obj.m_h>=height){
 					printf("[TestSolver] Error: Invalid block size\n");
 					return -2;
 				}
 
-				int w=width+1-boxWidth,h=height+1-boxHeight;
+				int w=width+1-obj.m_w,h=height+1-obj.m_h;
 				const unsigned char boxXSize=(w<=4)?((w<=2)?1:2):((w<=8)?3:4);
 				const unsigned char boxYSize=(h<=4)?((h<=2)?1:2):((h<=8)?3:4);
-				boxXShift=stateSize;
-				boxYShift=stateSize+boxXSize;
-				stateSize+=boxXSize+boxYSize;
-				boxXMask=(1<<boxXSize)-1;
-				boxYMask=(1<<boxYSize)-1;
+				boxXShift[boxCount]=stateSize;
+				boxYShift[boxCount]=stateSize+boxXSize;
+				stateSize+=boxStateSize=boxXSize+boxYSize;
+				boxXMask[boxCount]=(1<<boxXSize)-1;
+				boxYMask[boxCount]=(1<<boxYSize)-1;
 
-				initState|=(TestSolverStateType(obj.m_x&boxXMask)<<boxXShift)
-					|(TestSolverStateType(obj.m_y&boxYMask)<<boxYShift);
+				initState|=(TestSolverStateType(obj.m_x&boxXMask[boxCount])<<boxXShift[boxCount])
+					|(TestSolverStateType(obj.m_y&boxYMask[boxCount])<<boxYShift[boxCount]);
+
+				boxCount++;
 
 				continue;
 			}else{
@@ -355,6 +361,21 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 
 		printf("[TestSolver] Error: Invalid block type\n");
 		return -2;
+	}
+
+	//check if all boxes are of same size
+	if(boxCount>=2){
+		for(int boxIndex=1;boxIndex<boxCount;boxIndex++){
+			if(boxWidth[boxIndex]!=boxWidth[0] ||
+				boxHeight[boxIndex]!=boxHeight[0] ||
+				((boxTarget^(boxTarget>>boxIndex))&1))
+			{
+				boxStateSize=0;
+				break;
+			}
+		}
+	}else{
+		boxStateSize=0;
 	}
 
 	//for deadlock optimization later
@@ -436,14 +457,18 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 
 	//(experimental) calculate box fill data
 	//bit=1 means box can fill into the hole
-	unsigned short boxFillData[16]={};
-	if(boxWidth){
-		for(int j=0;j<=height-boxHeight;j++){
-			for(int i=0;i<=width-boxWidth;i++){
+	unsigned short boxFillData[4][16]={};
+	for(int boxIndex=0;boxIndex<boxCount;boxIndex++){
+		const unsigned char w=boxWidth[boxIndex];
+		const unsigned char h=boxHeight[boxIndex];
+
+		for(int j=0;j<=height-h;j++){
+			for(int i=0;i<=width-w;i++){
+				const unsigned char bTarget=(boxTarget>>boxIndex)&1;
 				bool b=true;
-				for(int jj=0;jj<boxHeight && b;jj++){
-					for(int ii=0;ii<boxWidth;ii++){
-						if(boxTarget){
+				for(int jj=0;jj<h && b;jj++){
+					for(int ii=0;ii<w;ii++){
+						if(bTarget){
 							if(level.m_bTargetData[(j+jj)*level.m_nWidth+(i+ii)]==0){
 								b=false;
 								break;
@@ -456,7 +481,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 						}
 					}
 				}
-				if(b) boxFillData[j]|=1<<i;
+				if(b) boxFillData[boxIndex][j]|=1<<i;
 			}
 		}
 	}
@@ -700,24 +725,31 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 
 		unsigned char pos[4];
 
-		unsigned char boxX=0,boxY=0,boxPos=0;
-		bool boxFilled=false;
-		if(boxWidth){
-			boxX=(node.state>>boxXShift)&boxXMask;
-			boxY=(node.state>>boxYShift)&boxYMask;
-			boxPos=(boxY+1)*16+(boxX+1);
-			boxFilled=((boxFillData[boxY]>>boxX)&0x1)!=0;
+		unsigned char boxX[4],boxY[4],boxPos[4];
+		unsigned char boxFilled=0;
+		for(int boxIndex=0;boxIndex<boxCount;boxIndex++){
+			boxX[boxIndex]=(node.state>>boxXShift[boxIndex])&boxXMask[boxIndex];
+			boxY[boxIndex]=(node.state>>boxYShift[boxIndex])&boxYMask[boxIndex];
+			unsigned char p=boxPos[boxIndex]=(boxY[boxIndex]+1)*16+(boxX[boxIndex]+1);
+			bool bFilled=((boxFillData[boxIndex][boxY[boxIndex]]>>boxX[boxIndex])&0x1)!=0;
 
-			if(boxTarget){
-				if(!boxFilled) playerRemaining=0xFF;
-				boxFilled=false;
+			if((boxTarget>>boxIndex)&1){
+				if(!bFilled) playerRemaining=0xFF;
+				bFilled=false;
 			}
 
 			//adhoc!!! slow!!!
-			if(boxFilled){
-				unsigned char p=boxPos;
-				for(int j=0;j<boxHeight;j++,p+=16){
-					for(int i=0;i<boxWidth;i++) mapData[(unsigned char)(p+i)]=0x3;
+			const unsigned char w=boxWidth[boxIndex],h=boxHeight[boxIndex];
+
+			if(bFilled){
+				boxFilled|=1<<boxIndex;
+
+				for(int j=0;j<h;j++,p+=16){
+					for(int i=0;i<w;i++) mapData[(unsigned char)(p+i)]|=0x3;
+				}
+			}else{
+				for(int j=0;j<h;j++,p+=16){
+					for(int i=0;i<w;i++) mapData[(unsigned char)(p+i)]|=(1+boxIndex)<<3;
 				}
 			}
 		}
@@ -749,31 +781,28 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 				const char dir=dirLUT[d];
 				unsigned char newPos=pos[currentPlayer]+dir;
 				unsigned char c=mapData[newPos];
-				bool boxPushed=false;
-
-#define CHECK_PUSH_BOX(POS,BOX_FILLED) ( \
-	boxWidth && (BOX_FILLED) \
-	&& (unsigned char)(((POS)&0xF)-1-boxX)<boxWidth \
-	&& (unsigned char)(((POS)>>4)-1-boxY)<boxHeight)
+				unsigned char boxPushedIndex=0; // boxPushedIndex-1 is real index
 
 				//check blocked exit
-				if((c&0x4)!=0 && (playerRemaining&0x80)!=0) c=0;
+				if((c&0x4) && (playerRemaining&0x80)) c=0;
 
 				//check push box
-				if((c&0x1)!=0 && CHECK_PUSH_BOX(newPos,!boxFilled)){
-					unsigned char checkPos=boxPos+
-						(d==0?-16:(d==1?-1:(d==2?(boxHeight*16):boxWidth)));
+				if((c&0x1) && ((c>>3)&0x7)){
+					unsigned char boxIndex=((c>>3)&0x7)-1;
+					unsigned char w=boxWidth[boxIndex],h=boxHeight[boxIndex];
+					unsigned char checkPos=boxPos[boxIndex]+
+						(d==0?-16:(d==1?-1:(d==2?(h*16):w)));
 					unsigned char checkStep=(d&1)?16:1;
-					unsigned char checkCount=(d&1)?boxHeight:boxWidth;
+					unsigned char checkCount=(d&1)?h:w;
 					for(;checkCount;checkPos+=checkStep,checkCount--){
-						if((mapData[checkPos]&0x2)==0
+						if((mapData[checkPos]&(0x2|0x8|0x10|0x20))!=0x2
 							|| TestSolver_HitTestForBlocks(mapAdjacency,blocks,node.state,checkPos)!=-1)
 						{
 							c=0;
 							break;
 						}
 					}
-					if(c) boxPushed=true;
+					if(c) boxPushedIndex=boxIndex+1;
 				}
 
 				if(c&0x1){
@@ -792,7 +821,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 							do{
 								unsigned char checkPos=block.pos+((n&3)-2)+((n&12)-8)*4;
 
-								if((mapData[checkPos]&0x2)==0 || CHECK_PUSH_BOX(checkPos,!boxFilled)
+								if((mapData[checkPos]&(0x2|0x8|0x10|0x20))!=0x2
 									|| TestSolver_HitTestForBlocks(mapAdjacency,blocks,node.state,checkPos)!=-1)
 								{
 									b=false;
@@ -980,10 +1009,14 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 						newState=TestSolver_SortPosition(level.m_nPlayerCount,
 							playerXSize+playerYSize,0,
 							newState|TestSolverStateType((newPos&playerXMask)|(((newPos>>4)&playerYMask)<<playerXSize))<<shift);
-						if(boxPushed){
-							unsigned char newBoxPos=boxPos+dir-17;
-							newState=(newState&~TestSolverStateType(((unsigned int)(boxXMask)<<boxXShift)|((unsigned int)(boxYMask)<<boxYShift)))
-								|((unsigned int)(newBoxPos&boxXMask)<<boxXShift)|((unsigned int)((newBoxPos>>4)&boxYMask)<<boxYShift);
+						if(boxPushedIndex){
+							boxPushedIndex--;
+							unsigned char newBoxPos=boxPos[boxPushedIndex]+dir-17;
+							newState=(newState&~TestSolverStateType((TestSolverStateType(boxXMask[boxPushedIndex])<<boxXShift[boxPushedIndex])
+								|(TestSolverStateType(boxYMask[boxPushedIndex])<<boxYShift[boxPushedIndex])))
+								|(TestSolverStateType(newBoxPos&boxXMask[boxPushedIndex])<<boxXShift[boxPushedIndex])
+								|(TestSolverStateType((newBoxPos>>4)&boxYMask[boxPushedIndex])<<boxYShift[boxPushedIndex]);
+							if(boxStateSize) newState=TestSolver_SortPosition(boxCount,boxStateSize,boxXShift[0],newState);
 						}
 						TestSolverNode newNode={currentNode,NULL,newState},*p=NULL;
 #ifdef USE_CUSTOM_HASHTREE
@@ -1010,10 +1043,18 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 		}
 
 		//adhoc!!! slow!!!
-		if(boxFilled){
-			unsigned char p=boxPos;
-			for(int j=0;j<boxHeight;j++,p+=16){
-				for(int i=0;i<boxWidth;i++) mapData[(unsigned char)(p+i)]=0x2;
+		for(int boxIndex=0;boxIndex<boxCount;boxIndex++){
+			unsigned char p=boxPos[boxIndex];
+			const unsigned char w=boxWidth[boxIndex],h=boxHeight[boxIndex];
+
+			if((boxFilled>>boxIndex)&1){
+				for(int j=0;j<h;j++,p+=16){
+					for(int i=0;i<w;i++) mapData[(unsigned char)(p+i)]=0x2;
+				}
+			}else{
+				for(int j=0;j<h;j++,p+=16){
+					for(int i=0;i<w;i++) mapData[(unsigned char)(p+i)]&=~(0x8|0x10|0x20);
+				}
 			}
 		}
 
