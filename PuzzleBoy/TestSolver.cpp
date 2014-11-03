@@ -106,42 +106,111 @@ static bool TestSolver_CalculateAdjacancyData(unsigned char mapAdjacency[256][4]
 	return true;
 }
 
-static TestSolverStateType TestSolver_SortPlayerPosition(int playerCount,unsigned char playerSize,TestSolverStateType pos){
-	switch(playerCount){
+static TestSolverStateType TestSolver_SortPosition(int count,unsigned char size,unsigned char offset,TestSolverStateType pos){
+	switch(count){
 	case 2:
 		{
-			unsigned int mask=(1<<playerSize)-1;
-			unsigned int p1=pos&mask;
-			unsigned int p2=(pos>>playerSize)&mask;
+			unsigned char mask=(1<<size)-1;
+			unsigned char p1=(pos>>offset)&mask;
+			unsigned char p2=(pos>>(offset+size))&mask;
 
-			if(p1>p2) return (p1<<playerSize)|p2|(pos&~((TestSolverStateType(1)<<(playerSize*2))-1));
+			if(p1>p2) return (TestSolverStateType(p2)<<offset)
+				|(TestSolverStateType(p1)<<(offset+size))
+				|(pos&~(((TestSolverStateType(1)<<(size*2))-1)<<offset));
 		}
 		break;
 	case 3:
+	case 4:
 		{
-			unsigned int mask=(1<<playerSize)-1;
-			unsigned int p1=pos&mask;
-			unsigned int p2=(pos>>playerSize)&mask;
-			unsigned int p3=(pos>>(playerSize*2))&mask;
+			unsigned char mask=(1<<size)-1;
+			unsigned char p1=(pos>>offset)&mask;
+			unsigned char p2=(pos>>(offset+size))&mask;
+			unsigned char p3=(pos>>(offset+size*2))&mask;
+			unsigned char p4=(pos>>(offset+size*3))&mask;
 
-			if(p1>p2){
-				if(p1>p3){
-					std::swap(p1,p3); //p1 biggest, swap to p3
-					if(p1>p2) std::swap(p1,p2);
-				}else{ //p1<=p3
-					std::swap(p1,p2);
-				}
-			}else{ //p1<=p2
-				if(p2>p3){
-					std::swap(p2,p3); //p2 biggest, swap to p3
-					if(p1>p2) std::swap(p1,p2);
-				}else{ //p2<=p3
-					break; //order is already correct
+			if(count==4){
+				if(p1>p2){
+					if(p1>p3){
+						if(p1>p4){
+							std::swap(p1,p4); //p1 biggest, swap to p4
+						}else{ //p1<=p4
+							std::swap(p1,p3); //p1 second biggest, swap to p3
+							if(p1>p2) std::swap(p1,p2);
+							count=0; //all numbers are sorted
+						}
+					}else{ //p2<p1<=p3
+						if(p1>p4){
+							unsigned char tmp=p4;
+							p4=p3; //p3 biggest, swap to p4
+							p3=p1; //p1 second biggest, swap to p3
+							if(p2>tmp) p1=tmp; //tmp smallest
+							else p1=p2,p2=tmp; //p2 smallest, swap to p1
+						}else{
+							std::swap(p1,p2); //p1 second smallest, p2 smallest, swap
+							if(p3>p4) std::swap(p3,p4);
+						}
+						count=0; //all numbers are sorted
+					}
+				}else{ //p1<=p2
+					if(p2>p3){
+						if(p2>p4){
+							std::swap(p2,p4); //p2 biggest, swap to p4
+						}else{ //p1,p3<=p2<=p4
+							std::swap(p2,p3); //p2 second biggest, swap to p3
+							if(p1>p2) std::swap(p1,p2);
+							count=0; //all numbers are sorted
+						}
+					}else{ //p1<=p2<=p3
+						if(p2>p4){
+							unsigned char tmp=p4;
+							p4=p3; //p3 biggest, swap to p4
+							p3=p2; //p2 second biggest, swap to p3
+							if(p1>tmp) p2=p1,p1=tmp; //tmp smallest, swap to p1
+							else p2=tmp; //p2 smallest
+						}else{ //p2<=p4
+							if(p3>p4){
+								std::swap(p3,p4);
+							}else{
+								break; //order is already correct
+							}
+						}
+						count=0; //all numbers are sorted
+					}
 				}
 			}
 
-			return p1|(p2<<playerSize)|(p3<<(playerSize*2))
-				|(pos&~((TestSolverStateType(1)<<(playerSize*3))-1));
+			if(count){
+				if(p1>p2){
+					if(p1>p3){
+						std::swap(p1,p3); //p1 biggest, swap to p3
+						if(p1>p2) std::swap(p1,p2);
+					}else{ //p1<=p3
+						std::swap(p1,p2);
+					}
+				}else{ //p1<=p2
+					if(p2>p3){
+						std::swap(p2,p3); //p2 biggest, swap to p3
+						if(p1>p2) std::swap(p1,p2);
+					}else{ //p2<=p3
+						if(count==3) break; //order is already correct
+					}
+				}
+			}
+
+			if(count==3){
+				assert(p1<=p2 && p2<=p3);
+				return (TestSolverStateType(p1)<<offset)
+					|(TestSolverStateType(p2)<<(offset+size))
+					|(TestSolverStateType(p3)<<(offset+size*2))
+					|(pos&~(((TestSolverStateType(1)<<(size*3))-1)<<offset));
+			}else{
+				assert(p1<=p2 && p2<=p3 && p3<=p4);
+				return (TestSolverStateType(p1)<<offset)
+					|(TestSolverStateType(p2)<<(offset+size))
+					|(TestSolverStateType(p3)<<(offset+size*2))
+					|(TestSolverStateType(p4)<<(offset+size*3))
+					|(pos&~(((TestSolverStateType(1)<<(size*4))-1)<<offset));
+			}
 		}
 		break;
 	default:
@@ -191,8 +260,8 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 		return -2;
 	}
 
-	//currently up to 3 players are supported (??? experimental)
-	if(level.m_nPlayerCount<1 || level.m_nPlayerCount>3){
+	//currently up to 4 players are supported (??? experimental)
+	if(level.m_nPlayerCount<1 || level.m_nPlayerCount>4){
 		printf("[TestSolver] Error: Invalid player count\n");
 		return -2;
 	}
@@ -612,7 +681,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 
 		if(playerRemaining==0) return 1;
 
-		initState=TestSolver_SortPlayerPosition(level.m_nPlayerCount,playerXSize+playerYSize,initState);
+		initState=TestSolver_SortPosition(level.m_nPlayerCount,playerXSize+playerYSize,0,initState);
 
 		TestSolverNode node={NULL,NULL,initState};
 #ifdef USE_CUSTOM_HASHTREE
@@ -800,7 +869,8 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 								switch(newIndexMask){
 								case 1: newIndex=0; break;
 								case 2: newIndex=1; break;
-								case 4: newIndex=2; break; //no more than 3 players
+								case 4: newIndex=2; break;
+								case 8: newIndex=3; break; //no more than 4 players
 								}
 
 								//update position
@@ -906,8 +976,8 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 						//add node
 						if(c&0x4) newPos=exitPos;
 						newPos-=17;
-						newState=TestSolver_SortPlayerPosition(level.m_nPlayerCount,
-							playerXSize+playerYSize,
+						newState=TestSolver_SortPosition(level.m_nPlayerCount,
+							playerXSize+playerYSize,0,
 							newState|TestSolverStateType((newPos&playerXMask)|(((newPos>>4)&playerYMask)<<playerXSize))<<shift);
 						if(boxPushed){
 							unsigned char newBoxPos=boxPos+dir-17;
