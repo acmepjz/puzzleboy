@@ -47,7 +47,18 @@ int RandomTest(int width,int height,int playerCount,int boxType,PuzzleBoyLevelDa
 	int tt0=0,tt1=0,tt2=0;
 #endif
 
-	int boxCount=(boxType==NORMAL_BLOCK || boxType==TARGET_BLOCK)?1:0;
+	//get box type and count
+	int boxCount=0;
+	switch(boxType&0x3){
+	case NORMAL_BLOCK:
+	case TARGET_BLOCK:
+		boxCount=1+(boxType>>4);
+		boxType&=0x3;
+		break;
+	default:
+		boxType=-1;
+		break;
+	}
 
 	//init pool
 	for(int i=0;i<PoolSize;i++){
@@ -79,25 +90,32 @@ int RandomTest(int width,int height,int playerCount,int boxType,PuzzleBoyLevelDa
 		}
 
 		//random add block
-		if(boxType==NORMAL_BLOCK || boxType==TARGET_BLOCK){
+		for(int boxIndex=0;boxIndex<boxCount;boxIndex++){
 			PushableBlock *block=new PushableBlock;
 
 			block->m_nType=boxType;
 
-			for(;;){
-				float maxWidth=width>6?2.5f:1.5f,maxHeight=height>6?2.5f:1.5f;
+			for(int failed=0;;failed++){
+				const float maxWidth=width>6?2.5f:1.5f,maxHeight=height>6?2.5f:1.5f;
 				block->m_w=1+int(maxWidth*(float)rnd->Rnd()/4294967296.0f);
 				block->m_h=1+int(maxHeight*(float)rnd->Rnd()/4294967296.0f);
-				int x1=width-3-block->m_w,x2=height-3-block->m_h;
-				block->m_x=(x1<2?1:2)+int(float(x1<2?2:x1)*(float)rnd->Rnd()/4294967296.0f);
-				block->m_y=(x2<2?1:2)+int(float(x2<2?2:x2)*(float)rnd->Rnd()/4294967296.0f);
+				if(failed>16){
+					block->m_x=int(float(width+1-block->m_w)*(float)rnd->Rnd()/4294967296.0f);
+					block->m_y=int(float(height+1-block->m_h)*(float)rnd->Rnd()/4294967296.0f);
+				}else if(failed>8){
+					block->m_x=1+int(float(width-1-block->m_w)*(float)rnd->Rnd()/4294967296.0f);
+					block->m_y=1+int(float(height-1-block->m_h)*(float)rnd->Rnd()/4294967296.0f);
+				}else{
+					block->m_x=2+int(float(width-3-block->m_w)*(float)rnd->Rnd()/4294967296.0f);
+					block->m_y=2+int(float(height-3-block->m_h)*(float)rnd->Rnd()/4294967296.0f);
+				}
 
 				bool b=true;
-				x1=block->m_x;
-				x2=block->m_x+block->m_w;
+				const int x1=block->m_x;
+				const int x2=block->m_x+block->m_w;
 				for(int y=block->m_y,y2=block->m_y+block->m_h;y<y2 && b;y++){
 					for(int x=x1;x<x2;x++){
-						if(level(x,y)){
+						if(level.HitTestForPlacingBlocks(x,y)!=-1){
 							b=false;
 							break;
 						}
@@ -145,10 +163,25 @@ int RandomTest(int width,int height,int playerCount,int boxType,PuzzleBoyLevelDa
 				for(;;){
 					xx=int(float(width-block->m_w)*(float)rnd->Rnd()/4294967296.0f);
 					yy=int(float(height+1-block->m_h)*(float)rnd->Rnd()/4294967296.0f);
+
+					bool b=false;
+					const int x2=xx+block->m_w;
+					for(int y=yy,y2=yy+block->m_h;y<y2 && !b;y++){
+						for(int x=xx;x<x2 && !b;x++){
+							switch(level(x,y)){
+							case TARGET_TILE:
+							case PLAYER_AND_TARGET_TILE:
+								b=true;
+								break;
+							}
+						}
+					}
+					if(b) continue;
+
 					if(xx!=block->m_x || yy!=block->m_y) break;
 				}
 
-				int x2=xx+block->m_w;
+				const int x2=xx+block->m_w;
 				for(int y=yy,y2=yy+block->m_h;y<y2;y++){
 					for(int x=xx;x<x2;x++){
 						level(x,y)=(level(x,y)==PLAYER_TILE)?PLAYER_AND_TARGET_TILE:TARGET_TILE;
