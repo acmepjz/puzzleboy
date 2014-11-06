@@ -38,21 +38,36 @@ static const RandomMapSizeData RandomMapSizes2[]={
 	{5,5,2,NORMAL_BLOCK},{5,7,2,NORMAL_BLOCK},{7,5,2,NORMAL_BLOCK},{6,6,2,NORMAL_BLOCK},
 	{8,8,1,TARGET_BLOCK},
 	{5,5,2,TARGET_BLOCK},{5,7,2,TARGET_BLOCK},{7,5,2,TARGET_BLOCK},{6,6,2,TARGET_BLOCK},
+	{5,5,1,TARGET_BLOCK|(1<<4)},{5,7,1,TARGET_BLOCK|(1<<4)},
+	{7,5,1,TARGET_BLOCK|(1<<4)},{6,6,1,TARGET_BLOCK|(1<<4)},
 };
 const int RandomMapSizesCount2=sizeof(RandomMapSizes2)/sizeof(RandomMapSizeData);
 
 static void CreateRandomMapSizeDescription(const RandomMapSizeData& size,MyFormat& fmt){
-	switch(size.boxType){
+	int type=size.boxType & 0x3;
+	int count=1+(size.boxType>>4);
+
+	u8string blockNames[4];
+	blockNames[0]=_("a pushable block");
+	blockNames[1]=_("a target block");
+	blockNames[2]=_("%d pushable blocks");
+	blockNames[3]=_("%d target blocks");
+
+	switch(type){
 	case NORMAL_BLOCK:
-		fmt(_("Rotate block with a pushable block"));
-		break;
 	case TARGET_BLOCK:
-		fmt(_("Rotate block with a target block"));
+		fmt(_("Rotate block with %s"));
+		if(count>1){
+			fmt<<str(MyFormat(blockNames[type==NORMAL_BLOCK?2:3])<<count);
+		}else{
+			fmt<<blockNames[type==NORMAL_BLOCK?0:1];
+		}
 		break;
 	default:
 		fmt(_("Rotate block only"));
 		break;
 	}
+
 	fmt(" %dx%d ")<<size.width<<size.height;
 	if(size.playerCount>1){
 		fmt(_("(%d players)"))<<size.playerCount;

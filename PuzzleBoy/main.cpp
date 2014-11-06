@@ -1059,7 +1059,7 @@ int main(int argc,char** argv){
 	delete theApp;
 	theApp=NULL;
 
-#ifdef ANDROID
+#if defined(ANDROID) || defined(__IPHONEOS__)
 	exit(0);
 #endif
 	return 0;

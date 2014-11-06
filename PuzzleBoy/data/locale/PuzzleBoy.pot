@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PuzzleBoy 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-10-16 21:07+0800\n"
+"POT-Creation-Date: 2014-11-04 23:31+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,13 +25,13 @@ msgstr ""
 msgid "User level: "
 msgstr ""
 
-#: ChooseLevelScreen.cpp:74 MainMenuScreen.cpp:182 MainMenuScreen.cpp:356
-#: MainMenuScreen.cpp:677
+#: ChooseLevelScreen.cpp:74 MainMenuScreen.cpp:185 MainMenuScreen.cpp:359
+#: MainMenuScreen.cpp:680
 msgid "Choose Level File"
 msgstr ""
 
-#: ChooseLevelScreen.cpp:91 MainMenuScreen.cpp:181 MainMenuScreen.cpp:355
-#: MainMenuScreen.cpp:676
+#: ChooseLevelScreen.cpp:91 MainMenuScreen.cpp:184 MainMenuScreen.cpp:358
+#: MainMenuScreen.cpp:679
 msgid "Choose Level"
 msgstr ""
 
@@ -49,13 +49,13 @@ msgstr ""
 
 #: ConfigScreen.cpp:43 ConfigScreen.cpp:404 LevelDatabaseScreen.cpp:243
 #: LevelDatabaseScreen.cpp:285 LevelDatabaseScreen.cpp:462 main.cpp:420
-#: MainMenuScreen.cpp:548 SimpleMiscScreen.cpp:305
+#: MainMenuScreen.cpp:551 SimpleMiscScreen.cpp:312
 msgid "No"
 msgstr ""
 
 #: ConfigScreen.cpp:44 ConfigScreen.cpp:405 LevelDatabaseScreen.cpp:242
 #: LevelDatabaseScreen.cpp:284 LevelDatabaseScreen.cpp:461 main.cpp:419
-#: MainMenuScreen.cpp:547 SimpleMiscScreen.cpp:306
+#: MainMenuScreen.cpp:550 SimpleMiscScreen.cpp:313
 msgid "Yes"
 msgstr ""
 
@@ -171,7 +171,7 @@ msgstr ""
 msgid "Multiplayer Keys (Player 2):"
 msgstr ""
 
-#: ConfigScreen.cpp:141 SimpleMiscScreen.cpp:228
+#: ConfigScreen.cpp:141 SimpleMiscScreen.cpp:235
 msgid "(None)"
 msgstr ""
 
@@ -212,8 +212,8 @@ msgstr ""
 msgid "Please input the new name of player %d"
 msgstr ""
 
-#: ConfigScreen.cpp:476 MainMenuScreen.cpp:185 MainMenuScreen.cpp:360
-#: MainMenuScreen.cpp:619
+#: ConfigScreen.cpp:476 MainMenuScreen.cpp:188 MainMenuScreen.cpp:363
+#: MainMenuScreen.cpp:622 MainMenuScreen.cpp:682
 msgid "Config"
 msgstr ""
 
@@ -239,7 +239,7 @@ msgstr ""
 msgid "Merge Level Database"
 msgstr ""
 
-#: LevelDatabaseScreen.cpp:156 MainMenuScreen.cpp:367 MainMenuScreen.cpp:453
+#: LevelDatabaseScreen.cpp:156 MainMenuScreen.cpp:370 MainMenuScreen.cpp:456
 msgid "Level Name"
 msgstr ""
 
@@ -263,15 +263,15 @@ msgstr ""
 msgid "Show Level"
 msgstr ""
 
-#: LevelDatabaseScreen.cpp:207 MainMenuScreen.cpp:372
+#: LevelDatabaseScreen.cpp:207 MainMenuScreen.cpp:375
 msgid "Remove Level"
 msgstr ""
 
-#: LevelDatabaseScreen.cpp:212 LevelRecordScreen.cpp:35
+#: LevelDatabaseScreen.cpp:212 LevelRecordScreen.cpp:36
 msgid "List of Records"
 msgstr ""
 
-#: LevelDatabaseScreen.cpp:241 MainMenuScreen.cpp:546
+#: LevelDatabaseScreen.cpp:241 MainMenuScreen.cpp:549
 msgid "Do you want to remove this level?"
 msgstr ""
 
@@ -288,7 +288,7 @@ msgstr ""
 msgid "Level Information"
 msgstr ""
 
-#: LevelDatabaseScreen.cpp:351 MainMenuScreen.cpp:197
+#: LevelDatabaseScreen.cpp:351 MainMenuScreen.cpp:200 MainMenuScreen.cpp:690
 msgid "Level Database"
 msgstr ""
 
@@ -308,11 +308,11 @@ msgstr ""
 msgid "Failed to save level database"
 msgstr ""
 
-#: LevelRecordScreen.cpp:61
+#: LevelRecordScreen.cpp:62
 msgid "Apply"
 msgstr ""
 
-#: LevelRecordScreen.cpp:65
+#: LevelRecordScreen.cpp:66
 msgid "Animation Demo"
 msgstr ""
 
@@ -324,236 +324,236 @@ msgid ""
 "Continue?"
 msgstr ""
 
-#: main.cpp:724
+#: main.cpp:807
 msgid "Puzzle Boy"
 msgstr ""
 
-#: main.cpp:815
+#: main.cpp:899
 #, c-format
 msgid "Pack: %s"
 msgstr ""
 
-#: main.cpp:823
+#: main.cpp:907
 #, c-format
 msgid "Level %d: %s"
 msgstr ""
 
-#: main.cpp:827
+#: main.cpp:911
 #, c-format
 msgid "Moves: %d"
 msgstr ""
 
-#: main.cpp:830
+#: main.cpp:914
 #, c-format
 msgid "Best: %d (%s)"
 msgstr ""
 
-#: main.cpp:903
+#: main.cpp:1009
 msgid "Press again to exit"
 msgstr ""
 
-#: MainMenuScreen.cpp:107 MainMenuScreen.cpp:191 MainMenuScreen.cpp:625
+#: MainMenuScreen.cpp:110 MainMenuScreen.cpp:194 MainMenuScreen.cpp:628
 msgid "Level Solver"
 msgstr ""
 
-#: MainMenuScreen.cpp:107
+#: MainMenuScreen.cpp:110
 msgid "The solution is:"
 msgstr ""
 
-#: MainMenuScreen.cpp:114
+#: MainMenuScreen.cpp:117
 msgid "No solution"
 msgstr ""
 
-#: MainMenuScreen.cpp:117
+#: MainMenuScreen.cpp:120
 msgid "Aborted"
 msgstr ""
 
-#: MainMenuScreen.cpp:120
+#: MainMenuScreen.cpp:123
 msgid "Can't solve this level"
 msgstr ""
 
-#: MainMenuScreen.cpp:169
+#: MainMenuScreen.cpp:172
 #, c-format
 msgid "File saved to %s"
 msgstr ""
 
-#: MainMenuScreen.cpp:171
+#: MainMenuScreen.cpp:174
 #, c-format
 msgid "Failed to save file %s"
 msgstr ""
 
-#: MainMenuScreen.cpp:183 MainMenuScreen.cpp:219 MainMenuScreen.cpp:618
-#: MainMenuScreen.cpp:636
+#: MainMenuScreen.cpp:186 MainMenuScreen.cpp:222 MainMenuScreen.cpp:621
+#: MainMenuScreen.cpp:639 MainMenuScreen.cpp:681 MainMenuScreen.cpp:726
 msgid "Level Record"
 msgstr ""
 
-#: MainMenuScreen.cpp:184 MainMenuScreen.cpp:611
+#: MainMenuScreen.cpp:187 MainMenuScreen.cpp:614
 msgid "Edit Level"
 msgstr ""
 
-#: MainMenuScreen.cpp:186
+#: MainMenuScreen.cpp:189
 msgid "Exit Game"
 msgstr ""
 
-#: MainMenuScreen.cpp:192 MainMenuScreen.cpp:193 MainMenuScreen.cpp:683
-#: RandomMapScreen.cpp:92
+#: MainMenuScreen.cpp:195 MainMenuScreen.cpp:196 MainMenuScreen.cpp:688
+#: RandomMapScreen.cpp:106
 msgid "Random Map"
 msgstr ""
 
-#: MainMenuScreen.cpp:194 MainMenuScreen.cpp:684
+#: MainMenuScreen.cpp:197 MainMenuScreen.cpp:689
 msgid "Save Temp Level File"
 msgstr ""
 
-#: MainMenuScreen.cpp:195 SimpleMiscScreen.cpp:595
+#: MainMenuScreen.cpp:198 SimpleMiscScreen.cpp:602
 msgid "Start Multiplayer"
 msgstr ""
 
-#: MainMenuScreen.cpp:196 MainMenuScreen.cpp:306
+#: MainMenuScreen.cpp:199 MainMenuScreen.cpp:309
 msgid "Network Multiplayer"
 msgstr ""
 
-#: MainMenuScreen.cpp:220 MainMenuScreen.cpp:637
+#: MainMenuScreen.cpp:223 MainMenuScreen.cpp:640 MainMenuScreen.cpp:727
 msgid ""
 "Copy record here or paste record\n"
 "and click 'Apply' button"
 msgstr ""
 
-#: MainMenuScreen.cpp:303
+#: MainMenuScreen.cpp:306
 msgid "Create server"
 msgstr ""
 
-#: MainMenuScreen.cpp:304 MainMenuScreen.cpp:324
+#: MainMenuScreen.cpp:307 MainMenuScreen.cpp:327
 msgid "Connect to server"
 msgstr ""
 
-#: MainMenuScreen.cpp:314
+#: MainMenuScreen.cpp:317
 msgid "Server created successfully"
 msgstr ""
 
-#: MainMenuScreen.cpp:317
+#: MainMenuScreen.cpp:320
 msgid "Can't create server"
 msgstr ""
 
-#: MainMenuScreen.cpp:324
+#: MainMenuScreen.cpp:327
 msgid "Please input server address"
 msgstr ""
 
-#: MainMenuScreen.cpp:326 NetworkManager.cpp:651 NetworkManager.cpp:676
+#: MainMenuScreen.cpp:329 NetworkManager.cpp:730 NetworkManager.cpp:762
 #, c-format
 msgid "Connected to %s"
 msgstr ""
 
-#: MainMenuScreen.cpp:329
+#: MainMenuScreen.cpp:332
 #, c-format
 msgid "Can't connect to %s"
 msgstr ""
 
-#: MainMenuScreen.cpp:348
+#: MainMenuScreen.cpp:351
 msgid "Main Menu"
 msgstr ""
 
-#: MainMenuScreen.cpp:357 MainMenuScreen.cpp:669
+#: MainMenuScreen.cpp:360 MainMenuScreen.cpp:672
 msgid "Test Level"
 msgstr ""
 
-#: MainMenuScreen.cpp:358
+#: MainMenuScreen.cpp:361
 msgid "New Level File"
 msgstr ""
 
-#: MainMenuScreen.cpp:359 MainMenuScreen.cpp:411
+#: MainMenuScreen.cpp:362 MainMenuScreen.cpp:414
 msgid "Save Level"
 msgstr ""
 
-#: MainMenuScreen.cpp:361
+#: MainMenuScreen.cpp:364
 msgid "Exit Editor"
 msgstr ""
 
-#: MainMenuScreen.cpp:365 MainMenuScreen.cpp:442
+#: MainMenuScreen.cpp:368 MainMenuScreen.cpp:445
 msgid "Level Pack Name"
 msgstr ""
 
-#: MainMenuScreen.cpp:369 SimpleMiscScreen.cpp:310
+#: MainMenuScreen.cpp:372 SimpleMiscScreen.cpp:317
 msgid "Change Level Size"
 msgstr ""
 
-#: MainMenuScreen.cpp:370
+#: MainMenuScreen.cpp:373
 msgid "Add Level"
 msgstr ""
 
-#: MainMenuScreen.cpp:371 MainMenuScreen.cpp:510
+#: MainMenuScreen.cpp:374 MainMenuScreen.cpp:513
 msgid "Move Level"
 msgstr ""
 
-#: MainMenuScreen.cpp:412
+#: MainMenuScreen.cpp:415
 msgid "Please input level file name"
 msgstr ""
 
-#: MainMenuScreen.cpp:443
+#: MainMenuScreen.cpp:446
 msgid "Please input level pack name"
 msgstr ""
 
-#: MainMenuScreen.cpp:454
+#: MainMenuScreen.cpp:457
 msgid "Please input level name"
 msgstr ""
 
-#: MainMenuScreen.cpp:511
+#: MainMenuScreen.cpp:514
 msgid "Please input the destination level number"
 msgstr ""
 
-#: MainMenuScreen.cpp:620
+#: MainMenuScreen.cpp:623
 msgid "Quit to Editor"
 msgstr ""
 
-#: MainMenuScreen.cpp:678
+#: MainMenuScreen.cpp:683
 msgid "Disconnect"
 msgstr ""
 
-#: MainMenuScreen.cpp:717 NetworkManager.cpp:522 NetworkManager.cpp:661
-#: NetworkManager.cpp:678
+#: MainMenuScreen.cpp:749 NetworkManager.cpp:585 NetworkManager.cpp:744
+#: NetworkManager.cpp:764
 msgid "Disconnected"
 msgstr ""
 
-#: MainMenuScreen.cpp:759
+#: MainMenuScreen.cpp:795
 msgid "Network Multiplayer Main Menu"
 msgstr ""
 
-#: NetworkManager.cpp:363
+#: NetworkManager.cpp:424
 msgid "Remote host is generating random map..."
 msgstr ""
 
-#: NetworkManager.cpp:435
+#: NetworkManager.cpp:498 NetworkManager.cpp:687
 #, c-format
 msgid "Connecting to %s..."
 msgstr ""
 
-#: NetworkManager.cpp:483
+#: NetworkManager.cpp:546
 msgid "Downloading maps..."
 msgstr ""
 
-#: NetworkManager.cpp:554
+#: NetworkManager.cpp:617
 msgid "Disconnecting..."
 msgstr ""
 
-#: NetworkManager.cpp:673
+#: NetworkManager.cpp:759
 msgid "Current Status"
 msgstr ""
 
-#: NetworkManager.cpp:684
+#: NetworkManager.cpp:770
 #, c-format
 msgid "Ping: %'d ms"
 msgstr ""
 
-#: NetworkManager.cpp:685
+#: NetworkManager.cpp:771
 #, c-format
 msgid "Downloaded Data: %'d Bytes"
 msgstr ""
 
-#: NetworkManager.cpp:686
+#: NetworkManager.cpp:772
 #, c-format
 msgid "Uploaded Data: %'d Bytes"
 msgstr ""
 
-#: NetworkManager.cpp:687
+#: NetworkManager.cpp:773
 #, c-format
 msgid "Packet Loss: %0.2f%%"
 msgstr ""
@@ -574,134 +574,149 @@ msgstr ""
 msgid "Unnamed level pack"
 msgstr ""
 
-#: PuzzleBoyLevelView.cpp:518
+#: PuzzleBoyLevelView.cpp:556
 msgid "Start editing level"
 msgstr ""
 
-#: PuzzleBoyLevelView.cpp:520
+#: PuzzleBoyLevelView.cpp:558
 msgid "Start testing level"
 msgstr ""
 
-#: PuzzleBoyLevelView.cpp:632
+#: PuzzleBoyLevelView.cpp:699
 msgid "Can't undo"
 msgstr ""
 
-#: PuzzleBoyLevelView.cpp:636
+#: PuzzleBoyLevelView.cpp:703
 msgid "Failed to undo"
 msgstr ""
 
-#: PuzzleBoyLevelView.cpp:646
+#: PuzzleBoyLevelView.cpp:713
 msgid "Can't redo"
 msgstr ""
 
-#: PuzzleBoyLevelView.cpp:650
+#: PuzzleBoyLevelView.cpp:717
 msgid "Failed to redo"
 msgstr ""
 
-#: PuzzleBoyLevelView.cpp:1079 PuzzleBoyLevelView.cpp:1516
+#: PuzzleBoyLevelView.cpp:1159 PuzzleBoyLevelView.cpp:1651
 msgid "Can't move to specified location"
 msgstr ""
 
-#: PuzzleBoyLevelView.cpp:1273 PuzzleBoyLevelView.cpp:1287
-#: PuzzleBoyLevelView.cpp:1338
+#: PuzzleBoyLevelView.cpp:1371 PuzzleBoyLevelView.cpp:1385
+#: PuzzleBoyLevelView.cpp:1436
 msgid "Can't place block here"
 msgstr ""
 
-#: PuzzleBoyLevelView.cpp:1491
+#: PuzzleBoyLevelView.cpp:1626
 msgid "Start moving box"
 msgstr ""
 
-#: RandomMapScreen.cpp:47
-msgid "Rotate block with a pushable block"
+#: RandomMapScreen.cpp:50
+msgid "a pushable block"
 msgstr ""
 
-#: RandomMapScreen.cpp:50
-msgid "Rotate block with a target block"
+#: RandomMapScreen.cpp:51
+msgid "a target block"
+msgstr ""
+
+#: RandomMapScreen.cpp:52
+#, c-format
+msgid "%d pushable blocks"
 msgstr ""
 
 #: RandomMapScreen.cpp:53
-msgid "Rotate block only"
+#, c-format
+msgid "%d target blocks"
 msgstr ""
 
 #: RandomMapScreen.cpp:58
 #, c-format
+msgid "Rotate block with %s"
+msgstr ""
+
+#: RandomMapScreen.cpp:66
+msgid "Rotate block only"
+msgstr ""
+
+#: RandomMapScreen.cpp:72
+#, c-format
 msgid "(%d players)"
 msgstr ""
 
-#: RandomMapScreen.cpp:70
+#: RandomMapScreen.cpp:84
 msgid "Random"
 msgstr ""
 
-#: RandomMapScreen.cpp:184
+#: RandomMapScreen.cpp:198
 #, c-format
 msgid "Random Level %d"
 msgstr ""
 
-#: RandomMapScreen.cpp:186 RandomMapScreen.cpp:214
+#: RandomMapScreen.cpp:200 RandomMapScreen.cpp:228
 msgid "Random Level"
 msgstr ""
 
-#: SimpleMiscScreen.cpp:165
+#: SimpleMiscScreen.cpp:169
 msgid "Press any key..."
 msgstr ""
 
-#: SimpleMiscScreen.cpp:170
+#: SimpleMiscScreen.cpp:174
 msgid "Config Key"
 msgstr ""
 
-#: SimpleMiscScreen.cpp:315
+#: SimpleMiscScreen.cpp:322
 msgid "Level Width"
 msgstr ""
 
-#: SimpleMiscScreen.cpp:316
+#: SimpleMiscScreen.cpp:323
 msgid "Level Height"
 msgstr ""
 
-#: SimpleMiscScreen.cpp:317
+#: SimpleMiscScreen.cpp:324
 msgid "Horizontal Offset"
 msgstr ""
 
-#: SimpleMiscScreen.cpp:318
+#: SimpleMiscScreen.cpp:325
 msgid "Vertical Offset"
 msgstr ""
 
-#: SimpleMiscScreen.cpp:319
+#: SimpleMiscScreen.cpp:326
 msgid "Horizontal Align:"
 msgstr ""
 
-#: SimpleMiscScreen.cpp:320
+#: SimpleMiscScreen.cpp:327
 msgid "Vertical Align:"
 msgstr ""
 
-#: SimpleMiscScreen.cpp:340 SimpleMiscScreen.cpp:492
+#: SimpleMiscScreen.cpp:347 SimpleMiscScreen.cpp:499
 msgid "Preserve Level Contents"
 msgstr ""
 
-#: SimpleMiscScreen.cpp:376
+#: SimpleMiscScreen.cpp:383
 msgid "Left"
 msgstr ""
 
-#: SimpleMiscScreen.cpp:380
+#: SimpleMiscScreen.cpp:387
 msgid "Center"
 msgstr ""
 
-#: SimpleMiscScreen.cpp:384
+#: SimpleMiscScreen.cpp:391
 msgid "Right"
 msgstr ""
 
-#: SimpleMiscScreen.cpp:393
+#: SimpleMiscScreen.cpp:400
 msgid "Top"
 msgstr ""
 
-#: SimpleMiscScreen.cpp:397
+#: SimpleMiscScreen.cpp:404
 msgid "Vertical Center"
 msgstr ""
 
-#: SimpleMiscScreen.cpp:401
+#: SimpleMiscScreen.cpp:408
 msgid "Bottom"
 msgstr ""
 
-#: SimpleMiscScreen.cpp:610
+#: SimpleMiscScreen.cpp:617
 #, c-format
 msgid "Start Level of Player %d"
 msgstr ""
