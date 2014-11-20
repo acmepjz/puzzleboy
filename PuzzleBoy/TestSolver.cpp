@@ -65,7 +65,6 @@ static const unsigned char HitTestLUT[16]={
 };
 
 static const char dirLUT[4]={-16,-1,16,1};
-static const char dirName[4]={'W','A','S','D'};
 
 //return value: bit0-5: index, bit6-7: direction, bit8-11: current type
 //-1=none
