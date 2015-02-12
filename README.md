@@ -8,7 +8,11 @@ MFC version
 
 The MFC version is already finished, originally as a homework of MFC
 programming course. (Maybe outdated) source and binary package:
-https://code.csdn.net/acme_pjz/puzzleboy/blob/master/mfccourse/mfccourse.7z
+
+   * <s>CSDN mirror: https://code.csdn.net/acme_pjz/puzzleboy/blob/master/mfccourse/mfccourse.7z</s>
+   * OSChina mirror: http://git.oschina.net/acmepjz/puzzleboy/raw/master/mfccourse/mfccourse.7z
+   * GitHub mirror: https://github.com/acmepjz/puzzleboy/blob/master/mfccourse/mfccourse.7z?raw=true
+
 or you can checkout SVN repository.
 
 SDL2/OpenGL version
@@ -23,8 +27,8 @@ Binary download
 
 Platform         | Download address
 -----------------|------------------
-Windows (32-bit) | https://code.csdn.net/acme_pjz/puzzleboy/blob/master/PuzzleBoy/PuzzleBoy.7z
-Android debug    | https://code.csdn.net/acme_pjz/puzzleboy/blob/master/PuzzleBoy/PuzzleBoy-debug.apk
+Windows (32-bit) | OSChina mirror: http://git.oschina.net/acmepjz/puzzleboy/raw/master/PuzzleBoy/PuzzleBoy.7z<br>GitHub mirror: https://github.com/acmepjz/puzzleboy/blob/master/PuzzleBoy/PuzzleBoy.7z?raw=true
+Android debug    | OSChina mirror: http://git.oschina.net/acmepjz/puzzleboy/raw/master/PuzzleBoy/PuzzleBoy-debug.apk<br>GitHub mirror: https://github.com/acmepjz/puzzleboy/blob/master/PuzzleBoy/PuzzleBoy-debug.apk?raw=true
 
 For other platforms, please checkout source code from SVN and compile it yourself.
 
@@ -41,7 +45,11 @@ MFC 版
 -----------
 
 MFC版本已经完成，原本是MFC程序设计的作业。源代码和可执行文件的压缩包（可能过时）：
-https://code.csdn.net/acme_pjz/puzzleboy/blob/master/mfccourse/mfccourse.7z
+
+   * <s>CSDN 镜像: https://code.csdn.net/acme_pjz/puzzleboy/blob/master/mfccourse/mfccourse.7z</s>
+   * OSChina 镜像: http://git.oschina.net/acmepjz/puzzleboy/raw/master/mfccourse/mfccourse.7z
+   * GitHub 镜像: https://github.com/acmepjz/puzzleboy/blob/master/mfccourse/mfccourse.7z?raw=true
+
 你也可以从SVN签出最新代码。
 
 SDL2/OpenGL 版
@@ -54,10 +62,10 @@ SDL2/OpenGL 版本是跨平台版本，目前仍处于测试阶段，新增了�
 可执行文件下载
 ---------------
 
-平台         | 下载地址
------------------|------------------
-Windows (32位) | https://code.csdn.net/acme_pjz/puzzleboy/blob/master/PuzzleBoy/PuzzleBoy.7z
-Android debug    | https://code.csdn.net/acme_pjz/puzzleboy/blob/master/PuzzleBoy/PuzzleBoy-debug.apk
+平台           | 下载地址
+---------------|------------------
+Windows (32位) | OSChina 镜像: http://git.oschina.net/acmepjz/puzzleboy/raw/master/PuzzleBoy/PuzzleBoy.7z<br>GitHub 镜像: https://github.com/acmepjz/puzzleboy/blob/master/PuzzleBoy/PuzzleBoy.7z?raw=true
+Android debug  | OSChina 镜像: http://git.oschina.net/acmepjz/puzzleboy/raw/master/PuzzleBoy/PuzzleBoy-debug.apk<br>GitHub 镜像: https://github.com/acmepjz/puzzleboy/blob/master/PuzzleBoy/PuzzleBoy-debug.apk?raw=true
 
 在其它平台上请从SVN签出最新代码并自行编译。
 
