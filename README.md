@@ -9,7 +9,6 @@ MFC version
 The MFC version is already finished, originally as a homework of MFC
 programming course. (Maybe outdated) source and binary package:
 
-   * <s>CSDN mirror: https://code.csdn.net/acme_pjz/puzzleboy/blob/master/mfccourse/mfccourse.7z</s>
    * OSChina mirror: http://git.oschina.net/acmepjz/puzzleboy/raw/master/mfccourse/mfccourse.7z
    * GitHub mirror: https://github.com/acmepjz/puzzleboy/blob/master/mfccourse/mfccourse.7z?raw=true
 
@@ -46,7 +45,6 @@ MFC 版
 
 MFC版本已经完成，原本是MFC程序设计的作业。源代码和可执行文件的压缩包（可能过时）：
 
-   * <s>CSDN 镜像: https://code.csdn.net/acme_pjz/puzzleboy/blob/master/mfccourse/mfccourse.7z</s>
    * OSChina 镜像: http://git.oschina.net/acmepjz/puzzleboy/raw/master/mfccourse/mfccourse.7z
    * GitHub 镜像: https://github.com/acmepjz/puzzleboy/blob/master/mfccourse/mfccourse.7z?raw=true
 
