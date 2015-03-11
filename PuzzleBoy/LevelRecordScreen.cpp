@@ -45,7 +45,6 @@ int LevelRecordScreen(const u8string& title,const u8string& prompt,u8string& rec
 	int buttonSize=theApp->m_nButtonSize;
 
 	SimpleText *m_txtPrompt=new SimpleText;
-	int m_nMyResizeTime=-1;
 
 	//create text
 	m_txtPrompt->AddString(mainFont,prompt,64,float(buttonSize+32),0,0,

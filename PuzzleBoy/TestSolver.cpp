@@ -65,7 +65,6 @@ static const unsigned char HitTestLUT[16]={
 };
 
 static const char dirLUT[4]={-16,-1,16,1};
-static const char dirName[4]={'W','A','S','D'};
 
 //return value: bit0-5: index, bit6-7: direction, bit8-11: current type
 //-1=none
@@ -279,7 +278,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 	//because filling order is not saved
 	//FIXME: currently only rectangular boxes are supported
 	unsigned char boxWidth[4]={},boxHeight[4]={},boxXShift[4]={},boxYShift[4]={},boxXMask[4]={},boxYMask[4]={};
-	unsigned char boxCount=0,boxTarget=0;
+	unsigned char boxCount=0,boxTarget=0,useDeadlock=0;
 	unsigned char boxStateSize=0; //>0 means all boxes are of same type, and this is the state size
 
 	TestSolverStateType initState=0;
@@ -331,7 +330,10 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 			if(boxCount<4){
 				boxWidth[boxCount]=obj.m_w;
 				boxHeight[boxCount]=obj.m_h;
-				if(obj.m_nType==TARGET_BLOCK) boxTarget|=(1<<boxCount);
+				if(obj.m_nType==TARGET_BLOCK){
+					boxTarget|=(1<<boxCount);
+					if(obj.m_w==1 && obj.m_h==1) useDeadlock|=(1<<boxCount);
+				}
 
 				if(obj.m_w==0 || obj.m_h==0 || obj.m_w>=width || obj.m_h>=height){
 					printf("[TestSolver] Error: Invalid block size\n");
@@ -491,7 +493,11 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 	unsigned char mapAdjacency[256][4];
 	if(!TestSolver_CalculateAdjacancyData(mapAdjacency,mapData,blocks,blockCount)) return -2;
 
-	//TEST: deadlock optimization
+	//(experimental) 1x1-size target block static deadlock detection
+	//0 means can't deadlock position
+	unsigned short boxDeadlock[16]={};
+
+	//(experimental) deadlock optimization and target block deadlock detection
 	{
 		//0=untested, 1=reachable, 2=unreachable (blocked)
 		unsigned char reachable[256];
@@ -584,7 +590,7 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 			}
 		}while(changed);
 
-		//now all untested position is unreachable (no code)
+		//now all untested position is unreachable (i.e. value!=1)
 
 		//check rotation block with type 0xA
 		for(int i=0;i<blockCount;i++){
@@ -601,6 +607,66 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 			}
 		}
 
+		//simple target block deadlock detection
+		for(int j=0;j<height;j++){ //< init
+			for(int i=0;i<width;i++){
+				if(level.m_bTargetData[j*width+i] && reachable[(unsigned char)((j+1)*16+(i+1))]==0x1){
+					boxDeadlock[j]|=(1<<i);
+				}
+			}
+		}
+		for(;;){ //< iterate
+			bool changed=false;
+
+			for(int j=0;j<height;j++){
+				for(int i=0;i<width;i++){
+					if((boxDeadlock[j]>>i)&1){
+						//block can push to this position, check its adjacent
+
+						unsigned char idx=(j+1)*16+(i+1);
+
+						//up
+						if(j>=2 && reachable[(unsigned char)(idx-16)]==0x1
+							&& reachable[(unsigned char)(idx-32)]==0x1
+							&& ((boxDeadlock[j-1]>>i)&1)==0)
+						{
+							boxDeadlock[j-1]|=(1<<i);
+							changed=true;
+						}
+
+						//down
+						if(j<height-2 && reachable[(unsigned char)(idx+16)]==0x1
+							&& reachable[(unsigned char)(idx+32)]==0x1
+							&& ((boxDeadlock[j+1]>>i)&1)==0)
+						{
+							boxDeadlock[j+1]|=(1<<i);
+							changed=true;
+						}
+
+						//left
+						if(i>=2 && reachable[(unsigned char)(idx-1)]==0x1
+							&& reachable[(unsigned char)(idx-2)]==0x1
+							&& ((boxDeadlock[j]>>(i-1))&1)==0)
+						{
+							boxDeadlock[j]|=(1<<(i-1));
+							changed=true;
+						}
+
+						//right
+						if(i<width-2 && reachable[(unsigned char)(idx+1)]==0x1
+							&& reachable[(unsigned char)(idx+2)]==0x1
+							&& ((boxDeadlock[j]>>(i+1))&1)==0)
+						{
+							boxDeadlock[j]|=(1<<(i+1));
+							changed=true;
+						}
+					}
+				}
+			}
+
+			if(!changed) break;
+		}
+
 		//debug output
 #if 0
 		for(int i=0;i<blockCount;i++){
@@ -611,6 +677,17 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 		for(int j=1;j<=height;j++){
 			for(int i=1;i<=width;i++){
 				printf("%d",reachable[j*16+i]);
+			}
+			printf("\n");
+		}
+#endif
+
+		//target block deadlock debug
+#if 0
+		printf("Target block deadlock:\n");
+		for(int j=0;j<height;j++){
+			for(int i=0;i<width;i++){
+				printf("%d",(boxDeadlock[j]>>i)&1);
 			}
 			printf("\n");
 		}
@@ -708,6 +785,15 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 
 		initState=TestSolver_SortPosition(level.m_nPlayerCount,playerXSize+playerYSize,0,initState);
 
+		//check if box init position is impossible
+		for(int boxIndex=0;boxIndex<boxCount;boxIndex++){
+			if((useDeadlock>>boxIndex)&1){
+				unsigned char boxX=(initState>>boxXShift[boxIndex])&boxXMask[boxIndex];
+				unsigned char boxY=(initState>>boxYShift[boxIndex])&boxYMask[boxIndex];
+				if(((boxDeadlock[boxY]>>boxX)&1)==0) return 0;
+			}
+		}
+
 		TestSolverNode node={NULL,NULL,initState};
 #ifdef USE_CUSTOM_HASHTREE
 		nodeMap.find_or_insert(node,&currentNode);
@@ -790,10 +876,13 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 				if((c&0x1) && ((c>>3)&0x7)){
 					unsigned char boxIndex=((c>>3)&0x7)-1;
 					unsigned char w=boxWidth[boxIndex],h=boxHeight[boxIndex];
+
 					unsigned char checkPos=boxPos[boxIndex]+
 						(d==0?-16:(d==1?-1:(d==2?(h*16):w)));
 					unsigned char checkStep=(d&1)?16:1;
 					unsigned char checkCount=(d&1)?h:w;
+
+					//check if it's blocked
 					for(;checkCount;checkPos+=checkStep,checkCount--){
 						if((mapData[checkPos]&(0x2|0x8|0x10|0x20))!=0x2
 							|| TestSolver_HitTestForBlocks(mapAdjacency,blocks,node.state,checkPos)!=-1)
@@ -802,6 +891,14 @@ int TestSolver_SolveIt(const PuzzleBoyLevel& level,u8string* rec,void* userData,
 							break;
 						}
 					}
+
+					//check if new position is deadlocked
+					if(c && ((useDeadlock>>boxIndex)&1)){
+						const unsigned char p=boxPos[boxIndex]-17+dir;
+						if(((boxDeadlock[p>>4]>>(p&15))&1)==0) c=0;
+					}
+
+					//over
 					if(c) boxPushedIndex=boxIndex+1;
 				}
 

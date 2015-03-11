@@ -830,20 +830,21 @@ int main(int argc,char** argv){
 	//try to load FreeType font
 	if(theApp->m_bInternationalFont){
 		mainFontFile=new SimpleFontFile;
-		if(mainFontFile->LoadFile("data/font/DroidSansFallback.ttf")
+
 #ifdef ANDROID
-			|| mainFontFile->LoadFile("/system/fonts/DroidSansFallback.ttf")
+#define FONT_FILE_PREFIX "/system/fonts/"
+#else
+#define FONT_FILE_PREFIX "data/font/"
 #endif
-			)
-		{
+
+		std::vector<u8string> files;
+		files.push_back(FONT_FILE_PREFIX "DroidSans.ttf");
+		files.push_back(FONT_FILE_PREFIX "DroidSansFallback.ttf");
+		if(mainFontFile->LoadFiles(files)>0){
 			mainFont=new SimpleFont(*mainFontFile,20);
 			titleFont=new SimpleFont(*mainFontFile,32);
-
-			//test preload glyph
-			mainFont->AddGlyph(0,true);
-			titleFont->AddGlyph(0,true);
 		}else{
-			printf("[main] Error: Can't load font file, fallback to bitmap font\n");
+			printf("[main] Error: Can't load any font file, fallback to bitmap font\n");
 			delete mainFontFile;
 			mainFontFile=NULL;
 		}

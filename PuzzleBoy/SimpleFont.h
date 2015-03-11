@@ -1,6 +1,8 @@
 #pragma once
 
 #include "SimpleText.h"
+#include "UTF8-16.h"
+#include <vector>
 #include <map>
 
 bool FreeType_Init();
@@ -16,9 +18,10 @@ public:
 	~SimpleFontFile();
 
 	bool LoadFile(const u8string& fileName);
+	int LoadFiles(const std::vector<u8string>& files);
 	void Destroy();
 private:
-	SimpleFontFileData *data;
+	std::vector<SimpleFontFileData*> data;
 };
 
 class SimpleFont:public SimpleBaseFont{
@@ -32,13 +35,16 @@ public:
 	void UpdateTexture() override;
 
 	bool AddChar(int c) override;
-	bool AddGlyph(int glyphIndex,bool saveBitmap) override; //internal function
 
 	bool GetCharMetric(int c,SimpleFontGlyphMetric& metric) override;
 private:
-	SimpleFontFileData *data; //weak reference, don't delete
+	//internal function
+	bool AddGlyph(int c,int fontIndex,int glyphIndex);
+
+	SimpleFontFile *fontFile; //weak reference, don't delete
 	int fontSize;
 
+	//((fontIndex<<26)|glyphIndex) ==> metric
 	std::map<int,SimpleFontGlyphMetric> glyphMap;
 
 	int bmWShift,bmHShift;

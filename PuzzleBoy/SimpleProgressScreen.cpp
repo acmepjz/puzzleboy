@@ -81,9 +81,6 @@ bool SimpleProgressScreen::DrawAndDoEvents(){
 	glBlendFunc(GL_ONE, GL_ONE);
 
 	//draw border
-	float f1=float(screenWidth)*0.5f;
-	float f2=float(screenWidth)/32.0f;
-
 	float v[8]={
 		float(screenWidth)*0.125f,float(screenHeight)*0.46875f,
 		float(screenWidth)*0.875f,float(screenHeight)*0.46875f,
