@@ -38,7 +38,6 @@ public:
 	virtual void UpdateTexture();
 
 	virtual bool AddChar(int c);
-	virtual bool AddGlyph(int glyphIndex,bool saveBitmap); //internal function
 
 	void BeginDraw();
 	void DrawString(const u8string& str,float x,float y,float w,float h,float scale,int flags,SDL_Color color);

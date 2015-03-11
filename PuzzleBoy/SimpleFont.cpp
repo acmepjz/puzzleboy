@@ -47,7 +47,6 @@ struct SimpleFontFileData{
 };
 
 SimpleFontFile::SimpleFontFile()
-:data(NULL)
 {
 }
 
@@ -56,57 +55,76 @@ SimpleFontFile::~SimpleFontFile(){
 }
 
 bool SimpleFontFile::LoadFile(const u8string& fileName){
+	std::vector<u8string> files;
+	files.push_back(fileName);
+	return LoadFiles(files)>0;
+}
+
+int SimpleFontFile::LoadFiles(const std::vector<u8string>& files){
 	Destroy();
 
-	u8file *f=u8fopen(fileName.c_str(),"rb");
-	if(f==NULL) return false;
+	int count=0;
 
-	data=new SimpleFontFileData;
-	memset(data,0,sizeof(SimpleFontFileData));
+	for(unsigned int i=0;i<files.size();i++){
+		u8file *f=u8fopen(files[i].c_str(),"rb");
+		if(f==NULL){
+			printf("[SimpleFontFile] Error: Can't open font file '%s'!\n",files[i].c_str());
+			continue;
+		}
 
-	data->args.flags=FT_OPEN_STREAM;
-	data->args.stream=&(data->stream);
+		SimpleFontFileData* d=new SimpleFontFileData;
+		memset(d,0,sizeof(SimpleFontFileData));
 
-	u8fseek(f,0,SEEK_END);
-	data->stream.size=u8ftell(f);
-	u8fseek(f,0,SEEK_SET);
-	data->stream.descriptor.pointer=f;
-	data->stream.read=SimpleFontFileData::Read;
+		d->args.flags=FT_OPEN_STREAM;
+		d->args.stream=&(d->stream);
 
-	if(FT_Open_Face(ft_lib,&data->args,0,&data->face)){
-		u8fclose(f);
-		delete data;
-		data=NULL;
-		return false;
+		u8fseek(f,0,SEEK_END);
+		d->stream.size=u8ftell(f);
+		u8fseek(f,0,SEEK_SET);
+		d->stream.descriptor.pointer=f;
+		d->stream.read=SimpleFontFileData::Read;
+
+		if(FT_Open_Face(ft_lib,&d->args,0,&d->face)){
+			printf("[SimpleFontFile] Error: Invalid font file '%s'!\n",files[i].c_str());
+			u8fclose(f);
+			delete d;
+			continue;
+		}
+
+		data.push_back(d);
+		count++;
 	}
 
-	return true;
+	return count;
 }
 
 void SimpleFontFile::Destroy(){
-	if(data){
-		FT_Done_Face(data->face);
-		u8fclose((u8file*)data->stream.descriptor.pointer);
+	for(size_t i=0;i<data.size();i++){
+		FT_Done_Face(data[i]->face);
+		u8fclose((u8file*)data[i]->stream.descriptor.pointer);
 
-		delete data;
-		data=NULL;
+		delete data[i];
 	}
+
+	data.clear();
 }
 
 SimpleFont::SimpleFont(SimpleFontFile& font,float fontSize)
-:data(font.data),fontSize(int(fontSize*64.0f+0.5f))
+:fontFile(&font),fontSize(int(fontSize*64.0f+0.5f))
 ,bmWShift(0),bmHShift(0)
 ,bmWidth(0),bmHeight(0)
 ,bmCurrentX(0),bmCurrentY(0),bmRowHeight(0)
 ,bitmap(NULL)
 ,bitmapDirty(false)
 {
-	data->SetSize(this->fontSize);
+	if(fontFile->data.empty()) return; //ERROR!
 
-	fontAscender=float(data->face->size->metrics.ascender)*(1.0f/64.0f);
-	fontDescender=float(-data->face->size->metrics.descender)*(1.0f/64.0f);
-	fontHeight=float(data->face->size->metrics.height)*(1.0f/64.0f);
-	fontAdvance=float(data->face->size->metrics.max_advance)*(1.0f/64.0f);
+	//set size to calculate font ascender, etc.
+	fontFile->data[0]->SetSize(this->fontSize);
+	fontAscender=float(fontFile->data[0]->face->size->metrics.ascender)*(1.0f/64.0f);
+	fontDescender=float(-fontFile->data[0]->face->size->metrics.descender)*(1.0f/64.0f);
+	fontHeight=float(fontFile->data[0]->face->size->metrics.height)*(1.0f/64.0f);
+	fontAdvance=float(fontFile->data[0]->face->size->metrics.max_advance)*(1.0f/64.0f);
 }
 
 SimpleFont::~SimpleFont(){
@@ -116,7 +134,7 @@ SimpleFont::~SimpleFont(){
 void SimpleFont::Destroy(){
 	SimpleBaseFont::Destroy();
 
-	data=NULL;
+	fontFile=NULL;
 	fontSize=0;
 
 	if(bitmap){
@@ -155,6 +173,8 @@ void SimpleFont::UpdateTexture(){
 	}
 }
 
+#define GLYPH_INDEX ((fontIndex<<26)|glyphIndex)
+
 bool SimpleFont::AddChar(int c){
 	if(c=='\t' || c=='\b' || c=='\n' || c=='\r'){
 		//do nothing
@@ -162,23 +182,33 @@ bool SimpleFont::AddChar(int c){
 	}
 
 	//get glyph index
-	int glyphIndex=FT_Get_Char_Index(data->face,c);
+	int fontIndex=0,glyphIndex=0,m=fontFile->data.size();
+	for(;fontIndex<m;fontIndex++){
+		glyphIndex=FT_Get_Char_Index(fontFile->data[fontIndex]->face,c);
+		if(glyphIndex>0) break;
+	}
+	if(fontIndex>=m){
+		fontIndex=0;
+		glyphIndex=0;
+	}
 
-	return AddGlyph(glyphIndex,
-		c!=' ' && c!=0x3000);
+	//check if we already have this char
+	if(glyphMap.find(GLYPH_INDEX)!=glyphMap.end()) return true;
+
+	return AddGlyph(c,fontIndex,glyphIndex);
 }
 
-bool SimpleFont::AddGlyph(int glyphIndex,bool saveBitmap){
-	//check if we already have this glyph
-	if(glyphMap.find(glyphIndex)!=glyphMap.end()) return true;
+bool SimpleFont::AddGlyph(int c,int fontIndex,int glyphIndex){
+	//check if it is non-space
+	const bool saveBitmap=(c!=' ' && c!=0x3000);
 
 	//render glyph
-	data->SetSize(fontSize);
-	if(FT_Load_Glyph(data->face,glyphIndex,FT_LOAD_RENDER)){
+	fontFile->data[fontIndex]->SetSize(fontSize);
+	if(FT_Load_Glyph(fontFile->data[fontIndex]->face,glyphIndex,FT_LOAD_RENDER)){
 		return false;
 	}
 
-	FT_GlyphSlot slot=data->face->glyph;
+	FT_GlyphSlot slot=fontFile->data[fontIndex]->face->glyph;
 	SimpleFontGlyphMetric metric={};
 
 	if(saveBitmap){
@@ -193,7 +223,7 @@ bool SimpleFont::AddGlyph(int glyphIndex,bool saveBitmap){
 	metric.advanceX=float(slot->advance.x)*(1.0f/64.0f);
 
 	//add it
-	glyphMap[glyphIndex]=metric;
+	glyphMap[GLYPH_INDEX]=metric;
 
 	//over
 	return true;
@@ -262,9 +292,17 @@ bool SimpleFont::AddBitmap(const void* /*FT_Bitmap* */ bm_,SimpleFontGlyphMetric
 
 bool SimpleFont::GetCharMetric(int c,SimpleFontGlyphMetric& metric){
 	//get glyph index
-	int glyphIndex=FT_Get_Char_Index(data->face,c);
+	int fontIndex=0,glyphIndex=0,m=fontFile->data.size();
+	for(;fontIndex<m;fontIndex++){
+		glyphIndex=FT_Get_Char_Index(fontFile->data[fontIndex]->face,c);
+		if(glyphIndex>0) break;
+	}
+	if(fontIndex>=m){
+		fontIndex=0;
+		glyphIndex=0;
+	}
 
-	std::map<int,SimpleFontGlyphMetric>::const_iterator it=glyphMap.find(glyphIndex);
+	std::map<int,SimpleFontGlyphMetric>::const_iterator it=glyphMap.find(GLYPH_INDEX);
 	if(it==glyphMap.end()) it=glyphMap.find(0);
 	if(it==glyphMap.end()) return false;
 	metric=it->second;

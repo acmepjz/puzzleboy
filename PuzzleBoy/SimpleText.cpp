@@ -39,10 +39,6 @@ bool SimpleBaseFont::AddChar(int c){
 	return false;
 }
 
-bool SimpleBaseFont::AddGlyph(int glyphIndex,bool saveBitmap){
-	return false;
-}
-
 void SimpleBaseFont::BeginDraw(){
 	if(!m_bDrawing){
 		UpdateTexture();

@@ -1,1 +1,2 @@
+de_DE.mo
 zh_CN.mo
