@@ -1,0 +1,11 @@
+*.bak
+*.exe
+*.dll
+*/Debug/
+*/Release/
+*.ncb
+*.pdb
+*.suo
+*.user
+*.ilk
+PuzzleBoy/LunaticSolver/
