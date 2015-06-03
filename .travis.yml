@@ -6,15 +6,15 @@ env:
   global:
     - SDL2_VERSION=2.0.3
 
-#before_install:
-#  # SDL dependencies
-#  - wget http://libsdl.org/release/SDL2-$SDL2_VERSION.tar.gz -O - | tar xz
-#  - (cd SDL2-$SDL2_VERSION && ./configure --prefix=/usr && make -j3 && sudo make install)
+before_install:
+  # SDL dependencies
+  - wget http://libsdl.org/release/SDL2-$SDL2_VERSION.tar.gz -O - | tar xz
+  - (cd SDL2-$SDL2_VERSION && ./configure --prefix=/usr && make -j3 && sudo make install)
 
-before_script:
-  - sudo add-apt-repository ppa:zoogie/sdl2-snapshots -y
-  - sudo apt-get update -q
-  - sudo apt-get install libsdl2
+#before_script:
+#  - sudo add-apt-repository ppa:zoogie/sdl2-snapshots -y
+#  - sudo apt-get update -q
+#  - sudo apt-get install libsdl2
 script:
   - cd PuzzleBoy && mkdir linux-x64 && cd linux-x64
   - cmake .. && make
