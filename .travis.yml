@@ -1,20 +1,29 @@
 language: cpp
 compiler:
   - gcc
-  - clang
+#  - clang
 env:
   global:
     - SDL2_VERSION=2.0.3
+    # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+    #   via the "travis encrypt" command using the project repo's public key
+    - secure: "DgHNLZozM5W4pN0nZkvpRIQUI4Tn8msVzw0zJASFP+aSVJrpauG4OHfdE0PlMFROCdhtMS4cc4T9CcufBH9B55Lg0hzn99kXZsxt8/JOuW1QVgqPcRNwEA4v+03/Z1CwRGi4CpLI0FBOVnX0DJ0sx5chdKq5rlcoQ1FK/q5E0kMmlIYa7wOUdEplGjVvxcB1+8Qw2fVA1sykKtcEya0zix9ffY0M7dZWlkJ3HB9QQJLtgU093l1mffzMWwaZ5j3NZmX/WxyycQADBBZEc8O/lzES8G6FrUpml4U40SgNe+qNNjLXMKtDY4G3WJMbnYTUhDNHpKX1f1ZmYem/8jFNeeix2prgm+xvrsaeOugmUYBBj0QhcAF0PUm/6NuC0HR7HxlBvbcrv+iEFWNixvEhnzik4U+jjCVv3e7EG9UqVBZo1zAwgma1zYr0sgjT0UNTN0E1hFpkIr+MDZUYpHp6scNRxvR1ZcYZkrmuAiCbd0RMNAcJL3kuBMbeDVP7Z3GzcooFJQKLAVVU1hu2+11LiPtI7rVzj6ivrXN8ngm7ZVDwK5nbPBwRwsqUIHSacrqB7CyfHkcW1ajlDnEOxETTp5XUYIkMRWq+rX2jkYgMHb8k/VFpZEHkAPQsr+mg11z2PVS2e7rm2Y7CzpPjMziWcZUBPtlyX8Urkf0w29HqUXw="
 
 before_install:
   # SDL dependencies
   - wget http://libsdl.org/release/SDL2-$SDL2_VERSION.tar.gz -O - | tar xz
   - (cd SDL2-$SDL2_VERSION && ./configure --prefix=/usr && make -j3 && sudo make install)
 
-#before_script:
-#  - sudo add-apt-repository ppa:zoogie/sdl2-snapshots -y
-#  - sudo apt-get update -q
-#  - sudo apt-get install libsdl2
 script:
-  - cd PuzzleBoy && mkdir linux-x64 && cd linux-x64
-  - cmake .. && make
+  - cd PuzzleBoy && mkdir linux-x64 && cd linux-x64 && cmake .. && make
+
+#test
+addons:
+  coverity_scan:
+    project:
+      name: "acmepjz/puzzleboy"
+      description: "Build submitted via Travis CI"
+    notification_email: acme_pjz@hotmail.com
+    build_command_prepend: "cd PuzzleBoy && mkdir linux-x64 && cd linux-x64 && cmake .. && make clean"
+    build_command:   "make -j 4"
+    branch_pattern: master
