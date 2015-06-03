@@ -1,0 +1,6 @@
+language: cpp
+compiler:
+  - gcc
+  - clang
+# Change this to your needs
+script: cd PuzzleBoy && mkdir linux-x64 && cd linux-x64 && cmake .. && make
