@@ -515,11 +515,11 @@ void MyFormat::appendByPosition(int index,double n){
 	switch(m_tCurrent.Type){
 	case 'd': case 'i':
 	case 'x': case 'X': case 'o': case 'p':
-		appendByPosition(index,(long long)n,true);
+		appendByPosition(index,(int64_t)n,true);
 		return;
 		break;
 	case 'u':
-		appendByPosition(index,(long long)(unsigned long long)n,false);
+		appendByPosition(index,(int64_t)(uint64_t)n,false);
 		return;
 		break;
 	case 'e': case 'E': case 'f': case 'F': case 'g': case 'G': case 'a': case 'A':
