@@ -1,6 +1,16 @@
 language: cpp
 compiler:
   - gcc
-  - clang
-# Change this to your needs
-script: cd PuzzleBoy && mkdir linux-x64 && cd linux-x64 && cmake .. && make
+  #- clang
+env:
+  global:
+    - SDL2_VERSION=2.0.3
+
+before_install:
+  # SDL dependencies
+  - wget http://libsdl.org/release/SDL2-$SDL2_VERSION.tar.gz -O - | tar xz
+  - (cd SDL2-$SDL2_VERSION && ./configure --prefix=/usr && make -j3 && sudo make install)
+
+script:
+  - cd PuzzleBoy && mkdir linux-x64 && cd linux-x64
+  - cmake .. && make
