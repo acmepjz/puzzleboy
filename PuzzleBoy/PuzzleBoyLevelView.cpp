@@ -1117,7 +1117,7 @@ bool PuzzleBoyLevelView::InternalKeyDown(int keyIndex){
 								if(m_nEditingBlockY==m_nEditingBlockDY){
 									switch(m_nEditingBlockX-objBlock->m_x){
 									case -1: dx=-1; break;
-									case 0: dx=-42; break;
+									case 0: dx=-42; break; //ad-hoc!! dx==-42 means cancelled
 									case 1: dx=1; break;
 									}
 								}
@@ -1125,7 +1125,7 @@ bool PuzzleBoyLevelView::InternalKeyDown(int keyIndex){
 								if(m_nEditingBlockX==m_nEditingBlockDX){
 									switch(m_nEditingBlockY-objBlock->m_y){
 									case -1: dy=-1; break;
-									case 0: dx=-42; break;
+									case 0: dx=-42; break; //ad-hoc!! dx==-42 means cancelled
 									case 1: dy=1; break;
 									}
 								}

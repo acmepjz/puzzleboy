@@ -105,7 +105,7 @@ int LevelRecordScreen(const u8string& title,const u8string& prompt,u8string& rec
 			titleBar.Draw();
 
 			//draw prompt text
-			if(m_txtPrompt && !m_txtPrompt->empty()){
+			if(!m_txtPrompt->empty()){
 				mainFont->DrawString(*m_txtPrompt,SDL_MakeColor(255,255,255,255));
 			}
 

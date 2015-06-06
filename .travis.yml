@@ -24,6 +24,6 @@ addons:
       name: "acmepjz/puzzleboy"
       description: "Build submitted via Travis CI"
     notification_email: acme_pjz@hotmail.com
-    #build_command_prepend: "cd PuzzleBoy/linux-x64 && make clean"
-    #build_command:   "make -j 4"
+    build_command_prepend: "cd PuzzleBoy/linux-x64 && make clean"
+    build_command:   "make -j 4"
     branch_pattern: master

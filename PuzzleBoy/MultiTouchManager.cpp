@@ -70,9 +70,15 @@ void MultiTouchManager::RemoveView(MultiTouchView* view){
 			if(m_nDraggingIndex==i) m_nDraggingIndex=-1;
 			else if(m_nDraggingIndex>i) m_nDraggingIndex--;
 
-			for(std::map<long long,int>::iterator it=fingers.begin();it!=fingers.end();++it){
-				if(it->second==i) fingers.erase(it); //??
-				else if(it->second>i) it->second--;
+			for(std::map<long long,int>::iterator it=fingers.begin();it!=fingers.end();){
+				if (it->second == i){
+					std::map<long long, int>::iterator tmp = ++it;
+					fingers.erase(it);
+					it = tmp;
+				} else {
+					if (it->second > i) it->second--;
+					++it;
+				}
 			}
 		}
 	}

@@ -83,9 +83,7 @@ bool SimpleInputScreen(const u8string& title,const u8string& prompt,u8string& te
 			titleBar.Draw();
 
 			//draw prompt text
-			if(m_txtPrompt && !m_txtPrompt->empty()){
-				mainFont->DrawString(*m_txtPrompt,SDL_MakeColor(255,255,255,255));
-			}
+			mainFont->DrawString(*m_txtPrompt,SDL_MakeColor(255,255,255,255));
 
 			//draw textbox
 			txt.Draw();
@@ -205,9 +203,7 @@ int SimpleConfigKeyScreen(int key){
 			titleBar.Draw();
 
 			//draw prompt text
-			if(m_txtPrompt && !m_txtPrompt->empty()){
-				mainFont->DrawString(*m_txtPrompt,SDL_MakeColor(255,255,255,255));
-			}
+			mainFont->DrawString(*m_txtPrompt,SDL_MakeColor(255,255,255,255));
 
 			//draw border
 			{
@@ -432,9 +428,7 @@ bool ChangeSizeScreen::DoModal(){
 			titleBar.Draw();
 
 			//draw prompt text
-			if(m_txtPrompt && !m_txtPrompt->empty()){
-				mainFont->DrawString(*m_txtPrompt,SDL_MakeColor(255,255,255,255));
-			}
+			mainFont->DrawString(*m_txtPrompt,SDL_MakeColor(255,255,255,255));
 
 			//draw textbox
 			for(int i=0;i<4;i++) txt[i].Draw();
