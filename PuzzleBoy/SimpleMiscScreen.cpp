@@ -679,7 +679,7 @@ bool StartMultiplayerScreen(int& level1,int& level2){
 			if(mgr.OnEvent()) continue;
 			{
 				bool bProcessed=false;
-				for(int i=0;i<4;i++){
+				for(int i=0;i<2;i++){
 					if(txt[i].OnEvent()){
 						bProcessed=true;
 						break;
