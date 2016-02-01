@@ -380,6 +380,29 @@ void initPaths(){
 	//Create subfolders.
 	createDirectory(externalStoragePath);
 	createDirectory(externalStoragePath+"/levels");
+
+#ifndef ANDROID
+	//try to detect data directory (which is the working directory)
+	for (int i = 0; i < 3; i++) {
+		//try to load a file
+		u8file *f = u8fopen("data/gfx/adhoc.bmp", "rb");
+		if (f) {
+			u8fclose(f);
+
+			//show the working directory
+			char buf[1024];
+			buf[0] = 0;
+			getcwd(buf, sizeof(buf));
+			printf("[initPaths] The working directory is set to '%s'\n", buf);
+
+			break;
+		}
+
+		//up one level if this file is not found
+		chdir("..");
+		printf("[initPaths] Warning: Can't find necessary data in the working directory, will try parent directory\n");
+	}
+#endif
 }
 
 bool createDirectory(const u8string& path){
