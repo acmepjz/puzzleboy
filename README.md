@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/acmepjz/puzzleboy.svg?branch=master)](https://travis-ci.org/acmepjz/puzzleboy)
+[![Coverity Scan Build Status](https://scan.coverity.com/projects/5332/badge.svg)](https://scan.coverity.com/projects/5332)
+
 Puzzle Boy
 ==========
 
