@@ -9,3 +9,5 @@
 *.user
 *.ilk
 PuzzleBoy/LunaticSolver/
+PuzzleBoy/build-*/
+PuzzleBoyRecord.dat
