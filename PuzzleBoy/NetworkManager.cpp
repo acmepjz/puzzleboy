@@ -673,7 +673,7 @@ void NetworkManager::OnTimer(bool discardAll){
 
 	//try to auto-reconnect
 	if(m_peer==NULL && m_nNextRetryTime && !isServer && SDL_GetTicks()>m_nNextRetryTime){
-		m_nNextRetryTime+=15000; //retry after 15 sec ???
+		m_nNextRetryTime = SDL_GetTicks() + 10000; //retry after 10 sec ???
 
 		ENetAddress *a=(ENetAddress*)m_address;
 		ENetPeer *p=enet_host_connect(m_host,a,CHANNELS_USED,0);

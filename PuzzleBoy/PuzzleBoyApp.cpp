@@ -371,7 +371,7 @@ bool PuzzleBoyApp::StartGame(int nPlayerCount,int mode,int currentLevel2){
 		PuzzleBoyLevelView *view=new PuzzleBoyLevelView();
 
 		view->m_sPlayerName=m_sPlayerName[0];
-		view->m_nKey=m_nKey+8;
+		view->m_nKey = netMgr->IsNetworkMultiplayer() ? m_nKey : m_nKey + 8;
 		view->m_scrollView.m_flags|=SimpleScrollViewFlags::AutoResize;
 		switch(m_nOrientation){
 		case 0:
