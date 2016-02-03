@@ -15,15 +15,20 @@ before_install:
   - (cd SDL2-$SDL2_VERSION && ./configure --prefix=/usr && make -j3 && sudo make install)
 
 script:
-  - cd PuzzleBoy && mkdir linux-x64 && cd linux-x64 && cmake .. && make
+  - cd PuzzleBoy && mkdir build && cd build && cmake .. && make && cd ..
+  - build/puzzleboy --headless --random random 100 -o random.lev
+  - gzip -9 random.lev && uuencode random.lev.gz
 
 #test
 addons:
-  coverity_scan:
-    project:
-      name: "acmepjz/puzzleboy"
-      description: "Build submitted via Travis CI"
-    notification_email: acme_pjz@hotmail.com
-    build_command_prepend: "cd PuzzleBoy && mkdir coverity && cd coverity && cmake .. && make clean"
-    build_command:   "make -j 4"
-    branch_pattern: master
+  apt:
+    packages:
+      - sharutils
+#  coverity_scan:
+#    project:
+#      name: "acmepjz/puzzleboy"
+#      description: "Build submitted via Travis CI"
+#    notification_email: acme_pjz@hotmail.com
+#    build_command_prepend: "cd PuzzleBoy && mkdir coverity && cd coverity && cmake .. && make clean"
+#    build_command:   "make -j 4"
+#    branch_pattern: master
