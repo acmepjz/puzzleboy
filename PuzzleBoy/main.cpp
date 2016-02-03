@@ -10,6 +10,7 @@
 #include "SimpleMessageBox.h"
 #include "NetworkManager.h"
 #include "MainMenuScreen.h"
+#include "ArgumentManager.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -640,51 +641,11 @@ static int MyEventFilter(void *userdata, SDL_Event *evt){
 
 int main(int argc,char** argv){
 	//process arguments
-	screenWidth=800;
-	screenHeight=480;
-	int windowFlags=0;
-	u8string levelDatabaseFileName;
-	for(int i=1;i<argc;i++){
-		if(strcmp(argv[i],"--help")==0){
-			printf(
-				"%s: Yet another puzzle boy\n"
-				"(a.k.a Kwirk <http://en.wikipedia.org/wiki/Kwirk>) clone.\n"
-				"Website: http://code.google.com/p/puzzleboy/\n\n"
-				"Usage: %s [options]\n\n"
-				"Available options:\n"
-				"  --help             Display this help message.\n"
-				"  -w, --width <n>    Set window width (default 800).\n"
-				"  -h, --height <n>   Set window height (default 480).\n"
-				"  -f, --fullscreen   Run the game fullscreen.\n"
-				//"  --data-dir <dir>   Specifies the data directory.\n"
-				"  --user-dir <dir>   Specifies the user preferences directory.\n"
-				"  --database <file>  Specifies the level database.\n"
-				,argv[0],argv[0]);
-			return 0;
-		}else if(strcmp(argv[i],"-w")==0 || strcmp(argv[i],"--width")==0){
-			i++;
-			if(i<argc) sscanf(argv[i],"%d",&screenWidth);
-		}else if(strcmp(argv[i],"-h")==0 || strcmp(argv[i],"--height")==0){
-			i++;
-			if(i<argc) sscanf(argv[i],"%d",&screenHeight);
-		}else if(strcmp(argv[i],"-f")==0 || strcmp(argv[i],"--fullscreen")==0){
-			windowFlags|=SDL_WINDOW_FULLSCREEN;
-		}else if(strcmp(argv[i],"--user-dir")==0){
-			i++;
-			if(i<argc) externalStoragePath=argv[i];
-		}else if(strcmp(argv[i],"--database")==0){
-			i++;
-			if(i<argc) levelDatabaseFileName=argv[i];
-		}else{
-			printf("Unrecognize option '%s'. Type '%s --help' for help.\n",argv[i],argv[0]);
-			return 1;
-		}
+	ArgumentManager arg(argc, argv);
+	if (arg.err) return arg.ret;
 
-		if(i>=argc){
-			printf("Missing argument for '%s'. Type '%s --help' for help.\n",argv[i-1],argv[0]);
-			return 1;
-		}
-	}
+	screenWidth = arg.screenWidth;
+	screenHeight = arg.screenHeight;
 
 	//init SDL
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER)<0){
@@ -737,10 +698,10 @@ int main(int argc,char** argv){
 	theApp->LoadLocale();
 
 	//load record file
-	if(levelDatabaseFileName.empty()) levelDatabaseFileName=externalStoragePath+"/PuzzleBoyRecord.dat";
-	if(!theApp->m_objRecordMgr.LoadFile(levelDatabaseFileName.c_str())){
+	if(arg.levelDatabaseFileName.empty()) arg.levelDatabaseFileName=externalStoragePath+"/PuzzleBoyRecord.dat";
+	if(!theApp->m_objRecordMgr.LoadFile(arg.levelDatabaseFileName.c_str())){
 		printf("[main] Error: Can't load level database '%s'! Probably another game instance is running\n",
-			levelDatabaseFileName.c_str());
+			arg.levelDatabaseFileName.c_str());
 	}
 
 	//load level file and progress
@@ -768,9 +729,23 @@ int main(int argc,char** argv){
 		}
 	}while(0);
 
+	//headless mode
+	if (arg.headless) {
+		arg.doHeadless();
+
+		SDL_Quit();
+
+		FreeType_Quit();
+
+		delete theApp;
+		theApp=NULL;
+
+		return arg.ret;
+	}
+
 #ifdef ANDROID
 	//experimental orientation aware
-	windowFlags=SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_FULLSCREEN;
+	arg.windowFlags=SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_FULLSCREEN;
 	{
 		SDL_DisplayMode mode;
 
@@ -782,8 +757,23 @@ int main(int argc,char** argv){
 		}
 	}
 #else
-	windowFlags|=SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
+	arg.windowFlags|=SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
+	if (arg.windowFlags & SDL_WINDOW_FULLSCREEN) {
+		SDL_DisplayMode mode;
+
+		if (SDL_GetDesktopDisplayMode(0, &mode)<0){
+			printf("[main] Error: Can't get screen resolution!\n");
+		}else{
+			screenWidth=mode.w;
+			screenHeight=mode.h;
+		}
+	}
 #endif
+
+	if (screenWidth <= 0 || screenHeight <= 0) {
+		screenWidth = 800;
+		screenHeight = 480;
+	}
 
 #ifdef USE_OPENGLES
 	SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 5 );
@@ -806,7 +796,7 @@ int main(int argc,char** argv){
 
 	if((mainWindow=SDL_CreateWindow(_("Puzzle Boy").c_str(),
 		SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,
-		screenWidth,screenHeight,windowFlags))==NULL)
+		screenWidth, screenHeight, arg.windowFlags)) == NULL)
 	{
 		printf("[main] Fatal Error: Can't create SDL window!\n");
 		abort();

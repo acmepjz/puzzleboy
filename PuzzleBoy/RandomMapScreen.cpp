@@ -12,10 +12,6 @@
 
 #include "include_sdl.h"
 
-struct RandomMapSizeData{
-	char width,height,playerCount,boxType;
-};
-
 //normal sizes
 static const RandomMapSizeData RandomMapSizes[]={
 	{6,6,1,-1},{6,8,1,-1},{6,10,1,-1},{8,6,1,-1},{8,8,1,-1},{10,6,1,-1},
@@ -108,7 +104,37 @@ int RandomMapScreen::DoModal(){
 	return SimpleListScreen::DoModal();
 }
 
-static int DoRandomIndirect(const RandomMapSizeData& size,PuzzleBoyLevelData*& outputLevel,MT19937 *rnd,void *userData,RandomLevelCallback callback){
+int RandomMapScreen::DoRandomIndirect(RandomMapSizeData size, PuzzleBoyLevelData*& outputLevel, MT19937 *rnd, void *userData, RandomLevelCallback callback){
+	while (size.width == 0) {
+		int type = size.height - 1;
+
+		if (type == MaxRandomTypes || type < 0) {
+			type = int((float)MaxRandomTypes*(float)rnd->Rnd() / 4294967296.0f);
+		}
+
+		int i = type;
+
+		//normal sizes
+		if (i >= 0 && i<RandomMapSizesCount) {
+			size = RandomMapSizes[i];
+			break;
+		}
+		i -= RandomMapSizesCount;
+
+		//experimental sizes
+		i -= 2;
+
+		if (i >= 0 && i<RandomMapSizesCount2) {
+			size = RandomMapSizes2[i];
+			break;
+		}
+		i -= RandomMapSizesCount2;
+
+		//shouldn't goes here
+		printf("[DoRandom] Error: Unknown random map type: %d\n", type); //not thread safe
+		return 0;
+	}
+
 	return RandomTest(
 		size.width,size.height,
 		size.playerCount,size.boxType,
@@ -116,34 +142,12 @@ static int DoRandomIndirect(const RandomMapSizeData& size,PuzzleBoyLevelData*& o
 }
 
 int RandomMapScreen::DoRandom(int type,PuzzleBoyLevelData*& outputLevel,MT19937 *rnd,void *userData,RandomLevelCallback callback){
-	type--;
-	if(type==MaxRandomTypes){
-		type=int((float)MaxRandomTypes*(float)rnd->Rnd()/4294967296.0f);
-	}
-
-	int i=type;
-
-	//normal sizes
-	if(i>=0 && i<RandomMapSizesCount){
-		return DoRandomIndirect(RandomMapSizes[i],outputLevel,rnd,userData,callback);
-	}
-	i-=RandomMapSizesCount;
-
-	//experimental sizes
-	i-=2;
-
-	if(i>=0 && i<RandomMapSizesCount2){
-		return DoRandomIndirect(RandomMapSizes2[i],outputLevel,rnd,userData,callback);
-	}
-	i-=RandomMapSizesCount2;
-
-	//shouldn't goes here
-	printf("[DoRandom] Error: Unknown random map type: %d\n",type); //not thread safe
-	return 0;
+	RandomMapSizeData size = { 0, type };
+	return DoRandomIndirect(size, outputLevel, rnd, userData, callback);
 }
 
 struct RandomLevelBatchProgress{
-	int type;
+	RandomMapSizeData size;
 	int nCount;
 	float progress;
 	volatile int *lpCurrent;
@@ -151,9 +155,13 @@ struct RandomLevelBatchProgress{
 	volatile bool *lpbAbort;
 	SDL_mutex *mutex;
 	PuzzleBoyLevelFile *doc;
-	SimpleProgressScreen *progressScreen; ///< only used when single-threaded
+	SimpleProgressScreen *progressScreen; // only used when single-threaded
 	MT19937 *rnd;
 };
+
+static void TestRandomLevelHeadlessProgress(float progress) {
+	printf("\rGenerating random level... %0.2f%%    ", progress*100.0f);
+}
 
 static int TestRandomLevelCallback(void* userData,float progress){
 	RandomLevelBatchProgress *t=(RandomLevelBatchProgress*)userData;
@@ -164,11 +172,17 @@ static int TestRandomLevelCallback(void* userData,float progress){
 		if(*(t->lpbAbort)) return 1;
 	}else{
 		//single-threaded
-		netMgr->OnTimer(true);
-		t->progressScreen->progress=(float(*(t->lpCurrent))+progress)/float(t->nCount);
-		if(!t->progressScreen->DrawAndDoEvents()){
-			*(t->lpbAbort)=true;
-			return 1;
+		if (netMgr) netMgr->OnTimer(true);
+
+		float p = (float(*(t->lpCurrent)) + progress) / float(t->nCount);
+		if (t->progressScreen) {
+			t->progressScreen->progress = p;
+			if (!t->progressScreen->DrawAndDoEvents()){
+				*(t->lpbAbort) = true;
+				return 1;
+			}
+		} else {
+			TestRandomLevelHeadlessProgress(p);
 		}
 	}
 
@@ -190,7 +204,7 @@ static int TestRandomLevelThreadFunc(void* userData){
 		//create random level
 		PuzzleBoyLevelData *level=NULL;
 
-		if(!RandomMapScreen::DoRandom(t->type,level,t->rnd,userData,TestRandomLevelCallback)) break;
+		if(!RandomMapScreen::DoRandomIndirect(t->size,level,t->rnd,userData,TestRandomLevelCallback)) break;
 
 		//save level
 		if(t->mutex) SDL_LockMutex(t->mutex);
@@ -207,10 +221,18 @@ static int TestRandomLevelThreadFunc(void* userData){
 		t->progress=0.0f;
 	}
 
+	// Set mutex to NULL to indicate we are finished
+	t->mutex = NULL;
+
 	return 0;
 }
 
-PuzzleBoyLevelFile* RandomMapScreen::DoRandomLevels(int type,int levelCount){
+PuzzleBoyLevelFile* RandomMapScreen::DoRandomLevels(int type, int levelCount, bool headless){
+	RandomMapSizeData size = { 0, type };
+	return DoRandomLevelsIndirect(size, levelCount, headless);
+}
+
+PuzzleBoyLevelFile* RandomMapScreen::DoRandomLevelsIndirect(const RandomMapSizeData& size, int levelCount, bool headless){
 	if(levelCount<=0) return NULL;
 
 #ifdef RANDOM_MAP_PROFILING
@@ -230,7 +252,7 @@ PuzzleBoyLevelFile* RandomMapScreen::DoRandomLevels(int type,int levelCount){
 
 	//create progress screen
 	SimpleProgressScreen progressScreen;
-	progressScreen.Create();
+	if(!headless) progressScreen.Create();
 
 	SDL_mutex *mutex=NULL;
 	if(threadCount>1) mutex=SDL_CreateMutex();
@@ -241,7 +263,7 @@ PuzzleBoyLevelFile* RandomMapScreen::DoRandomLevels(int type,int levelCount){
 
 	RandomLevelBatchProgress prog[8];
 	for(int i=0;i<threadCount;i++){
-		prog[i].type=type;
+		prog[i].size=size;
 		prog[i].nCount=levelCount;
 		prog[i].progress=0.0f;
 		prog[i].lpCurrent=&nCurrent;
@@ -249,7 +271,7 @@ PuzzleBoyLevelFile* RandomMapScreen::DoRandomLevels(int type,int levelCount){
 		prog[i].lpbAbort=&bAbort;
 		prog[i].mutex=mutex;
 		prog[i].doc=doc;
-		prog[i].progressScreen=&progressScreen;
+		prog[i].progressScreen = headless ? NULL : &progressScreen;
 
 		MT19937 *rnd=new MT19937;
 		unsigned int seed[16];
@@ -271,19 +293,27 @@ PuzzleBoyLevelFile* RandomMapScreen::DoRandomLevels(int type,int levelCount){
 		for(;;){
 			SDL_Delay(30);
 
-			netMgr->OnTimer(true);
+			if(netMgr) netMgr->OnTimer(true);
 
 			if(nCurrent>=levelCount) break;
 
+			int finished = 0;
 			float progress=(float)nCurrent;
 			for(int i=0;i<threadCount;i++){
-				progress+=prog[i].progress;
+				progress += prog[i].progress;
+				if (prog[i].mutex == NULL) finished++;
 			}
+			if (finished >= threadCount) break;
 
-			progressScreen.progress=progress/(float)levelCount;
-			if(!progressScreen.DrawAndDoEvents()){
-				bAbort=true;
-				break;
+			float p = progress / (float)levelCount;
+			if (headless) {
+				TestRandomLevelHeadlessProgress(p);
+			} else {
+				progressScreen.progress = p;
+				if (!progressScreen.DrawAndDoEvents()){
+					bAbort = true;
+					break;
+				}
 			}
 		}
 
@@ -305,6 +335,10 @@ PuzzleBoyLevelFile* RandomMapScreen::DoRandomLevels(int type,int levelCount){
 	//print statistics
 	printf("[DoRandomLevels] Create %d random level(s) in %dms\n",doc->m_objLevels.size(),SDL_GetTicks()-t);
 #endif
+
+	if (headless) {
+		printf("\rGenerating random level... Done.    \n");
+	}
 
 	if(doc->m_objLevels.empty()){
 		delete doc;

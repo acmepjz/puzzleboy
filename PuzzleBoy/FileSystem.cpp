@@ -357,6 +357,11 @@ std::vector<u8string> enumAllDirs(u8string path,bool containsPath){
 #endif
 }
 
+void setDataDirectory(const char* dir){
+	//ad-hoc!
+	chdir(dir);
+}
+
 void initPaths(){
 	if(externalStoragePath.empty()){
 #if defined(ANDROID)

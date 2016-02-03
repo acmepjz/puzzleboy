@@ -17,6 +17,8 @@ char* u8fgets(char* buf, int count, u8file* file);
 const char* u8fgets2(u8string& s,u8file* file);
 size_t u8fputs2(const u8string& s,u8file* file);
 
+void setDataDirectory(const char* dir);
+
 void initPaths();
 
 extern u8string externalStoragePath;
