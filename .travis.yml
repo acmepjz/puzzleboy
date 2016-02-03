@@ -12,18 +12,17 @@ env:
 before_install:
   # SDL dependencies
   - wget http://libsdl.org/release/SDL2-$SDL2_VERSION.tar.gz -O - | tar xz
-  - (cd SDL2-$SDL2_VERSION && ./configure --prefix=/usr && make -j3 && sudo make install)
+  - (cd SDL2-$SDL2_VERSION && ./configure --prefix=/usr && make -j3 && sudo make install && cd ..)
+  - wget https://opensource.apple.com/source/basic_cmds/basic_cmds-51/uuencode/uuencode.c?txt -O uuencode.c
+  - $CC -o uuencode uuencode.c
 
 script:
   - cd PuzzleBoy && mkdir build && cd build && cmake .. && make && cd ..
   - build/puzzleboy --headless --random random 100 -o random.lev
-  - gzip -9 random.lev && uuencode random.lev.gz
+  - gzip -9 random.lev && ../uuencode random.lev.gz random.lev.gz
 
-#test
-addons:
-  apt:
-    packages:
-      - sharutils
+##test
+#addons:
 #  coverity_scan:
 #    project:
 #      name: "acmepjz/puzzleboy"

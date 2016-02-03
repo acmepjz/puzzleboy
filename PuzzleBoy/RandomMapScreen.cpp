@@ -159,8 +159,14 @@ struct RandomLevelBatchProgress{
 	MT19937 *rnd;
 };
 
+static Uint32 headlessProgressTime = 0;
+
 static void TestRandomLevelHeadlessProgress(float progress) {
-	printf("\rGenerating random level... %0.2f%%    ", progress*100.0f);
+	Uint32 t = SDL_GetTicks();
+	if (headlessProgressTime == 0 || t - headlessProgressTime > 1000) {
+		headlessProgressTime = t;
+		printf("\rGenerating random level... %0.2f%%    ", progress*100.0f);
+	}
 }
 
 static int TestRandomLevelCallback(void* userData,float progress){
@@ -252,7 +258,8 @@ PuzzleBoyLevelFile* RandomMapScreen::DoRandomLevelsIndirect(const RandomMapSizeD
 
 	//create progress screen
 	SimpleProgressScreen progressScreen;
-	if(!headless) progressScreen.Create();
+	if (headless) headlessProgressTime = 0;
+	else progressScreen.Create();
 
 	SDL_mutex *mutex=NULL;
 	if(threadCount>1) mutex=SDL_CreateMutex();
