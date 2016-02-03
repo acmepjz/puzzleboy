@@ -648,7 +648,8 @@ int main(int argc,char** argv){
 	screenHeight = arg.screenHeight;
 
 	//init SDL
-	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER)<0){
+	if (SDL_Init(arg.headless ? SDL_INIT_TIMER :
+		(SDL_INIT_VIDEO | SDL_INIT_TIMER)) < 0){
 		printf("[main] Fatal Error: Can't initialize SDL video or timer!\n");
 		abort();
 	}
