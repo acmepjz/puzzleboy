@@ -44,15 +44,23 @@ static void CreateRandomMapSizeDescription(const RandomMapSizeData& size,MyForma
 	int count=1+(size.boxType>>4);
 
 	u8string blockNames[4];
-	blockNames[0]=_("a pushable block");
-	blockNames[1]=_("a target block");
-	blockNames[2]=_("%d pushable blocks");
-	blockNames[3]=_("%d target blocks");
+	if (theApp) {
+		blockNames[0] = _("a pushable block");
+		blockNames[1] = _("a target block");
+		blockNames[2] = _("%d pushable blocks");
+		blockNames[3] = _("%d target blocks");
+	} else {
+		blockNames[0] = "a pushable block";
+		blockNames[1] = "a target block";
+		blockNames[2] = "%d pushable blocks";
+		blockNames[3] = "%d target blocks";
+	}
 
 	switch(type){
 	case NORMAL_BLOCK:
 	case TARGET_BLOCK:
-		fmt(_("Rotate block with %s"));
+		if (theApp) fmt(_("Rotate blocks with %s"));
+		else fmt("Rotate blocks with %s");
 		if(count>1){
 			fmt<<str(MyFormat(blockNames[type==NORMAL_BLOCK?2:3])<<count);
 		}else{
@@ -60,13 +68,17 @@ static void CreateRandomMapSizeDescription(const RandomMapSizeData& size,MyForma
 		}
 		break;
 	default:
-		fmt(_("Rotate block only"));
+		if (theApp) fmt(_("Rotate blocks only"));
+		else fmt("Rotate blocks only");
 		break;
 	}
 
-	fmt(" %dx%d ")<<size.width<<size.height;
+	fmt(" %dx%d")<<size.width<<size.height;
 	if(size.playerCount>1){
-		fmt(_("(%d players)"))<<size.playerCount;
+		fmt(" ");
+		if (theApp) fmt(_("(%d players)"));
+		else fmt("(%d players)");
+		fmt << size.playerCount;
 	}
 }
 
@@ -86,6 +98,24 @@ void RandomMapScreen::OnDirty(){
 		MyFormat fmt;
 		CreateRandomMapSizeDescription(RandomMapSizes2[i],fmt);
 		AddItem(str(fmt));
+	}
+}
+
+void RandomMapScreen::HeadlessListRandomTypes() {
+	printf("Typical types:\n");
+	for (int i = 0; i<RandomMapSizesCount; i++){
+		MyFormat fmt;
+		CreateRandomMapSizeDescription(RandomMapSizes[i], fmt);
+		printf("  %#2d  %s, also '%d,%d,%d,%d'\n", i + 1, str(fmt).c_str(),
+			RandomMapSizes[i].width, RandomMapSizes[i].height, RandomMapSizes[i].playerCount, RandomMapSizes[i].boxType);
+	}
+	printf("  %#2d  Random\n\nExperimental types:\n", RandomMapSizesCount + 1);
+
+	for (int i = 0; i<RandomMapSizesCount2; i++){
+		MyFormat fmt;
+		CreateRandomMapSizeDescription(RandomMapSizes2[i], fmt);
+		printf("  %#2d  %s, also '%d,%d,%d,%d'\n", i + RandomMapSizesCount + 3, str(fmt).c_str(),
+			RandomMapSizes2[i].width, RandomMapSizes2[i].height, RandomMapSizes2[i].playerCount, RandomMapSizes2[i].boxType);
 	}
 }
 

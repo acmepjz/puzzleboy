@@ -21,6 +21,8 @@ public:
 	int OnClick(int index) override;
 	int DoModal() override;
 
+	static void HeadlessListRandomTypes();
+
 	static int DoRandom(int type,PuzzleBoyLevelData*& outputLevel,MT19937 *rnd,void *userData=NULL,RandomLevelCallback callback=NULL);
 	static int DoRandomIndirect(RandomMapSizeData size, PuzzleBoyLevelData*& outputLevel, MT19937 *rnd, void *userData=NULL, RandomLevelCallback callback=NULL);
 

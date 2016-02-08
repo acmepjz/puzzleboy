@@ -26,14 +26,16 @@ ArgumentManager::ArgumentManager(int argc, char** argv)
 				"Website: https://github.com/acmepjz/puzzleboy" "\n\n"
 				"Usage: %s [options]\n\n"
 				"Available options:\n"
-				"  --help             Display this help message.\n"
-				"  -w, --width <n>    Set window width.\n"
-				"  -h, --height <n>   Set window height.\n"
-				"  -f, --fullscreen   Run the game fullscreen.\n"
-				"  --data-dir <dir>   Specifies the data directory (will change the working directory).\n"
-				"  --user-dir <dir>   Specifies the user preferences directory.\n"
-				"  --database <file>  Specifies the level database.\n"
-				"  --headless         Headless mode.\n"
+				"  --help               Display this help message.\n"
+				"  -w, --width <n>      Set window width.\n"
+				"  -h, --height <n>     Set window height.\n"
+				"  -f, --fullscreen     Run the game fullscreen.\n"
+				"  --data-dir <dir>     Specifies the data directory\n"
+				"                       (will change the working directory).\n"
+				"  --user-dir <dir>     Specifies the user preferences directory.\n"
+				"  --database <file>    Specifies the level database.\n"
+				"  --list-random-types  List predefined random map types.\n"
+				"  --headless           Headless mode.\n"
 				"\nHeadless mode operations:\n"
 				"  -i, --input <file>   Load a level file.\n"
 				"  -o, --output <file>  Save a level file.\n"
@@ -58,6 +60,9 @@ ArgumentManager::ArgumentManager(int argc, char** argv)
 		} else if (strcmp(argv[i], "--database") == 0){
 			i++;
 			if (i < argc) levelDatabaseFileName = argv[i];
+		} else if (strcmp(argv[i], "--list-random-types") == 0){
+			RandomMapScreen::HeadlessListRandomTypes();
+			err = true; return;
 		} else if (strcmp(argv[i], "--headless") == 0){
 			headless = true;
 		} else if (strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--input") == 0){
