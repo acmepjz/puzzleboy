@@ -3,7 +3,7 @@
    Copy tmp/SDL_android.c to /path-to-SDL2/src/core/android/SDL_android.c.
 1. Follow the instruction in README-android.txt in SDL2
 2. Copy (or symlink) project/jni/freetype/ forder in CommanderGenius (a.k.a. SDL1.2 Android) to here,
-   or you should figure out youtself how to compile FreeType for Android.
+   or you should figure out yourself how to compile FreeType for Android.
 3. (Optional) Edit freetype/include/freetype/config/ftoption.h to disable zlib
 4. Copy (or symlink) data/ folder to assets/data/
 5. (Ignore this step because this project doesn't use any other C++11 features)
